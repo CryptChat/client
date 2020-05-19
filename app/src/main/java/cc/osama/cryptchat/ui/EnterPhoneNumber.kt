@@ -1,4 +1,4 @@
-package cc.osama.sechat.ui
+package cc.osama.cryptchat.ui
 
 import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
@@ -7,10 +7,9 @@ import android.text.Editable
 import android.text.TextWatcher
 import android.util.Log.w
 import android.view.View
-import android.widget.AdapterView
 import android.widget.ArrayAdapter
-import cc.osama.sechat.R
-import cc.osama.sechat.SechatServer
+import cc.osama.cryptchat.R
+import cc.osama.cryptchat.CryptchatServer
 import kotlinx.android.synthetic.main.activity_enter_phone_number.*
 import org.json.JSONObject
 
@@ -41,7 +40,7 @@ class EnterPhoneNumber : AppCompatActivity() {
       param.put("country_code", code)
       param.put("phone_number", number)
       toggleErrorMessage()
-      SechatServer(applicationContext, address).post(
+      CryptchatServer(applicationContext, address).post(
         path = "/register.json",
         param = param,
         success = {

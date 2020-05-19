@@ -1,4 +1,4 @@
-package cc.osama.sechat
+package cc.osama.cryptchat
 
 import android.content.Context
 import com.android.volley.Request
@@ -9,7 +9,7 @@ import com.android.volley.toolbox.JsonObjectRequest
 import com.android.volley.toolbox.Volley
 import org.json.JSONObject
 
-class SechatServer(private val context: Context, private val hostname: String) {
+class CryptchatServer(private val context: Context, private val hostname: String) {
   private class QueueHandler(val context: Context) {
     companion object {
       private var INSTANCE: QueueHandler? = null

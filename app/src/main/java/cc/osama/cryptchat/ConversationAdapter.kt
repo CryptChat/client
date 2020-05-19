@@ -1,9 +1,8 @@
-package cc.osama.sechat
+package cc.osama.cryptchat
 
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import kotlinx.android.synthetic.main.conversation_row.view.*
 

@@ -1,4 +1,4 @@
-package cc.osama.sechat.db
+package cc.osama.cryptchat.db
 
 import androidx.annotation.NonNull
 import androidx.room.*

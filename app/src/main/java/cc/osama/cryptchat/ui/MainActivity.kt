@@ -1,29 +1,21 @@
-package cc.osama.sechat.ui
+package cc.osama.cryptchat.ui
 
 import android.content.Context
 import android.content.Intent
-import android.net.Uri
 import android.os.Bundle
 import android.security.keystore.KeyProperties
-import android.util.Base64
-import android.util.Log.d
 import android.view.ViewGroup
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import cc.osama.sechat.R
-import cc.osama.sechat.Sechat
-import cc.osama.sechat.SechatServer
+import cc.osama.cryptchat.R
+import cc.osama.cryptchat.Cryptchat
+import cc.osama.cryptchat.CryptchatServer
 import kotlinx.android.synthetic.main.activity_main.*
 import org.json.JSONArray
 import org.json.JSONObject
-import java.net.URI
-import java.net.URL
-import java.security.KeyFactory
 import java.security.KeyPairGenerator
-import java.security.Security
-import java.security.spec.*
 
 
 class MainActivity : AppCompatActivity() {
@@ -52,13 +44,13 @@ class MainActivity : AppCompatActivity() {
 
   override fun onDestroy() {
     super.onDestroy()
-    Sechat.currentChatView = null
+    Cryptchat.currentChatView = null
   }
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
     // startActivity(Intent(this, EnterServerAddress::class.java))
-    Sechat.currentChatView = this
+    Cryptchat.currentChatView = this
     setContentView(R.layout.activity_main)
     val kpg = KeyPairGenerator.getInstance(KeyProperties.KEY_ALGORITHM_EC)
     // kpg.initialize()
@@ -89,7 +81,7 @@ class MainActivity : AppCompatActivity() {
       message.put("body", composer.text)
       params.put("message", message)
       addToMessagesAndNotify(composer.text.toString())
-      SechatServer(applicationContext, "").post(
+      CryptchatServer(applicationContext, "").post(
         "/message.json",
         params,
         failure = { error ->

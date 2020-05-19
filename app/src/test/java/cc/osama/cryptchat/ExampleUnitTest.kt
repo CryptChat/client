@@ -1,4 +1,4 @@
-package cc.osama.sechat
+package cc.osama.cryptchat
 
 import org.junit.Test
 

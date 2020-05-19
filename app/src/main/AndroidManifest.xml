@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="cc.osama.sechat">
+    package="cc.osama.cryptchat">
 
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
 
     <application
-        android:name=".Sechat"
+        android:name="cc.osama.cryptchat.Cryptchat"
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
@@ -14,18 +14,18 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme"
         android:usesCleartextTraffic="${usesCleartextTraffic}">
-        <activity android:name=".ui.ServersList">
+        <activity android:name="cc.osama.cryptchat.ui.ServersList">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name=".ui.VerifyPhoneNumber"></activity>
-        <activity android:name=".ui.EnterPhoneNumber" />
-        <activity android:name=".ui.EnterServerAddress">
+        <activity android:name="cc.osama.cryptchat.ui.VerifyPhoneNumber"></activity>
+        <activity android:name="cc.osama.cryptchat.ui.EnterPhoneNumber" />
+        <activity android:name="cc.osama.cryptchat.ui.EnterServerAddress">
         </activity>
-        <activity android:name=".ui.MainActivity">
+        <activity android:name="cc.osama.cryptchat.ui.MainActivity">
 
             <!--
             intent-filter>
@@ -36,7 +36,7 @@
         </activity>
 
         <service
-            android:name=".SechatFirebaseMessagingService"
+            android:name="cc.osama.cryptchat.CryptchatFirebaseMessagingService"
             android:exported="false">
             <intent-filter>
                 <action android:name="com.google.firebase.MESSAGING_EVENT" />

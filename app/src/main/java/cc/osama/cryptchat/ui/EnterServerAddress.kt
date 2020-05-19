@@ -1,14 +1,13 @@
-package cc.osama.sechat.ui
+package cc.osama.cryptchat.ui
 
 import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
-import cc.osama.sechat.R
-import cc.osama.sechat.Sechat
-import cc.osama.sechat.SechatServer
-import cc.osama.sechat.db.Server
+import cc.osama.cryptchat.R
+import cc.osama.cryptchat.Cryptchat
+import cc.osama.cryptchat.CryptchatServer
 import com.android.volley.ClientError
 import com.android.volley.NoConnectionError
 import com.android.volley.ServerError
@@ -44,7 +43,7 @@ class EnterServerAddress : AppCompatActivity() {
       address = getCanonicalAddress(address)
       validateServer(address,
         onValid = {
-          val db = Sechat.db(applicationContext)
+          val db = Cryptchat.db(applicationContext)
           db.asyncExec({
             val serverDao = db.server()
             val server = serverDao.findByAddress(address)
@@ -78,24 +77,24 @@ class EnterServerAddress : AppCompatActivity() {
 
   private fun validateServer(address: String, onValid: () -> Unit, onInvalid: (message: String) -> Unit) {
     return onValid()
-    SechatServer(applicationContext, address).get(
+    CryptchatServer(applicationContext, address).get(
       path = "/knock-knock.json",
       param = JSONObject(),
       success = {
-        val isSechat = it["is_sechat"] as? Boolean ?: false
-        if (isSechat) {
+        val isCryptchat = it["is_cryptchat"] as? Boolean ?: false
+        if (isCryptchat) {
           onValid()
         } else {
-          onInvalid(resources.getString(R.string.not_a_sechat_server))
+          onInvalid(resources.getString(R.string.not_a_cryptchat_server))
         }
       },
       failure = {
         val errorMessage = if (it is UnknownHostException) {
-          resources.getString(R.string.unknow_host)
+          resources.getString(R.string.unknown_host)
         } else if (it is ClientError) {
           val responseCode = it.networkResponse?.statusCode ?: -1
           if (responseCode == 404) {
-            resources.getString((R.string.not_a_sechat_server))
+            resources.getString((R.string.not_a_cryptchat_server))
           } else {
             resources.getString(R.string.client_error_occurred, responseCode)
           }

@@ -1,9 +1,9 @@
-package cc.osama.sechat
+package cc.osama.cryptchat
 
 import android.os.AsyncTask
 import androidx.room.Database
 import androidx.room.RoomDatabase
-import cc.osama.sechat.db.Server
+import cc.osama.cryptchat.db.Server
 
 @Database(
   entities = [Server::class],

@@ -1,11 +1,11 @@
-package cc.osama.sechat
+package cc.osama.cryptchat
 
 import android.app.Application
 import android.content.Context
 import androidx.room.Room
-import cc.osama.sechat.ui.MainActivity
+import cc.osama.cryptchat.ui.MainActivity
 
-class Sechat : Application() {
+class Cryptchat : Application() {
   companion object {
     var currentChatView: MainActivity? = null
 
@@ -15,7 +15,7 @@ class Sechat : Application() {
         DB_INSTANCE ?: Room.databaseBuilder(
           context,
           Database::class.java,
-          "sechat-database"
+          "cryptchat-database"
         ).build().also { DB_INSTANCE = it }
       }
   }

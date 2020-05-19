@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">"Sechat"</string>
+    <string name="app_name">"Cryptchat"</string>
     <string name="send_button">"Send"</string>
     <string name="enter_server_address">"https://example.com"</string>
     <string name="enter_phone_number">"Phone number"</string>
@@ -9,10 +9,10 @@
     <string name="add_server_button">Go</string>
     <string name="go_phone_number">Go</string>
     <string name="server_already_added">"Server already added"</string>
-    <string name="not_a_sechat_server">"This address doesn't appear to be pointing to a Sechat server."</string>
+    <string name="not_a_cryptchat_server">"This address doesn't appear to be pointing to a Cryptchat server."</string>
     <string name="not_pointing_to_server">"This address doesn't appear to be pointing to a server."</string>
     <string name="server_down">"The server appears to be down at the moment. Please try again later or contact the site administrator."</string>
-    <string name="unknow_host">"Unknown host"</string>
+    <string name="unknown_host">"Unknown host"</string>
     <string name="server_error_occurred">"Server error occurred: \"%1$d\""</string>
     <string name="client_error_occurred">"Client error occurred: \"%1$d\""</string>
     <string name="unknown_error_occurred">"Unknown error occurred: \"%1$s\""</string>
