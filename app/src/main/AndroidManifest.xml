@@ -15,13 +15,13 @@
         android:theme="@style/AppTheme"
         android:usesCleartextTraffic="${usesCleartextTraffic}">
         <activity android:name="cc.osama.cryptchat.ui.ServersList">
+        </activity>
+        <activity android:name="cc.osama.cryptchat.ui.VerifyPhoneNumber">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name="cc.osama.cryptchat.ui.VerifyPhoneNumber"></activity>
         <activity android:name="cc.osama.cryptchat.ui.EnterPhoneNumber" />
         <activity android:name="cc.osama.cryptchat.ui.EnterServerAddress">
         </activity>

@@ -1,19 +1,29 @@
 package cc.osama.cryptchat.ui
 
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.util.Base64
 import android.util.Log.w
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import cc.osama.cryptchat.R
 import cc.osama.cryptchat.Cryptchat
+import cc.osama.cryptchat.CryptchatSecurity
+import cc.osama.cryptchat.R
 import cc.osama.cryptchat.db.Server
 import kotlinx.android.synthetic.main.activity_servers_list.*
 import kotlinx.android.synthetic.main.servers_list_item.view.*
-import javax.net.ssl.SSLContext
+import org.whispersystems.curve25519.Curve25519
+import java.io.ByteArrayOutputStream
+import java.security.MessageDigest
+import javax.crypto.Cipher
+import javax.crypto.Mac
+import javax.crypto.spec.IvParameterSpec
+import javax.crypto.spec.SecretKeySpec
+import kotlin.math.ceil
+
 
 interface OnServerClick {
   fun onServerClick(position: Int)
@@ -52,11 +62,6 @@ class ServersList : AppCompatActivity(), OnServerClick {
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
     setContentView(R.layout.activity_servers_list)
-    val engine = SSLContext.getInstance("TLS").createSSLEngine()
-    engine.enabledProtocols.forEach {
-      w("WARRRRN", it?.toString() ?: "NOTHING")
-    }
-    return
 
     serversList.apply {
       setHasFixedSize(true)
@@ -64,13 +69,16 @@ class ServersList : AppCompatActivity(), OnServerClick {
       adapter = viewAdapter
     }
     val db = Cryptchat.db(applicationContext)
-    db.asyncExec({
-      db.server().getAll().forEach {
-        servers.add(it)
+    db.asyncExec(
+      task = {
+        db.servers().getAll().forEach {
+          servers.add(it)
+        }
+      },
+      onProgress = {},
+      after = {
+        viewAdapter.notifyDataSetChanged()
       }
-    },
-    after = {
-      viewAdapter.notifyDataSetChanged()
-    })
+    )
   }
 }

@@ -44,23 +44,27 @@ class EnterServerAddress : AppCompatActivity() {
       validateServer(address,
         onValid = {
           val db = Cryptchat.db(applicationContext)
-          db.asyncExec({
-            val serverDao = db.server()
-            val server = serverDao.findByAddress(address)
-            if (server == null) {
-              // serverDao.add(Server(address = address))
-              val intent = Intent(this, EnterPhoneNumber::class.java)
-              intent.putExtra("address", address)
-              startActivity(intent)
-            } else {
-              errorMessage = resources.getString(R.string.server_already_added)
+          db.asyncExec(
+            task = {
+              val serverDao = db.servers()
+              val server = serverDao.findByAddress(address)
+              if (server == null) {
+                // serverDao.add(Server(address = address))
+                val intent = Intent(this, EnterPhoneNumber::class.java)
+                intent.putExtra("address", address)
+                startActivity(intent)
+              } else {
+                errorMessage = resources.getString(R.string.server_already_added)
+              }
+            },
+            onProgress = {},
+            after = {
+              if (errorMessage != null) {
+                errorMessagePlaceholder.text = errorMessage
+                changeElementsEnabledStatus(true)
+              }
             }
-          }, {
-            if (errorMessage != null) {
-              errorMessagePlaceholder.text = errorMessage
-              changeElementsEnabledStatus(true)
-            }
-          })
+          )
         },
         onInvalid = {
           errorMessagePlaceholder.text = it

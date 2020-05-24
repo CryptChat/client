@@ -5,15 +5,17 @@ import androidx.room.*
 
 @Entity(tableName = "servers")
 data class Server (
-  @PrimaryKey(autoGenerate = true) val id: Int = 0,
-  @NonNull var address: String,
-  @NonNull var userId: Int,
+  @PrimaryKey(autoGenerate = true) val id: Long = 0,
+  @NonNull val address: String,
+  @NonNull val userId: Long,
+  @NonNull val publicKey: String,
+  @NonNull val privateKey: String,
   var name: String?
 ) {
   @Dao
   interface DataAccessObject {
     @Insert
-    fun add(server: Server)
+    fun add(server: Server): Long
 
     @Query("SELECT * FROM servers")
     fun getAll(): List<Server>
