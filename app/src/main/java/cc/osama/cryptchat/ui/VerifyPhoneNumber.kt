@@ -2,20 +2,17 @@ package cc.osama.cryptchat.ui
 
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import android.os.Looper
 import android.text.Editable
 import android.text.TextWatcher
 import android.util.Log.w
-import androidx.constraintlayout.widget.ConstraintLayout
-import cc.osama.cryptchat.R
-import cc.osama.cryptchat.Cryptchat
-import cc.osama.cryptchat.CryptchatSecurity
-import cc.osama.cryptchat.CryptchatServer
+import cc.osama.cryptchat.*
 import cc.osama.cryptchat.db.EphemeralKey
 import cc.osama.cryptchat.db.Server
+import cc.osama.cryptchat.db.User
 import kotlinx.android.synthetic.main.activity_verify_phone_number.*
 import org.json.JSONArray
 import org.json.JSONObject
+import kotlin.math.floor
 
 class VerifyPhoneNumber : AppCompatActivity() {
 
@@ -30,7 +27,8 @@ class VerifyPhoneNumber : AppCompatActivity() {
       }
     })
     verificationCodeSubmit.setOnClickListener {
-      submitButtonHandler()
+      fetchServerMembers("http://172.18.170.181:3000", 1, 2)
+      //submitButtonHandler()
     }
   }
 
@@ -52,25 +50,78 @@ class VerifyPhoneNumber : AppCompatActivity() {
       success = {
         val userId = (it["id"] as? Int)?.toLong()
         if (userId != null) {
-          val db = Cryptchat.db(applicationContext)
-          db.asyncExec(
-            task = {
-              val server = Server(
-                address = address,
-                name = "SErVeR!&#_X",
-                userId = userId,
-                publicKey = keyPair.publicKey.toString(),
-                privateKey = keyPair.privateKey.toString()
-              )
-              val serverId = db.servers().add(server)
-              finishUpRegistration(address, serverId, userId)
-            }, onProgress = {}, after = {}
-          )
+          addServerToDatabase(address, userId, keyPair)
         }
         w("USERID", userId.toString())
       },
       failure = {
         w("FAILUUUURE", it.javaClass.toString())
+      }
+    )
+  }
+
+  private fun addServerToDatabase(address: String, userId: Long, keyPair: ECKeyPair) {
+    val db = Cryptchat.db(applicationContext)
+    db.asyncExec(
+      task = {
+        val server = Server(
+          address = address,
+          name = "SErVeR!&#_X",
+          userId = userId,
+          keyPair = keyPair
+        )
+        val serverId = db.servers().add(server)
+        fetchServerMembers(address, serverId, userId)
+        finishUpRegistration(address, serverId, userId)
+      }
+    )
+  }
+
+  private fun fetchServerMembers(address: String, serverId: Long, userId: Long) {
+    CryptchatServer(applicationContext, address).get(
+      path = "/sync/users.json",
+      success = {
+        val usersJsonArray = it["users"] as? JSONArray
+        if (usersJsonArray != null) {
+          val users = mutableListOf<User>()
+          for (i in 0 until usersJsonArray.length()) {
+            val userJson = usersJsonArray[i] as? JSONObject
+            if (userJson != null) {
+              val publicKey = if (userJson["identity_key"] as? String != null) ECPublicKey(userJson["identity_key"] as String) else null
+              val countryCode = userJson["country_code"] as? String
+              val phoneNumber = userJson["phone_number"] as? String
+              val idOnServer = (userJson["id"] as? Int)?.toLong() ?: userJson["id"] as? Long
+              val lastUpdatedAt = userJson["updated_at"] as? Double
+              val name = userJson["name"] as? String
+              if (publicKey != null &&
+                countryCode != null &&
+                phoneNumber != null &&
+                idOnServer != null &&
+                idOnServer != userId &&
+                lastUpdatedAt != null
+              ) {
+                users.add(
+                  User(
+                    serverId = serverId,
+                    publicKey = publicKey,
+                    lastUpdatedAt = lastUpdatedAt,
+                    phoneNumber = phoneNumber,
+                    countryCode = countryCode,
+                    idOnServer = idOnServer,
+                    name = name
+                  )
+                )
+              }
+            }
+          }
+          val db = Cryptchat.db(applicationContext)
+          db.asyncExec({
+            db.users().addMany(users)
+          })
+        } else {
+          w("USERSSS2", it["users"].javaClass.toString())
+          w("USERSSS2", it["users"].toString())
+        }
       }
     )
   }

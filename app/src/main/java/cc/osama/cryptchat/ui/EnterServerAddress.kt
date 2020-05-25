@@ -57,7 +57,6 @@ class EnterServerAddress : AppCompatActivity() {
                 errorMessage = resources.getString(R.string.server_already_added)
               }
             },
-            onProgress = {},
             after = {
               if (errorMessage != null) {
                 errorMessagePlaceholder.text = errorMessage

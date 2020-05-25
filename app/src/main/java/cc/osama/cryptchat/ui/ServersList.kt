@@ -75,7 +75,6 @@ class ServersList : AppCompatActivity(), OnServerClick {
           servers.add(it)
         }
       },
-      onProgress = {},
       after = {
         viewAdapter.notifyDataSetChanged()
       }

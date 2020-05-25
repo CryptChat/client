@@ -5,21 +5,24 @@ import androidx.room.Database
 import androidx.room.RoomDatabase
 import cc.osama.cryptchat.db.EphemeralKey
 import cc.osama.cryptchat.db.Server
+import cc.osama.cryptchat.db.User
 import java.util.concurrent.Executor
 
 @Database(
   entities = [
     Server::class,
-    EphemeralKey::class
+    EphemeralKey::class,
+    User::class
   ],
   version = 1
 )
 abstract class Database : RoomDatabase() {
   abstract fun servers() : Server.DataAccessObject
   abstract fun ephemeralKeys() : EphemeralKey.DataAccessObject
+  abstract fun users() : User.DataAccessObject
+
   class Executor(
     private val task: (executor: Executor) -> Any?,
-    private val onProgress: (values: List<Any?>) -> Any?,
     private val after: (Any?) -> Any?
   ) : AsyncTask<Any?, Any?, Any?>() {
     override fun doInBackground(vararg params: Any?): Any? {
@@ -28,11 +31,12 @@ abstract class Database : RoomDatabase() {
 
     override fun onProgressUpdate(vararg values: Any?) {
       super.onProgressUpdate(*values)
-      val list = mutableListOf<Any?>()
-      for (i in values) {
-        list.add(i)
+      if (values.size == 2 && (values[0] as? String) == "customPublishProgress") {
+        val callback = values[1] as? () -> Unit
+        if (callback != null) {
+          callback()
+        }
       }
-      onProgress(list)
     }
 
     override fun onPostExecute(result: Any?) {
@@ -40,16 +44,15 @@ abstract class Database : RoomDatabase() {
       after(result)
     }
 
-    fun customPublishProgress(value: String) {
-      publishProgress(value)
+    fun publishProgress(callback: () -> Unit) {
+      publishProgress("customPublishProgress", callback)
     }
   }
 
   fun asyncExec(
     task: (executor: Executor) -> Any?,
-    onProgress: (values: List<Any?>) -> Any? = {},
     after: (Any?) -> Any? = {}
   ) {
-    Executor(task, onProgress, after).execute()
+    Executor(task, after).execute()
   }
 }

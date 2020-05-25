@@ -28,7 +28,7 @@ class CryptchatServer(private val context: Context, private val hostname: String
 
   fun get(
     path: String,
-    param: JSONObject,
+    param: JSONObject? = null,
     success: (JSONObject) -> Unit =  {},
     failure: (error: VolleyError) -> Unit = {},
     always: () -> Unit = {}
@@ -38,7 +38,7 @@ class CryptchatServer(private val context: Context, private val hostname: String
 
   fun post(
     path: String,
-    param: JSONObject,
+    param: JSONObject? = null,
     success: (JSONObject) -> Unit =  {},
     failure: (error: VolleyError) -> Unit = {},
     always: () -> Unit = {}
@@ -48,7 +48,7 @@ class CryptchatServer(private val context: Context, private val hostname: String
 
   fun put(
     path: String,
-    param: JSONObject,
+    param: JSONObject? = null,
     success: (data: JSONObject) -> Unit = {},
     failure: (error: VolleyError) -> Unit = {},
     always: () -> Unit = {}
@@ -59,7 +59,7 @@ class CryptchatServer(private val context: Context, private val hostname: String
   private fun request(
     method: Int,
     path: String,
-    param: JSONObject,
+    param: JSONObject? = null,
     success: (data: JSONObject) -> Unit,
     failure: (error: VolleyError) -> Unit,
     always: () -> Unit = {}
