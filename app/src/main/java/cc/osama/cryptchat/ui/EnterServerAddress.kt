@@ -8,6 +8,7 @@ import android.text.TextWatcher
 import cc.osama.cryptchat.R
 import cc.osama.cryptchat.Cryptchat
 import cc.osama.cryptchat.CryptchatServer
+import cc.osama.cryptchat.db.Server
 import com.android.volley.ClientError
 import com.android.volley.NoConnectionError
 import com.android.volley.ServerError
@@ -49,7 +50,6 @@ class EnterServerAddress : AppCompatActivity() {
               val serverDao = db.servers()
               val server = serverDao.findByAddress(address)
               if (server == null) {
-                // serverDao.add(Server(address = address))
                 val intent = Intent(this, EnterPhoneNumber::class.java)
                 intent.putExtra("address", address)
                 startActivity(intent)

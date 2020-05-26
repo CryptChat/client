@@ -22,11 +22,11 @@ abstract class Database : RoomDatabase() {
   abstract fun users() : User.DataAccessObject
 
   class Executor(
-    private val task: (executor: Executor) -> Any?,
-    private val after: (Any?) -> Any?
-  ) : AsyncTask<Any?, Any?, Any?>() {
-    override fun doInBackground(vararg params: Any?): Any? {
-      return task(this)
+    private val task: (executor: Executor) -> Unit,
+    private val after: () -> Unit
+  ) : AsyncTask<Unit, Any?, Unit>() {
+    override fun doInBackground(vararg params: Unit) {
+      task(this)
     }
 
     override fun onProgressUpdate(vararg values: Any?) {
@@ -39,19 +39,19 @@ abstract class Database : RoomDatabase() {
       }
     }
 
-    override fun onPostExecute(result: Any?) {
+    override fun onPostExecute(result: Unit) {
       super.onPostExecute(result)
-      after(result)
+      after()
     }
 
-    fun publishProgress(callback: () -> Unit) {
+    fun execOnUIThread(callback: () -> Unit) {
       publishProgress("customPublishProgress", callback)
     }
   }
 
   fun asyncExec(
-    task: (executor: Executor) -> Any?,
-    after: (Any?) -> Any? = {}
+    task: (executor: Executor) -> Unit,
+    after: () -> Unit = {}
   ) {
     Executor(task, after).execute()
   }

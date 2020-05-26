@@ -1,5 +1,6 @@
 package cc.osama.cryptchat.ui
 
+import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.text.Editable
@@ -12,7 +13,6 @@ import cc.osama.cryptchat.db.User
 import kotlinx.android.synthetic.main.activity_verify_phone_number.*
 import org.json.JSONArray
 import org.json.JSONObject
-import kotlin.math.floor
 
 class VerifyPhoneNumber : AppCompatActivity() {
 
@@ -27,8 +27,8 @@ class VerifyPhoneNumber : AppCompatActivity() {
       }
     })
     verificationCodeSubmit.setOnClickListener {
-      fetchServerMembers("http://172.18.170.181:3000", 1, 2)
-      //submitButtonHandler()
+      // fetchServerMembers("http://172.18.170.181:3000", 1, 2)
+      submitButtonHandler()
     }
   }
 
@@ -71,8 +71,8 @@ class VerifyPhoneNumber : AppCompatActivity() {
           keyPair = keyPair
         )
         val serverId = db.servers().add(server)
+        supplyEphemeralKeys(address, serverId, userId)
         fetchServerMembers(address, serverId, userId)
-        finishUpRegistration(address, serverId, userId)
       }
     )
   }
@@ -117,6 +117,10 @@ class VerifyPhoneNumber : AppCompatActivity() {
           val db = Cryptchat.db(applicationContext)
           db.asyncExec({
             db.users().addMany(users)
+          }, after = {
+            val intent = Intent(this, ServerMembers::class.java)
+            intent.putExtra("serverId", serverId)
+            startActivity(intent)
           })
         } else {
           w("USERSSS2", it["users"].javaClass.toString())
@@ -126,7 +130,7 @@ class VerifyPhoneNumber : AppCompatActivity() {
     )
   }
 
-  private fun finishUpRegistration(address: String, serverId: Long, userId: Long) {
+  private fun supplyEphemeralKeys(address: String, serverId: Long, userId: Long) {
     val keysJsonArray = JSONArray()
     val ephemeralKeyList = mutableListOf<EphemeralKey>()
     for (i in 1..1000) {
@@ -148,10 +152,9 @@ class VerifyPhoneNumber : AppCompatActivity() {
       param = params,
       success = {
         val db = Cryptchat.db(applicationContext)
-        val ids = db.ephemeralKeys().addMany(ephemeralKeyList)
-        w("DATABASETEST1", ids.toString())
-        w("DATABASETEST1", ids.size.toString())
-        w("DATABASETEST1", ids.javaClass.toString())
+        db.asyncExec({
+          db.ephemeralKeys().addMany(ephemeralKeyList)
+        })
       },
       failure = {
         w("CONNECTION_FAILURE", it.javaClass.toString())

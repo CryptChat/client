@@ -13,7 +13,7 @@ data class User(
   @NonNull val phoneNumber: String,
   @NonNull val identityKey: String, // ideally this should be private...
   @NonNull val lastUpdatedAt: Double,
-  val name: String?
+  val name: String? = null
 ) {
   @Ignore val publicKey = ECPublicKey(identityKey)
 
@@ -25,7 +25,7 @@ data class User(
     phoneNumber: String,
     publicKey: ECPublicKey,
     lastUpdatedAt: Double,
-    name: String?
+    name: String? = null
   ) : this(
     id = id,
     serverId = serverId,
@@ -44,5 +44,8 @@ data class User(
 
     @Query("SELECT * FROM users")
     fun getAll(): List<User>
+
+    @Query("SELECT * FROM users WHERE serverId = :serverId")
+    fun findByServerId(serverId: Long): List<User>
   }
 }
