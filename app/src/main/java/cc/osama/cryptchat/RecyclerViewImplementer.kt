@@ -7,7 +7,6 @@ import android.view.ViewGroup
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import kotlinx.android.synthetic.main.activity_conversation.*
 
 interface OnClick {
   fun onClick(position: Int)
@@ -18,7 +17,7 @@ abstract class RecyclerViewImplementer<T> : AppCompatActivity(), OnClick {
   abstract val dataset: ArrayList<T>
   abstract val layout: Int
   abstract val viewAdapter: Adapter<T>
-  val viewManager = LinearLayoutManager(this)
+  abstract val viewManager: LinearLayoutManager
 
   class Adapter<T>(
     private val dataset: ArrayList<T>,
@@ -34,7 +33,6 @@ abstract class RecyclerViewImplementer<T> : AppCompatActivity(), OnClick {
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ListItemHolder {
-      Log.w("LOOOOOOOOOG", "onCreateViewHolder")
       val view = LayoutInflater.from(parent.context).inflate(layout, parent, false)
       return ListItemHolder(view, listener)
     }
@@ -42,7 +40,6 @@ abstract class RecyclerViewImplementer<T> : AppCompatActivity(), OnClick {
     override fun getItemCount() = dataset.size
 
     override fun onBindViewHolder(holder: ListItemHolder, position: Int) {
-      Log.w("LOOOOOOOOOG", "onBindViewHolder")
       listener.onBindViewHolder(holder, position)
     }
   }

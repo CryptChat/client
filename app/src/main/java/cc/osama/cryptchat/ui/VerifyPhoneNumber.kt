@@ -118,7 +118,7 @@ class VerifyPhoneNumber : AppCompatActivity() {
           db.asyncExec({
             db.users().addMany(users)
           }, after = {
-            val intent = Intent(this, ServerMembers::class.java)
+            val intent = Intent(this, ServerUsersList::class.java)
             intent.putExtra("serverId", serverId)
             startActivity(intent)
           })
@@ -131,12 +131,10 @@ class VerifyPhoneNumber : AppCompatActivity() {
   }
 
   private fun supplyEphemeralKeys(address: String, serverId: Long, userId: Long) {
-    val keysJsonArray = JSONArray()
-    val ephemeralKeyList = mutableListOf<EphemeralKey>()
-    for (i in 1..1000) {
+    val ephemeralKeysList = mutableListOf<EphemeralKey>()
+    for (i in 1..500) {
       val keyPair = CryptchatSecurity.genKeyPair()
-      keysJsonArray.put(keyPair.publicKey.toString())
-      ephemeralKeyList.add(
+      ephemeralKeysList.add(
         EphemeralKey(
           serverId = serverId,
           publicKey = keyPair.publicKey.toString(),
@@ -144,21 +142,29 @@ class VerifyPhoneNumber : AppCompatActivity() {
         )
       )
     }
-    val params = JSONObject()
-    params.put("user_id", userId)
-    params.put("keys", keysJsonArray)
-    CryptchatServer(applicationContext, address).post(
-      path = "/ephemeral-keys.json",
-      param = params,
-      success = {
-        val db = Cryptchat.db(applicationContext)
-        db.asyncExec({
-          db.ephemeralKeys().addMany(ephemeralKeyList)
-        })
-      },
-      failure = {
-        w("CONNECTION_FAILURE", it.javaClass.toString())
+    val db = Cryptchat.db(applicationContext)
+    db.asyncExec({
+      val ids = db.ephemeralKeys().addMany(ephemeralKeysList)
+      val keysList = db.ephemeralKeys().findByIds(ids)
+      val jsonArray = JSONArray()
+      keysList.forEach { key ->
+        val jsonKey = JSONObject()
+        jsonKey.put("id", key.id)
+        jsonKey.put("key", key.publicKey)
+        jsonArray.put(jsonKey)
       }
-    )
+      val params = JSONObject()
+      params.put("user_id", userId)
+      params.put("keys", jsonArray)
+      CryptchatServer(applicationContext, address).post(
+        path = "/ephemeral-keys.json",
+        param = params,
+        failure = {
+          db.asyncExec({
+            db.ephemeralKeys().deleteMany(ephemeralKeysList)
+          })
+        }
+      )
+    })
   }
 }

@@ -1,10 +1,12 @@
 package cc.osama.cryptchat
 
+import android.util.Base64
 import android.util.Log
+import android.util.Log.w
 import org.whispersystems.curve25519.Curve25519
-import org.whispersystems.curve25519.Curve25519KeyPair
 import java.io.ByteArrayOutputStream
 import java.security.MessageDigest
+import java.security.SecureRandom
 import javax.crypto.Cipher
 import javax.crypto.Mac
 import javax.crypto.spec.IvParameterSpec
@@ -12,6 +14,8 @@ import javax.crypto.spec.SecretKeySpec
 import kotlin.math.ceil
 
 class CryptchatSecurity {
+  class BadMac : Throwable()
+
   companion object {
     fun genKeyPair(): ECKeyPair {
       val keyPair = Curve25519.getInstance(Curve25519.BEST).generateKeyPair()
@@ -37,16 +41,19 @@ class CryptchatSecurity {
     val salt = ByteArray(32)
     val info = "Cryptchat".toByteArray()
     val prk = extract(salt, master)
-    val derived = expand(prk, info, 80)
+    val derived = expand(prk, info, 64)
     val cipherKey = SecretKeySpec(derived.copyOfRange(0, 32), "AES")
     val macKey = SecretKeySpec(derived.copyOfRange(32, 32 + 32), "HmacSHA256")
-    val iv = IvParameterSpec(derived.copyOfRange(32 + 32, 32 + 32 + 16))
+    val ivByteArray = ByteArray(16)
+    SecureRandom().nextBytes(ivByteArray)
+    val iv = IvParameterSpec(ivByteArray)
     val cipher = Cipher.getInstance("AES/CBC/PKCS5Padding")
     cipher.init(Cipher.ENCRYPT_MODE, cipherKey, iv)
     val cipherBytes = cipher.doFinal(message.toByteArray())
     val mac = getMac(cipherBytes, macKey, senderIdPubKey, receiverIdPubKey)
-    val list = ArrayList<ByteArray>(2)
+    val list = ArrayList<ByteArray>(3)
     list.add(mac)
+    list.add(ivByteArray)
     list.add(cipherBytes)
     return list
   }
@@ -59,8 +66,9 @@ class CryptchatSecurity {
     receiverEphPriKey: ByteArray,
     receiverIdPubKey: ByteArray
   ): String {
-    val theirMac = cipherList.get(0)
-    val cipherBytes = cipherList.get(1)
+    val theirMac = cipherList[0]
+    val ivByteArray = cipherList[1]
+    val cipherBytes = cipherList[2]
     val ss1 = Curve25519.getInstance(Curve25519.BEST).calculateAgreement(senderIdPubKey, receiverIdPriKey)
     val ss2 = Curve25519.getInstance(Curve25519.BEST).calculateAgreement(senderEphPubKey, receiverEphPriKey)
     val stream = ByteArrayOutputStream()
@@ -70,12 +78,14 @@ class CryptchatSecurity {
     val salt = ByteArray(32)
     val info = "Cryptchat".toByteArray()
     val prk = extract(salt, master)
-    val derived = expand(prk, info, 80)
+    val derived = expand(prk, info, 64)
     val cipherKey = SecretKeySpec(derived.copyOfRange(0, 32), "AES")
     val macKey = SecretKeySpec(derived.copyOfRange(32, 32 + 32), "HmacSHA256")
-    val iv = IvParameterSpec(derived.copyOfRange(32 + 32, 32 + 32 + 16))
+    val iv = IvParameterSpec(ivByteArray)
     val ourMac = getMac(cipherBytes, macKey, senderIdPubKey, receiverIdPubKey)
-    Log.w("INTEGRITY", (MessageDigest.isEqual(ourMac, theirMac)).toString())
+    if (!MessageDigest.isEqual(ourMac, theirMac)) {
+      throw BadMac()
+    }
     val cipher = Cipher.getInstance("AES/CBC/PKCS5Padding")
     cipher.init(Cipher.DECRYPT_MODE, cipherKey, iv)
     val plainBytes = cipher.doFinal(cipherBytes)
@@ -87,8 +97,7 @@ class CryptchatSecurity {
     mac.init(macKey)
     mac.update(senderIdPubKey)
     mac.update(receiverIdPubKey)
-    val final = mac.doFinal(msg).copyOfRange(0, 8)
-    return final
+    return mac.doFinal(msg).copyOfRange(0, 16)
   }
 
   fun extract(salt: ByteArray, input: ByteArray): ByteArray {
@@ -113,7 +122,7 @@ class CryptchatSecurity {
       }
       mac.update(i.toByte())
       val stepResult = mac.doFinal()
-      val stepSize = Math.min(remainingBytes, stepResult.size)
+      val stepSize = remainingBytes.coerceAtMost(stepResult.size)
       results.write(stepResult, 0, stepSize)
       mixin = stepResult
       remainingBytes -= stepSize

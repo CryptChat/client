@@ -14,7 +14,8 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme"
         android:usesCleartextTraffic="${usesCleartextTraffic}">
-        <activity android:name=".ui.Conversation"></activity>
+        <activity android:name=".ui.ChatView">
+        </activity>
         <activity
             android:name=".ui.AppEntry"
             android:launchMode="singleInstance"
@@ -25,13 +26,12 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name=".ui.ServerMembers" />
+        <activity android:name=".ui.ServerUsersList" />
         <activity android:name=".ui.ServersList" />
-        <activity android:name=".ui.VerifyPhoneNumber"></activity>
+        <activity android:name=".ui.VerifyPhoneNumber" />
         <activity android:name=".ui.EnterPhoneNumber" />
         <activity android:name=".ui.EnterServerAddress" />
         <activity android:name=".ui.MainActivity">
-
             <!--
             intent-filter>
                 <action android:name="android.intent.action.MAIN" />
