@@ -1,6 +1,8 @@
 package cc.osama.cryptchat
 
-class ECKeyPair(val publicKey: ECPublicKey, val privateKey: ECPrivateKey) {
+import java.io.Serializable
+
+class ECKeyPair(val publicKey: ECPublicKey, val privateKey: ECPrivateKey) : Serializable {
   constructor(
     publicKey: ByteArray,
     privateKey: ByteArray

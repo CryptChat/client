@@ -7,7 +7,6 @@ import cc.osama.cryptchat.db.EphemeralKey
 import cc.osama.cryptchat.db.Message
 import cc.osama.cryptchat.db.Server
 import cc.osama.cryptchat.db.User
-import java.util.concurrent.Executor
 
 @Database(
   entities = [
@@ -22,7 +21,7 @@ abstract class Database : RoomDatabase() {
   abstract fun servers() : Server.DataAccessObject
   abstract fun ephemeralKeys() : EphemeralKey.DataAccessObject
   abstract fun users() : User.DataAccessObject
-  abstract fun messages() : Message.DataAcessObject
+  abstract fun messages() : Message.DataAccessObject
 
   class Executor(
     private val task: (executor: Executor) -> Unit,

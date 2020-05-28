@@ -3,6 +3,7 @@ package cc.osama.cryptchat.db
 import androidx.annotation.NonNull
 import androidx.room.*
 import cc.osama.cryptchat.ECPublicKey
+import java.io.Serializable
 
 @Entity(tableName = "users")
 data class User(
@@ -14,7 +15,7 @@ data class User(
   @NonNull val identityKey: String, // ideally this should be private...
   @NonNull val lastUpdatedAt: Double,
   val name: String? = null
-) {
+) : Serializable {
   @Ignore val publicKey = ECPublicKey(identityKey)
 
   constructor(

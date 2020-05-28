@@ -43,4 +43,6 @@ abstract class RecyclerViewImplementer<T> : AppCompatActivity(), OnClick {
       listener.onBindViewHolder(holder, position)
     }
   }
+
+  override fun onClick(position: Int) {}
 }

@@ -28,7 +28,7 @@ data class Message(
   }
 
   @Dao
-  interface DataAcessObject {
+  interface DataAccessObject {
 
   }
 }

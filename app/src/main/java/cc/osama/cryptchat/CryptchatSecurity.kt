@@ -1,8 +1,6 @@
 package cc.osama.cryptchat
 
 import android.util.Base64
-import android.util.Log
-import android.util.Log.w
 import org.whispersystems.curve25519.Curve25519
 import java.io.ByteArrayOutputStream
 import java.security.MessageDigest
@@ -16,6 +14,23 @@ import kotlin.math.ceil
 class CryptchatSecurity {
   class BadMac : Throwable()
 
+  data class EncryptionOutput(
+    val iv: String,
+    val mac: String,
+    val ciphertext: String,
+    val senderPubEphKey: ECPublicKey?
+  )
+
+  data class DecryptionInput(
+    val iv: String,
+    val mac: String,
+    val ciphertext: String,
+    val senderIdPubKey: ECPublicKey,
+    val senderEphPubKey: ECPublicKey?,
+    val receiverIdKeyPair: ECKeyPair,
+    val receiverEphPriKey: ECPrivateKey?
+  )
+
   companion object {
     fun genKeyPair(): ECKeyPair {
       val keyPair = Curve25519.getInstance(Curve25519.BEST).generateKeyPair()
@@ -24,89 +39,151 @@ class CryptchatSecurity {
       return ECKeyPair(public, private)
     }
   }
+
   fun encrypt(
     message: String,
-    senderIdPriKey: ByteArray,
-    senderEphPriKey: ByteArray,
-    receiverIdPubKey: ByteArray,
-    receiverEphPubKey: ByteArray,
-    senderIdPubKey: ByteArray
-  ): ArrayList<ByteArray> {
-    val ss1 = Curve25519.getInstance(Curve25519.BEST).calculateAgreement(receiverIdPubKey, senderIdPriKey)
-    val ss2 = Curve25519.getInstance(Curve25519.BEST).calculateAgreement(receiverEphPubKey, senderEphPriKey)
+    senderIdKeyPair: ECKeyPair,
+    receiverIdPubKey: ECPublicKey,
+    receiverEphPubKey: ECPublicKey?
+  ) : EncryptionOutput {
+    val ss1 = calculateAgreement(receiverIdPubKey, senderIdKeyPair.privateKey)
     val stream = ByteArrayOutputStream()
     stream.write(ss1)
-    stream.write(ss2)
+    val senderEphKeyPair: ECKeyPair?
+    if (receiverEphPubKey != null) {
+      senderEphKeyPair = genKeyPair()
+      val ss2 = calculateAgreement(receiverEphPubKey, senderEphKeyPair.privateKey)
+      stream.write(ss2)
+    } else {
+      senderEphKeyPair = null
+    }
     val master = stream.toByteArray()
     val salt = ByteArray(32)
     val info = "Cryptchat".toByteArray()
     val prk = extract(salt, master)
     val derived = expand(prk, info, 64)
-    val cipherKey = SecretKeySpec(derived.copyOfRange(0, 32), "AES")
-    val macKey = SecretKeySpec(derived.copyOfRange(32, 32 + 32), "HmacSHA256")
-    val ivByteArray = ByteArray(16)
-    SecureRandom().nextBytes(ivByteArray)
-    val iv = IvParameterSpec(ivByteArray)
-    val cipher = Cipher.getInstance("AES/CBC/PKCS5Padding")
-    cipher.init(Cipher.ENCRYPT_MODE, cipherKey, iv)
-    val cipherBytes = cipher.doFinal(message.toByteArray())
-    val mac = getMac(cipherBytes, macKey, senderIdPubKey, receiverIdPubKey)
-    val list = ArrayList<ByteArray>(3)
-    list.add(mac)
-    list.add(ivByteArray)
-    list.add(cipherBytes)
-    return list
+
+    val cipherKeyBytes = derived.copyOfRange(0, 32)
+    val ivBytes = ByteArray(16)
+    SecureRandom().nextBytes(ivBytes)
+    val cipherBytes = toCiphertextBytes(
+      plaintextBytes = message.toByteArray(),
+      ivBytes = ivBytes,
+      cipherKeyBytes = cipherKeyBytes
+    )
+
+    val macKeyBytes = derived.copyOfRange(32, 64)
+    val mac = getMac(
+      cipherBytes = cipherBytes + ivBytes,
+      macKeyBytes = macKeyBytes,
+      senderIdPubKey = senderIdKeyPair.publicKey,
+      receiverIdPubKey = receiverIdPubKey
+    )
+    return EncryptionOutput(
+      iv = encode(ivBytes),
+      mac = encode(mac),
+      ciphertext = encode(cipherBytes),
+      senderPubEphKey = senderEphKeyPair?.publicKey
+    )
   }
 
-  fun decrypt(
-    cipherList: ArrayList<ByteArray>,
-    senderIdPubKey: ByteArray,
-    senderEphPubKey: ByteArray,
-    receiverIdPriKey: ByteArray,
-    receiverEphPriKey: ByteArray,
-    receiverIdPubKey: ByteArray
-  ): String {
-    val theirMac = cipherList[0]
-    val ivByteArray = cipherList[1]
-    val cipherBytes = cipherList[2]
-    val ss1 = Curve25519.getInstance(Curve25519.BEST).calculateAgreement(senderIdPubKey, receiverIdPriKey)
-    val ss2 = Curve25519.getInstance(Curve25519.BEST).calculateAgreement(senderEphPubKey, receiverEphPriKey)
+  fun decrypt(input: DecryptionInput) : String {
+    val ss1 = calculateAgreement(input.senderIdPubKey, input.receiverIdKeyPair.privateKey)
     val stream = ByteArrayOutputStream()
     stream.write(ss1)
-    stream.write(ss2)
+    if (input.senderEphPubKey != null && input.receiverEphPriKey != null) {
+      val ss2 = calculateAgreement(input.senderEphPubKey, input.receiverEphPriKey)
+      stream.write(ss2)
+    }
     val master = stream.toByteArray()
     val salt = ByteArray(32)
     val info = "Cryptchat".toByteArray()
     val prk = extract(salt, master)
     val derived = expand(prk, info, 64)
-    val cipherKey = SecretKeySpec(derived.copyOfRange(0, 32), "AES")
-    val macKey = SecretKeySpec(derived.copyOfRange(32, 32 + 32), "HmacSHA256")
-    val iv = IvParameterSpec(ivByteArray)
-    val ourMac = getMac(cipherBytes, macKey, senderIdPubKey, receiverIdPubKey)
+
+    val macKeyBytes = derived.copyOfRange(32, 64)
+    val cipherBytes = decode(input.ciphertext)
+    val ivBytes = decode(input.iv)
+    val ourMac = getMac(
+      cipherBytes = cipherBytes + ivBytes,
+      macKeyBytes = macKeyBytes,
+      senderIdPubKey = input.senderIdPubKey,
+      receiverIdPubKey = input.receiverIdKeyPair.publicKey
+    )
+    val theirMac = decode(input.mac)
     if (!MessageDigest.isEqual(ourMac, theirMac)) {
       throw BadMac()
     }
-    val cipher = Cipher.getInstance("AES/CBC/PKCS5Padding")
-    cipher.init(Cipher.DECRYPT_MODE, cipherKey, iv)
-    val plainBytes = cipher.doFinal(cipherBytes)
-    return String(plainBytes)
+
+    val cipherKeyBytes = derived.copyOfRange(0, 32)
+    val plaintextBytes = toPlaintextBytes(
+      ciphertextBytes = cipherBytes,
+      ivBytes = ivBytes,
+      cipherKeyBytes = cipherKeyBytes
+    )
+    return String(plaintextBytes)
   }
 
-  fun getMac(msg: ByteArray, macKey: SecretKeySpec, senderIdPubKey: ByteArray, receiverIdPubKey: ByteArray): ByteArray {
+  private fun encode(bytes: ByteArray) : String {
+    return Base64.encodeToString(bytes, Base64.DEFAULT)
+  }
+
+  private fun decode(string: String) : ByteArray {
+    return Base64.decode(string, Base64.DEFAULT)
+  }
+
+  private fun calculateAgreement(pubKey: ECPublicKey, priKey: ECPrivateKey) : ByteArray {
+    return Curve25519.getInstance(Curve25519.BEST).calculateAgreement(
+      pubKey.toByteArray(),
+      priKey.toByteArray()
+    )
+  }
+
+  private fun getMac(
+    cipherBytes: ByteArray,
+    macKeyBytes: ByteArray,
+    senderIdPubKey: ECPublicKey,
+    receiverIdPubKey: ECPublicKey
+  ) : ByteArray {
+    val macKey = SecretKeySpec(macKeyBytes, "HmacSHA256")
     val mac = Mac.getInstance("HmacSHA256")
     mac.init(macKey)
-    mac.update(senderIdPubKey)
-    mac.update(receiverIdPubKey)
-    return mac.doFinal(msg).copyOfRange(0, 16)
+    mac.update(senderIdPubKey.toByteArray())
+    mac.update(receiverIdPubKey.toByteArray())
+    return mac.doFinal(cipherBytes).copyOfRange(0, 16)
   }
 
-  fun extract(salt: ByteArray, input: ByteArray): ByteArray {
+  private fun toCiphertextBytes(
+    plaintextBytes: ByteArray,
+    ivBytes: ByteArray,
+    cipherKeyBytes: ByteArray
+  ) : ByteArray {
+    val iv = IvParameterSpec(ivBytes)
+    val cipher = Cipher.getInstance("AES/CBC/PKCS5Padding")
+    val cipherKey = SecretKeySpec(cipherKeyBytes, "AES")
+    cipher.init(Cipher.ENCRYPT_MODE, cipherKey, iv)
+    return cipher.doFinal(plaintextBytes)
+  }
+
+  private fun toPlaintextBytes(
+    ciphertextBytes: ByteArray,
+    ivBytes: ByteArray,
+    cipherKeyBytes: ByteArray
+  ) : ByteArray {
+    val iv = IvParameterSpec(ivBytes)
+    val cipher = Cipher.getInstance("AES/CBC/PKCS5Padding")
+    val cipherKey = SecretKeySpec(cipherKeyBytes, "AES")
+    cipher.init(Cipher.DECRYPT_MODE, cipherKey, iv)
+    return cipher.doFinal(cipherKeyBytes)
+  }
+
+  private fun extract(salt: ByteArray, input: ByteArray): ByteArray {
     val mac = Mac.getInstance("HmacSHA256")
     mac.init(SecretKeySpec(salt, "HmacSHA256"))
     return mac.doFinal(input)
   }
 
-  fun expand(prk: ByteArray, info: ByteArray?, size: Int): ByteArray {
+  private fun expand(prk: ByteArray, info: ByteArray?, size: Int): ByteArray {
     val iterations =
       ceil(size.toDouble() / 32.0).toInt()
     var mixin: ByteArray? = ByteArray(0)

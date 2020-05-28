@@ -8,6 +8,8 @@ import android.util.Log.w
 import cc.osama.cryptchat.Cryptchat
 import cc.osama.cryptchat.CryptchatSecurity
 import cc.osama.cryptchat.ECKeyPair
+import cc.osama.cryptchat.ECPublicKey
+import cc.osama.cryptchat.db.Server
 import java.util.*
 
 class AppEntry : AppCompatActivity() {
@@ -60,6 +62,7 @@ class AppEntry : AppCompatActivity() {
       } else {
         intent = Intent(this, ServerUsersList::class.java)
         intent.putExtra("serverId", servers[0].id)
+        intent.putExtra("server", servers[0])
       }
       it.execOnUIThread {
         startActivity(intent)

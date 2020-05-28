@@ -1,8 +1,9 @@
 package cc.osama.cryptchat
 
 import android.util.Base64
+import java.io.Serializable
 
-class ECPublicKey(private val publicKey: ByteArray) {
+class ECPublicKey(private val publicKey: ByteArray) : Serializable {
   constructor(key: String) : this(Base64.decode(key, Base64.DEFAULT))
 
   override fun toString(): String {

@@ -64,20 +64,19 @@ class VerifyPhoneNumber : AppCompatActivity() {
     val db = Cryptchat.db(applicationContext)
     db.asyncExec(
       task = {
-        val server = Server(
+        val server = db.servers().add(Server(
           address = address,
           name = "SErVeR!&#_X",
           userId = userId,
           keyPair = keyPair
-        )
-        val serverId = db.servers().add(server)
-        supplyEphemeralKeys(address, serverId, userId)
-        fetchServerMembers(address, serverId, userId)
+        ))
+        supplyEphemeralKeys(address, server, userId)
+        fetchServerMembers(address, server, userId)
       }
     )
   }
 
-  private fun fetchServerMembers(address: String, serverId: Long, userId: Long) {
+  private fun fetchServerMembers(address: String, server: Server, userId: Long) {
     CryptchatServer(applicationContext, address).get(
       path = "/sync/users.json",
       success = {
@@ -102,7 +101,7 @@ class VerifyPhoneNumber : AppCompatActivity() {
               ) {
                 users.add(
                   User(
-                    serverId = serverId,
+                    serverId = server.id,
                     publicKey = publicKey,
                     lastUpdatedAt = lastUpdatedAt,
                     phoneNumber = phoneNumber,
@@ -119,7 +118,8 @@ class VerifyPhoneNumber : AppCompatActivity() {
             db.users().addMany(users)
           }, after = {
             val intent = Intent(this, ServerUsersList::class.java)
-            intent.putExtra("serverId", serverId)
+            intent.putExtra("serverId", server.id)
+            intent.putExtra("server", server)
             startActivity(intent)
           })
         } else {
@@ -130,13 +130,13 @@ class VerifyPhoneNumber : AppCompatActivity() {
     )
   }
 
-  private fun supplyEphemeralKeys(address: String, serverId: Long, userId: Long) {
+  private fun supplyEphemeralKeys(address: String, server: Server, userId: Long) {
     val ephemeralKeysList = mutableListOf<EphemeralKey>()
     for (i in 1..500) {
       val keyPair = CryptchatSecurity.genKeyPair()
       ephemeralKeysList.add(
         EphemeralKey(
-          serverId = serverId,
+          serverId = server.id,
           publicKey = keyPair.publicKey.toString(),
           privateKey = keyPair.privateKey.toString()
         )

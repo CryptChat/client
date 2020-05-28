@@ -3,8 +3,7 @@ package cc.osama.cryptchat.db
 import androidx.annotation.NonNull
 import androidx.room.*
 import cc.osama.cryptchat.ECKeyPair
-import cc.osama.cryptchat.ECPrivateKey
-import org.whispersystems.curve25519.Curve25519KeyPair
+import java.io.Serializable
 
 @Entity(tableName = "servers")
 data class Server (
@@ -14,7 +13,7 @@ data class Server (
   @NonNull val publicKey: String, // these 2 attributes should be private... but that would cause errors
   @NonNull val privateKey: String,
   var name: String?
-) {
+) : Serializable {
   @Ignore val keyPair = ECKeyPair(publicKey = publicKey, privateKey = privateKey)
 
   constructor(
@@ -35,12 +34,20 @@ data class Server (
   @Dao
   interface DataAccessObject {
     @Insert
-    fun add(server: Server): Long
+    fun addReturningId(server: Server): Long
+
+    fun add(server: Server) : Server {
+      val id = addReturningId(server)
+      return findById(id) as Server
+    }
 
     @Query("SELECT * FROM servers")
     fun getAll(): List<Server>
 
     @Query("SELECT * FROM servers WHERE address = :address LIMIT 1")
     fun findByAddress(address: String): Server?
+
+    @Query("SELECT * FROM servers WHERE id = :id LIMIT 1")
+    fun findById(id: Long): Server?
   }
 }

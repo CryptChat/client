@@ -7,6 +7,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import cc.osama.cryptchat.Cryptchat
 import cc.osama.cryptchat.R
 import cc.osama.cryptchat.RecyclerViewImplementer
+import cc.osama.cryptchat.db.Server
 import cc.osama.cryptchat.db.User
 import kotlinx.android.synthetic.main.activity_server_users_list.*
 import kotlinx.android.synthetic.main.server_users_list_item.view.*
@@ -25,13 +26,12 @@ class ServerUsersList : RecyclerViewImplementer<User>() {
       layoutManager = viewManager
       adapter = viewAdapter
     }
-    val serverId = intent.extras?.get("serverId") as? Long
-    if (serverId != null) {
+    val server = intent.extras?.get("server") as? Server
+    if (server != null) {
       val db = Cryptchat.db(applicationContext)
       db.asyncExec({
-        db.users().findByServerId(serverId).forEach { user ->
+        db.users().findByServerId(server.id).forEach { user ->
           dataset.add(user)
-          // viewAdapter.notifyItemInserted(dataset.size)
         }
       })
     }
@@ -39,10 +39,11 @@ class ServerUsersList : RecyclerViewImplementer<User>() {
 
   override fun onClick(position: Int) {
     val user = dataset[position]
+    val server = intent.extras?.get("server") as? Server
     val intent = Intent(this, ChatView::class.java)
-    intent.putExtra("userId", user.id)
+    intent.putExtra("user", user)
+    intent.putExtra("server", server)
     startActivity(intent)
-    w("SERVER CLICK", "SERVER INFO: name: ${user.name}, serverId: ${user.serverId}, id: ${user.id}, idOnServer: ${user.idOnServer}")
   }
 
   override fun onBindViewHolder(holder: Adapter.ListItemHolder, position: Int) {
