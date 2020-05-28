@@ -3,6 +3,7 @@ package cc.osama.cryptchat
 import android.util.Base64
 import org.whispersystems.curve25519.Curve25519
 import java.io.ByteArrayOutputStream
+import java.lang.Exception
 import java.security.MessageDigest
 import java.security.SecureRandom
 import javax.crypto.Cipher
@@ -12,13 +13,13 @@ import javax.crypto.spec.SecretKeySpec
 import kotlin.math.ceil
 
 class CryptchatSecurity {
-  class BadMac : Throwable()
+  class BadMac(message: String) : Exception(message)
 
   data class EncryptionOutput(
-    val iv: String,
-    val mac: String,
-    val ciphertext: String,
-    val senderPubEphKey: ECPublicKey?
+    var iv: String,
+    var mac: String,
+    var ciphertext: String,
+    val senderEphPubKey: ECPublicKey?
   )
 
   data class DecryptionInput(
@@ -83,7 +84,7 @@ class CryptchatSecurity {
       iv = encode(ivBytes),
       mac = encode(mac),
       ciphertext = encode(cipherBytes),
-      senderPubEphKey = senderEphKeyPair?.publicKey
+      senderEphPubKey = senderEphKeyPair?.publicKey
     )
   }
 
@@ -112,7 +113,7 @@ class CryptchatSecurity {
     )
     val theirMac = decode(input.mac)
     if (!MessageDigest.isEqual(ourMac, theirMac)) {
-      throw BadMac()
+      throw BadMac("BAD MAC")
     }
 
     val cipherKeyBytes = derived.copyOfRange(0, 32)
@@ -174,7 +175,7 @@ class CryptchatSecurity {
     val cipher = Cipher.getInstance("AES/CBC/PKCS5Padding")
     val cipherKey = SecretKeySpec(cipherKeyBytes, "AES")
     cipher.init(Cipher.DECRYPT_MODE, cipherKey, iv)
-    return cipher.doFinal(cipherKeyBytes)
+    return cipher.doFinal(ciphertextBytes)
   }
 
   private fun extract(salt: ByteArray, input: ByteArray): ByteArray {

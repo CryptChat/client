@@ -8,9 +8,6 @@ import android.util.Log.w
 import cc.osama.cryptchat.Cryptchat
 import cc.osama.cryptchat.CryptchatSecurity
 import cc.osama.cryptchat.ECKeyPair
-import cc.osama.cryptchat.ECPublicKey
-import cc.osama.cryptchat.db.Server
-import java.util.*
 
 class AppEntry : AppCompatActivity() {
 
@@ -37,19 +34,20 @@ class AppEntry : AppCompatActivity() {
     val message = "THIS IS VERY SECRET"
     val res = CryptchatSecurity().encrypt(
       message = message,
-      senderIdPubKey = senderIdKeyPair.publicKey.toByteArray(),
-      senderIdPriKey = senderIdKeyPair.privateKey.toByteArray(),
-      senderEphPriKey = senderEphKeyPair.privateKey.toByteArray(),
-      receiverIdPubKey = receiverIdKeyPair.publicKey.toByteArray(),
-      receiverEphPubKey = receiverEphKeyPair.publicKey.toByteArray()
+      senderIdKeyPair = senderIdKeyPair,
+      receiverIdPubKey = receiverIdKeyPair.publicKey,
+      receiverEphPubKey = receiverEphKeyPair.publicKey
     )
     val aft = CryptchatSecurity().decrypt(
-      cipherList = res,
-      senderIdPubKey = senderIdKeyPair.publicKey.toByteArray(),
-      senderEphPubKey = senderEphKeyPair.publicKey.toByteArray(),
-      receiverIdPubKey = receiverIdKeyPair.publicKey.toByteArray(),
-      receiverIdPriKey = receiverIdKeyPair.privateKey.toByteArray(),
-      receiverEphPriKey = receiverEphKeyPair.privateKey.toByteArray()
+      CryptchatSecurity.DecryptionInput(
+        iv = res.iv,
+        mac = res.mac,
+        ciphertext = res.ciphertext,
+        senderIdPubKey = senderIdKeyPair.publicKey,
+        senderEphPubKey = res.senderEphPubKey,
+        receiverIdKeyPair = receiverIdKeyPair,
+        receiverEphPriKey = receiverEphKeyPair.privateKey
+      )
     )
     return
     **/

@@ -18,8 +18,6 @@ class ChatView : RecyclerViewImplementer<String>() {
   override val layout = R.layout.chat_message
   override val viewAdapter = Adapter(dataset, layout, this)
   override val viewManager = LinearLayoutManager(this).also { it.stackFromEnd = true }
-  private val user = intent.extras?.get("user") as? User
-  private val server = intent.extras?.get("server") as? Server
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
@@ -29,6 +27,8 @@ class ChatView : RecyclerViewImplementer<String>() {
       layoutManager = viewManager
       adapter = viewAdapter
     }
+    val user = intent?.extras?.get("user") as? User
+    val server = intent?.extras?.get("server") as? Server
     chatMessageSend.setOnClickListener {
       if (chatMessageInput.text.isNotEmpty() && user != null && server != null) {
         CryptchatServer(applicationContext, server.address).post(
