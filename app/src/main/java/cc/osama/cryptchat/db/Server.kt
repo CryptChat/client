@@ -33,14 +33,6 @@ data class Server (
 
   @Dao
   interface DataAccessObject {
-    @Insert
-    fun addReturningId(server: Server): Long
-
-    fun add(server: Server) : Server {
-      val id = addReturningId(server)
-      return findById(id) as Server
-    }
-
     @Query("SELECT * FROM servers")
     fun getAll(): List<Server>
 
@@ -49,5 +41,14 @@ data class Server (
 
     @Query("SELECT * FROM servers WHERE id = :id LIMIT 1")
     fun findById(id: Long): Server?
+
+    @Insert
+    fun addReturningId(server: Server) : Long
+
+    @Insert
+    fun add(server: Server) : Server {
+      val id = addReturningId(server)
+      return findById(id) as Server
+    }
   }
 }
