@@ -39,5 +39,8 @@ data class Message(
 
     @Update
     fun update(message: Message)
+
+    @Query("SELECT * FROM messages WHERE serverId = :serverId AND userId = :userId ORDER BY createdAt")
+    fun findByServerAndUser(serverId: Long, userId: Long) : List<Message>
   }
 }

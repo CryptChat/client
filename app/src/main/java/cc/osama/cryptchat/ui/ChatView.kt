@@ -22,10 +22,21 @@ class ChatView : RecyclerViewImplementer<String>() {
       layoutManager = viewManager
       adapter = viewAdapter
     }
-    val user = intent?.extras?.get("user") as? User
-    val server = intent?.extras?.get("server") as? Server
+    val user = intent?.extras?.get("user") as User
+    val server = intent?.extras?.get("server") as Server
+    Cryptchat.db(applicationContext).also { db ->
+      db.asyncExec({
+        var size = 0
+        db.messages().findByServerAndUser(serverId = server.id, userId = user.id).forEach { msg ->
+          dataset.add(msg.plaintext)
+        }
+        it.execOnUIThread {
+          viewAdapter.notifyDataSetChanged()
+        }
+      })
+    }
     chatMessageSend.setOnClickListener {
-      if (chatMessageInput.text.isNotEmpty() && user != null && server != null) {
+      if (chatMessageInput.text.isNotEmpty()) {
         val plaintext = chatMessageInput.text.toString()
         val handler = OutgoingMessageHandler(
           plaintext = plaintext,
