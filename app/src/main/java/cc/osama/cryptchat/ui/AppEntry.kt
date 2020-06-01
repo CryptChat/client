@@ -5,14 +5,25 @@ import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Base64
 import android.util.Log.w
+import cc.osama.cryptchat.AsyncExec
 import cc.osama.cryptchat.Cryptchat
 import cc.osama.cryptchat.CryptchatSecurity
 import cc.osama.cryptchat.ECKeyPair
+import com.google.firebase.iid.FirebaseInstanceId
 
 class AppEntry : AppCompatActivity() {
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
+    Cryptchat.db(applicationContext).asyncExec({
+      w("USERRRR CRYPTCHAT", FirebaseInstanceId.getInstance().getToken("530989455642", "FCM"))
+      w("USERRRR SECHAT", FirebaseInstanceId.getInstance().getToken("108521922410", "FCM"))
+    })
+
+    AsyncExec.run({
+
+    })
+    return
     /** val senderIdKeyPair = ECKeyPair(
       "niPLt99JahABLoSBx3vZK7kUWCyrrsF0RcVE9GYl3QY=",
       "qPsfwm+sTovdsv1/LpzYYbHhYQo3/UDs8LltDy72amI="

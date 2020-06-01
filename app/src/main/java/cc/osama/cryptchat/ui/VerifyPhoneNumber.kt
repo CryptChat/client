@@ -10,9 +10,11 @@ import cc.osama.cryptchat.*
 import cc.osama.cryptchat.db.EphemeralKey
 import cc.osama.cryptchat.db.Server
 import cc.osama.cryptchat.db.User
+import com.google.firebase.iid.FirebaseInstanceId
 import kotlinx.android.synthetic.main.activity_verify_phone_number.*
 import org.json.JSONArray
 import org.json.JSONObject
+import java.io.IOException
 
 class VerifyPhoneNumber : AppCompatActivity() {
 
@@ -35,45 +37,55 @@ class VerifyPhoneNumber : AppCompatActivity() {
   private fun submitButtonHandler() {
     val id = intent.extras?.getInt("id")
     val address = intent.extras?.getString("address")
+    val senderId = intent.extras?.getString("senderId")
     val token = verificationCodeField.text.toString()
-    if (id == null || address == null) {
+    if (id == null || address == null || senderId == null) {
       return
     }
-    val param = JSONObject()
-    val keyPair = CryptchatSecurity.genKeyPair()
-    param.put("id", id)
-    param.put("verification_token", token)
-    param.put("identity_key", keyPair.publicKey.toString())
-    CryptchatServer(applicationContext, address).post(
-      path = "/register.json",
-      param = param,
-      success = {
-        val userId = (it["id"] as? Int)?.toLong()
-        if (userId != null) {
-          addServerToDatabase(address, userId, keyPair)
-        }
-        w("USERID", userId.toString())
-      },
-      failure = {
-        w("FAILUUUURE", it.javaClass.toString())
+    AsyncExec.run({
+      val instanceId: String? = try {
+        FirebaseInstanceId.getInstance().getToken(senderId, "FCM")
+      } catch (ex: IOException) {
+        null
       }
-    )
+      val keyPair = CryptchatSecurity.genKeyPair()
+      val param = JSONObject().also { param ->
+        param.put("id", id)
+        param.put("instance_id", instanceId)
+        param.put("identity_key", keyPair.publicKey.toString())
+        param.put("verification_token", token)
+      }
+      CryptchatServer(applicationContext, address).post(
+        path = "/register.json",
+        param = param,
+        success = {
+          val userId = (it["id"] as? Int)?.toLong() ?: (it["id"] as? Long)
+          val secretToken = it["secret_token"] as? String
+          if (userId != null && secretToken != null) {
+            addServerToDatabase(address, userId, keyPair, secretToken)
+          }
+          w("USERID", userId.toString())
+        },
+        failure = {
+          w("FAILUUUURE", it.javaClass.toString())
+        }
+      )
+    })
   }
 
-  private fun addServerToDatabase(address: String, userId: Long, keyPair: ECKeyPair) {
+  private fun addServerToDatabase(address: String, userId: Long, keyPair: ECKeyPair, secretToken: String) {
     val db = Cryptchat.db(applicationContext)
-    db.asyncExec(
-      task = {
-        val server = db.servers().add(Server(
-          address = address,
-          name = "SErVeR!&#_X",
-          userId = userId,
-          keyPair = keyPair
-        ))
-        supplyEphemeralKeys(address, server, userId)
-        fetchServerMembers(address, server, userId)
-      }
-    )
+    db.asyncExec({
+      val server = db.servers().add(Server(
+        address = address,
+        name = "SErVeR!&#_X",
+        userId = userId,
+        keyPair = keyPair,
+        secretToken = secretToken
+      ))
+      supplyEphemeralKeys(address, server, userId)
+      fetchServerMembers(address, server, userId)
+    })
   }
 
   private fun fetchServerMembers(address: String, server: Server, userId: Long) {

@@ -45,10 +45,12 @@ class EnterPhoneNumber : AppCompatActivity() {
         param = param,
         success = {
           val id = it["id"] as? Int
-          if (id != null) {
+          val senderId = it["sender_id"] as? String
+          if (id != null && senderId != null) {
             toggleErrorMessage()
             val intent = Intent(this, VerifyPhoneNumber::class.java)
             intent.putExtra("id", id)
+            intent.putExtra("senderId", senderId)
             intent.putExtra("address", address)
             startActivity(intent)
           } else {
