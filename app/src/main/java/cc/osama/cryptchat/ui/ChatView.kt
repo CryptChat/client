@@ -25,15 +25,15 @@ class ChatView : RecyclerViewImplementer<String>() {
     val user = intent?.extras?.get("user") as User
     val server = intent?.extras?.get("server") as Server
     Cryptchat.db(applicationContext).also { db ->
-      db.asyncExec({
+      AsyncExec.run {
         var size = 0
         db.messages().findByServerAndUser(serverId = server.id, userId = user.id).forEach { msg ->
           dataset.add(msg.plaintext)
         }
-        it.execOnUIThread {
+        it.execMainThread {
           viewAdapter.notifyDataSetChanged()
         }
-      })
+      }
     }
     chatMessageSend.setOnClickListener {
       if (chatMessageInput.text.isNotEmpty()) {

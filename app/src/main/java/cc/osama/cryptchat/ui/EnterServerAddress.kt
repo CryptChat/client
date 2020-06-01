@@ -5,6 +5,7 @@ import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
+import cc.osama.cryptchat.AsyncExec
 import cc.osama.cryptchat.R
 import cc.osama.cryptchat.Cryptchat
 import cc.osama.cryptchat.CryptchatServer
@@ -45,7 +46,7 @@ class EnterServerAddress : AppCompatActivity() {
       validateServer(address,
         onValid = {
           val db = Cryptchat.db(applicationContext)
-          db.asyncExec(
+          AsyncExec.run<Unit>(
             task = {
               val serverDao = db.servers()
               val server = serverDao.findByAddress(address)

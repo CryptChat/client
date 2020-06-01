@@ -4,6 +4,7 @@ import android.content.Intent
 import android.os.Bundle
 import android.util.Log.w
 import androidx.recyclerview.widget.LinearLayoutManager
+import cc.osama.cryptchat.AsyncExec
 import cc.osama.cryptchat.Cryptchat
 import cc.osama.cryptchat.R
 import cc.osama.cryptchat.RecyclerViewImplementer
@@ -29,11 +30,11 @@ class ServerUsersList : RecyclerViewImplementer<User>() {
     val server = intent.extras?.get("server") as? Server
     if (server != null) {
       val db = Cryptchat.db(applicationContext)
-      db.asyncExec({
+      AsyncExec.run {
         db.users().findByServerId(server.id).forEach { user ->
           dataset.add(user)
         }
-      })
+      }
     }
   }
 

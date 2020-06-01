@@ -12,7 +12,8 @@ data class Message(
   val plaintext: String,
   var senderPublicEphemeralKey: String? = null,
   var receiverEphemeralKeyPairId: Long? = null,
-  @NonNull val createdAt: Long
+  @NonNull val createdAt: Long,
+  @NonNull var read: Boolean
 ) {
   companion object {
     val PENDING = 1

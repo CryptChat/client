@@ -3,26 +3,21 @@ package cc.osama.cryptchat.ui
 import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import android.util.Base64
+import android.os.Looper
 import android.util.Log.w
 import cc.osama.cryptchat.AsyncExec
 import cc.osama.cryptchat.Cryptchat
-import cc.osama.cryptchat.CryptchatSecurity
-import cc.osama.cryptchat.ECKeyPair
-import com.google.firebase.iid.FirebaseInstanceId
+import cc.osama.cryptchat.R
+import kotlinx.android.synthetic.main.activity_app_entry.*
 
 class AppEntry : AppCompatActivity() {
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
-    Cryptchat.db(applicationContext).asyncExec({
-      w("USERRRR CRYPTCHAT", FirebaseInstanceId.getInstance().getToken("530989455642", "FCM"))
-      w("USERRRR SECHAT", FirebaseInstanceId.getInstance().getToken("108521922410", "FCM"))
-    })
-
-    AsyncExec.run({
-
-    })
+    // Cryptchat.db(applicationContext).asyncExec({
+      // w("USERRRR CRYPTCHAT", FirebaseInstanceId.getInstance().getToken("530989455642", "FCM"))
+      // w("USERRRR SECHAT", FirebaseInstanceId.getInstance().getToken("108521922410", "FCM"))
+    // })
     return
     /** val senderIdKeyPair = ECKeyPair(
       "niPLt99JahABLoSBx3vZK7kUWCyrrsF0RcVE9GYl3QY=",
@@ -62,21 +57,22 @@ class AppEntry : AppCompatActivity() {
     )
     return
     **/
-    val db = Cryptchat.db(applicationContext)
-    db.asyncExec({
-      val servers = db.servers().getAll()
-      val intent: Intent
-      if (servers.isEmpty()) {
-        intent = Intent(this, EnterServerAddress::class.java)
-      } else {
-        intent = Intent(this, ServerUsersList::class.java)
-        intent.putExtra("serverId", servers[0].id)
-        intent.putExtra("server", servers[0])
+    Cryptchat.db(applicationContext).also { db ->
+      AsyncExec.run {
+        val servers = db.servers().getAll()
+        val intent: Intent
+        if (servers.isEmpty()) {
+          intent = Intent(this, EnterServerAddress::class.java)
+        } else {
+          intent = Intent(this, ServerUsersList::class.java)
+          intent.putExtra("serverId", servers[0].id)
+          intent.putExtra("server", servers[0])
+        }
+        it.execMainThread {
+          startActivity(intent)
+          finish()
+        }
       }
-      it.execOnUIThread {
-        startActivity(intent)
-        finish()
-      }
-    })
+    }
   }
 }

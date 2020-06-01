@@ -42,7 +42,7 @@ class VerifyPhoneNumber : AppCompatActivity() {
     if (id == null || address == null || senderId == null) {
       return
     }
-    AsyncExec.run({
+    AsyncExec.run {
       val instanceId: String? = try {
         FirebaseInstanceId.getInstance().getToken(senderId, "FCM")
       } catch (ex: IOException) {
@@ -60,9 +60,8 @@ class VerifyPhoneNumber : AppCompatActivity() {
         param = param,
         success = {
           val userId = (it["id"] as? Int)?.toLong() ?: (it["id"] as? Long)
-          val secretToken = it["secret_token"] as? String
-          if (userId != null && secretToken != null) {
-            addServerToDatabase(address, userId, keyPair, secretToken)
+          if (userId != null) {
+            addServerToDatabase(address, userId, keyPair, senderId)
           }
           w("USERID", userId.toString())
         },
@@ -70,22 +69,22 @@ class VerifyPhoneNumber : AppCompatActivity() {
           w("FAILUUUURE", it.javaClass.toString())
         }
       )
-    })
+    }
   }
 
-  private fun addServerToDatabase(address: String, userId: Long, keyPair: ECKeyPair, secretToken: String) {
+  private fun addServerToDatabase(address: String, userId: Long, keyPair: ECKeyPair, senderId: String) {
     val db = Cryptchat.db(applicationContext)
-    db.asyncExec({
+    AsyncExec.run {
       val server = db.servers().add(Server(
         address = address,
         name = "SErVeR!&#_X",
         userId = userId,
         keyPair = keyPair,
-        secretToken = secretToken
+        senderId = senderId
       ))
       supplyEphemeralKeys(address, server, userId)
       fetchServerMembers(address, server, userId)
-    })
+    }
   }
 
   private fun fetchServerMembers(address: String, server: Server, userId: Long) {
@@ -126,14 +125,15 @@ class VerifyPhoneNumber : AppCompatActivity() {
             }
           }
           val db = Cryptchat.db(applicationContext)
-          db.asyncExec({
+          AsyncExec.run { runner ->
             db.users().addMany(users)
-          }, after = {
-            val intent = Intent(this, ServerUsersList::class.java)
-            intent.putExtra("serverId", server.id)
-            intent.putExtra("server", server)
-            startActivity(intent)
-          })
+            runner.execMainThread {
+              val intent = Intent(this, ServerUsersList::class.java)
+              intent.putExtra("serverId", server.id)
+              intent.putExtra("server", server)
+              startActivity(intent)
+            }
+          }
         } else {
           w("USERSSS2", it["users"].javaClass.toString())
           w("USERSSS2", it["users"].toString())
@@ -155,7 +155,7 @@ class VerifyPhoneNumber : AppCompatActivity() {
       )
     }
     val db = Cryptchat.db(applicationContext)
-    db.asyncExec({
+    AsyncExec.run {
       val ids = db.ephemeralKeys().addMany(ephemeralKeysList)
       val keysList = db.ephemeralKeys().findByIds(ids)
       val jsonArray = JSONArray()
@@ -172,11 +172,11 @@ class VerifyPhoneNumber : AppCompatActivity() {
         path = "/ephemeral-keys.json",
         param = params,
         failure = {
-          db.asyncExec({
+          AsyncExec.run {
             db.ephemeralKeys().deleteMany(ephemeralKeysList)
-          })
+          }
         }
       )
-    })
+    }
   }
 }

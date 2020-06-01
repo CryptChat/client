@@ -12,7 +12,7 @@ data class Server (
   @NonNull val userId: Long,
   @NonNull val publicKey: String, // these 2 attributes should be private... but that would cause errors
   @NonNull val privateKey: String,
-  @NonNull val secretToken: String,
+  @NonNull val senderId: String,
   var name: String?
 ) : Serializable {
   @Ignore val keyPair = ECKeyPair(publicKey = publicKey, privateKey = privateKey)
@@ -23,7 +23,7 @@ data class Server (
     address: String,
     userId: Long,
     keyPair: ECKeyPair,
-    secretToken: String
+    senderId: String
   ) : this(
     id = id,
     name = name,
@@ -31,7 +31,7 @@ data class Server (
     userId = userId,
     publicKey = keyPair.publicKey.toString(),
     privateKey = keyPair.privateKey.toString(),
-    secretToken = secretToken
+    senderId = senderId
   )
 
   @Dao

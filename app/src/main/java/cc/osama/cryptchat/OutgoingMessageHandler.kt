@@ -18,7 +18,8 @@ class OutgoingMessageHandler(
     userId = user.id,
     status = Message.PENDING,
     plaintext = plaintext,
-    createdAt = System.currentTimeMillis()
+    createdAt = System.currentTimeMillis(),
+    read = true
   )
 
   private class EphPubKeyFromServer(
@@ -30,13 +31,13 @@ class OutgoingMessageHandler(
 
   fun saveToDb(callback: (Message) -> Unit) {
     Cryptchat.db(context).also { db ->
-      db.asyncExec({
+      AsyncExec.run {
         val message = db.messages().add(this.message)
         this.message = message
-        it.execOnUIThread {
+        it.execMainThread {
           callback(message)
         }
-      })
+      }
     }
   }
 
@@ -49,10 +50,10 @@ class OutgoingMessageHandler(
       message.receiverEphemeralKeyPairId = it?.idOnUserDevice
       message.senderPublicEphemeralKey = encryptionOutput.senderEphPubKey?.toString()
       Cryptchat.db(context).also { db ->
-        db.asyncExec({
+        AsyncExec.run {
           db.messages().update(message)
           send(message, encryptionOutput)
-        })
+        }
       }
     }
   }
@@ -74,10 +75,10 @@ class OutgoingMessageHandler(
       param = param,
       success = {
         Cryptchat.db(context).also { db ->
-          db.asyncExec({
+          AsyncExec.run {
             message.status = Message.SENT
             db.messages().update(message)
-          })
+          }
         }
       }
     )
@@ -85,7 +86,7 @@ class OutgoingMessageHandler(
 
   private fun encrypt(ephPubKey: EphPubKeyFromServer?) : CryptchatSecurity.EncryptionOutput {
     return CryptchatSecurity().encrypt(
-      message = message?.plaintext,
+      message = message.plaintext,
       senderIdKeyPair = server.keyPair,
       receiverIdPubKey = user.publicKey,
       receiverEphPubKey = ephPubKey?.key

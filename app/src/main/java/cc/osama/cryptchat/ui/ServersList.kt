@@ -9,6 +9,7 @@ import android.view.ViewGroup
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import cc.osama.cryptchat.AsyncExec
 import cc.osama.cryptchat.Cryptchat
 import cc.osama.cryptchat.CryptchatSecurity
 import cc.osama.cryptchat.R
@@ -69,15 +70,13 @@ class ServersList : AppCompatActivity(), OnServerClick {
       adapter = viewAdapter
     }
     val db = Cryptchat.db(applicationContext)
-    db.asyncExec(
-      task = {
-        db.servers().getAll().forEach {
-          servers.add(it)
-        }
-      },
-      after = {
+    AsyncExec.run { runner ->
+      db.servers().getAll().forEach {
+        servers.add(it)
+      }
+      runner.execMainThread {
         viewAdapter.notifyDataSetChanged()
       }
-    )
+    }
   }
 }
