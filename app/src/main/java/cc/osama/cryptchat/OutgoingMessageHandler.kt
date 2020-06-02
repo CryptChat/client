@@ -19,7 +19,8 @@ class OutgoingMessageHandler(
     status = Message.PENDING,
     plaintext = plaintext,
     createdAt = System.currentTimeMillis(),
-    read = true
+    read = true,
+    idOnServer = null
   )
 
   private class EphPubKeyFromServer(
@@ -45,8 +46,6 @@ class OutgoingMessageHandler(
     val message = this.message ?: return
     fetchReceiverEphemeralPublicKey() {
       val encryptionOutput = encrypt(ephPubKey = it)
-      w("USERRRRR", it?.idOnUserDevice?.toString() ?: "SSSSS")
-      w("USERRRRR", it?.key?.toString() ?: "SSSSS1111")
       message.receiverEphemeralKeyPairId = it?.idOnUserDevice
       message.senderPublicEphemeralKey = encryptionOutput.senderEphPubKey?.toString()
       Cryptchat.db(context).also { db ->
@@ -73,10 +72,12 @@ class OutgoingMessageHandler(
     CryptchatServer(context, server.address).post(
       path = "/message.json",
       param = param,
-      success = {
+      success = { json ->
+        val idOnServer = CryptchatUtils.toLong((json["message"] as? JSONObject)?.get("id"))
         Cryptchat.db(context).also { db ->
           AsyncExec.run {
             message.status = Message.SENT
+            message.idOnServer = idOnServer
             db.messages().update(message)
           }
         }

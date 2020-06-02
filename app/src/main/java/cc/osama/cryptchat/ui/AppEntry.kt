@@ -5,9 +5,12 @@ import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.os.Looper
 import android.util.Log.w
+import androidx.work.OneTimeWorkRequestBuilder
+import androidx.work.WorkManager
 import cc.osama.cryptchat.AsyncExec
 import cc.osama.cryptchat.Cryptchat
 import cc.osama.cryptchat.R
+import cc.osama.cryptchat.worker.SyncMessagesWorker
 import kotlinx.android.synthetic.main.activity_app_entry.*
 
 class AppEntry : AppCompatActivity() {
@@ -18,6 +21,10 @@ class AppEntry : AppCompatActivity() {
       // w("USERRRR CRYPTCHAT", FirebaseInstanceId.getInstance().getToken("530989455642", "FCM"))
       // w("USERRRR SECHAT", FirebaseInstanceId.getInstance().getToken("108521922410", "FCM"))
     // })
+
+    val syncMessagesRequest = OneTimeWorkRequestBuilder<SyncMessagesWorker>()
+      .build()
+    WorkManager.getInstance(applicationContext).enqueue(syncMessagesRequest)
     return
     /** val senderIdKeyPair = ECKeyPair(
       "niPLt99JahABLoSBx3vZK7kUWCyrrsF0RcVE9GYl3QY=",

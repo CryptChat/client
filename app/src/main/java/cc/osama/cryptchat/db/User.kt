@@ -13,7 +13,7 @@ data class User(
   @NonNull val countryCode: String,
   @NonNull val phoneNumber: String,
   @NonNull val identityKey: String, // ideally this should be private...
-  @NonNull val lastUpdatedAt: Double,
+  @NonNull val lastUpdatedAt: Long,
   val name: String? = null
 ) : Serializable {
   @Ignore val publicKey = ECPublicKey(identityKey)
@@ -25,7 +25,7 @@ data class User(
     countryCode: String,
     phoneNumber: String,
     publicKey: ECPublicKey,
-    lastUpdatedAt: Double,
+    lastUpdatedAt: Long,
     name: String? = null
   ) : this(
     id = id,

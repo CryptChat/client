@@ -9,6 +9,7 @@ data class Message(
   @NonNull val serverId: Long,
   @NonNull val userId: Long,
   @NonNull var status: Int,
+  var idOnServer: Long?,
   val plaintext: String,
   var senderPublicEphemeralKey: String? = null,
   var receiverEphemeralKeyPairId: Long? = null,
@@ -16,12 +17,12 @@ data class Message(
   @NonNull var read: Boolean
 ) {
   companion object {
-    val PENDING = 1
-    val SENT = 2
+    const val PENDING = 1
+    const val SENT = 2
 
-    val RECEIVED = 100
-    val DECRYPTION_FAILED = 101
-    val BAD_MAC = 102
+    const val RECEIVED = 100
+    const val DECRYPTION_FAILED = 101
+    const val BAD_MAC = 102
   }
 
   @Dao
@@ -43,5 +44,8 @@ data class Message(
 
     @Query("SELECT * FROM messages WHERE serverId = :serverId AND userId = :userId ORDER BY createdAt")
     fun findByServerAndUser(serverId: Long, userId: Long) : List<Message>
+
+    @Query("SELECT MAX(idOnServer) FROM messages WHERE serverId = :serverId AND status >= $RECEIVED")
+    fun findNewestReceivedMessageFromServer(serverId: Long) : Long?
   }
 }

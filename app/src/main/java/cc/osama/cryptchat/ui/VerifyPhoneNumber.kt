@@ -101,7 +101,7 @@ class VerifyPhoneNumber : AppCompatActivity() {
               val countryCode = userJson["country_code"] as? String
               val phoneNumber = userJson["phone_number"] as? String
               val idOnServer = CryptchatUtils.toLong(userJson["id"])
-              val lastUpdatedAt = userJson["updated_at"] as? Double
+              val lastUpdatedAt = CryptchatUtils.toLong(userJson["updated_at"])
               val name = userJson["name"] as? String
               if (publicKey != null &&
                 countryCode != null &&

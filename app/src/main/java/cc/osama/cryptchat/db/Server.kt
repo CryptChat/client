@@ -9,7 +9,7 @@ import java.io.Serializable
 data class Server (
   @PrimaryKey(autoGenerate = true) val id: Long = 0,
   @NonNull val address: String,
-  @NonNull val userId: Long,
+  @NonNull val userId: Long, // user id on the server's database
   @NonNull val publicKey: String, // these 2 attributes should be private... but that would cause errors
   @NonNull val privateKey: String,
   @NonNull val senderId: String,
