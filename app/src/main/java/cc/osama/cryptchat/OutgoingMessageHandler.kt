@@ -107,8 +107,8 @@ class OutgoingMessageHandler(
   private fun extractEphKeyFromJson(json: JSONObject) : EphPubKeyFromServer? {
     val keyJson = json["ephemeral_key"] as? JSONObject ?: return null
     val stringKey = keyJson["key"] as? String
-    val idOnUserDevice = castToLong(keyJson["id_on_user_device"])
-    val idOnServer = castToLong(keyJson["id"])
+    val idOnUserDevice = CryptchatUtils.toLong(keyJson["id_on_user_device"])
+    val idOnServer = CryptchatUtils.toLong(keyJson["id"])
     return if (stringKey != null && idOnUserDevice != null && idOnServer != null) {
       EphPubKeyFromServer(
         stringKey = stringKey,
@@ -118,9 +118,5 @@ class OutgoingMessageHandler(
     } else {
       null
     }
-  }
-
-  private fun castToLong(value: Any) : Long? {
-    return (value as? Int)?.toLong() ?: value as? Long
   }
 }

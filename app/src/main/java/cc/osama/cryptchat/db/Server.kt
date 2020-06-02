@@ -42,6 +42,9 @@ data class Server (
     @Query("SELECT * FROM servers WHERE address = :address LIMIT 1")
     fun findByAddress(address: String): Server?
 
+    @Query("SELECT * FROM servers WHERE senderId = :senderId LIMIT 1")
+    fun findBySenderId(senderId: String): Server?
+
     @Query("SELECT * FROM servers WHERE id = :id LIMIT 1")
     fun findById(id: Long): Server?
 

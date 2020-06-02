@@ -8,10 +8,13 @@ import org.json.JSONObject
 class CryptchatFirebaseMessagingService : FirebaseMessagingService() {
   override fun onMessageReceived(message: RemoteMessage) {
     super.onMessageReceived(message)
-    val msg = message.data["message"]
-    if (msg != null) {
+    val senderUserId = CryptchatUtils.toLong(message.data["sender_id"]) ?: return
+    val from = message.from ?: return
+    val server = Cryptchat.db(applicationContext).servers().findBySenderId(from) ?: return
+
+    /* if (msg != null) {
       Cryptchat?.currentChatView?.addToMessagesAndNotify(msg)
-    }
+    } */
     d("TOKEN", "MESSAGE RECEIVED ${message.from} dsadasd")
   }
 }

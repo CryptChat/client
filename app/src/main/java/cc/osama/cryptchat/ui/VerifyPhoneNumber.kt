@@ -59,7 +59,7 @@ class VerifyPhoneNumber : AppCompatActivity() {
         path = "/register.json",
         param = param,
         success = {
-          val userId = (it["id"] as? Int)?.toLong() ?: (it["id"] as? Long)
+          val userId = CryptchatUtils.toLong(it["id"])
           if (userId != null) {
             addServerToDatabase(address, userId, keyPair, senderId)
           }
@@ -100,7 +100,7 @@ class VerifyPhoneNumber : AppCompatActivity() {
               val publicKey = if (userJson["identity_key"] as? String != null) ECPublicKey(userJson["identity_key"] as String) else null
               val countryCode = userJson["country_code"] as? String
               val phoneNumber = userJson["phone_number"] as? String
-              val idOnServer = (userJson["id"] as? Int)?.toLong() ?: userJson["id"] as? Long
+              val idOnServer = CryptchatUtils.toLong(userJson["id"])
               val lastUpdatedAt = userJson["updated_at"] as? Double
               val name = userJson["name"] as? String
               if (publicKey != null &&
