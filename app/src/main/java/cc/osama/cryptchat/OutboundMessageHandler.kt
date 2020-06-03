@@ -7,7 +7,7 @@ import cc.osama.cryptchat.db.Server
 import cc.osama.cryptchat.db.User
 import org.json.JSONObject
 
-class OutgoingMessageHandler(
+class OutboundMessageHandler(
   plaintext: String,
   private val user: User,
   private val server: Server,

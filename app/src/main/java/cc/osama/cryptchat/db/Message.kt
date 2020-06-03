@@ -2,6 +2,7 @@ package cc.osama.cryptchat.db
 
 import androidx.annotation.NonNull
 import androidx.room.*
+import cc.osama.cryptchat.ECKeyPair
 
 @Entity(tableName = "messages")
 data class Message(
@@ -10,7 +11,7 @@ data class Message(
   @NonNull val userId: Long,
   @NonNull var status: Int,
   var idOnServer: Long?,
-  val plaintext: String,
+  var plaintext: String,
   var senderPublicEphemeralKey: String? = null,
   var receiverEphemeralKeyPairId: Long? = null,
   @NonNull val createdAt: Long,
@@ -20,9 +21,10 @@ data class Message(
     const val PENDING = 1
     const val SENT = 2
 
-    const val RECEIVED = 100
-    const val DECRYPTION_FAILED = 101
-    const val BAD_MAC = 102
+    const val UNDECRYPTED = 100
+    const val DECRYPTED = 101
+    const val DECRYPTION_FAILED = 102
+    const val BAD_MAC = 103
   }
 
   @Dao
@@ -45,7 +47,10 @@ data class Message(
     @Query("SELECT * FROM messages WHERE serverId = :serverId AND userId = :userId ORDER BY createdAt")
     fun findByServerAndUser(serverId: Long, userId: Long) : List<Message>
 
-    @Query("SELECT MAX(idOnServer) FROM messages WHERE serverId = :serverId AND status >= $RECEIVED")
+    @Query("SELECT MAX(idOnServer) FROM messages WHERE serverId = :serverId AND status >= $UNDECRYPTED")
     fun findNewestReceivedMessageFromServer(serverId: Long) : Long?
+
+    @Query("SELECT 1 FROM messages WHERE serverId = :serverId AND idOnServer = :idOnServer")
+    fun checkMessageExists(serverId: Long, idOnServer: Long) : Boolean
   }
 }

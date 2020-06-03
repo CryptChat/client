@@ -1,7 +1,6 @@
 package cc.osama.cryptchat
 
 import android.util.Base64
-import org.json.JSONObject
 import org.whispersystems.curve25519.Curve25519
 import java.io.ByteArrayOutputStream
 import java.lang.Exception

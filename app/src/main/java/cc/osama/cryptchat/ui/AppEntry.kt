@@ -10,22 +10,31 @@ import androidx.work.WorkManager
 import cc.osama.cryptchat.AsyncExec
 import cc.osama.cryptchat.Cryptchat
 import cc.osama.cryptchat.R
+import cc.osama.cryptchat.db.Message
 import cc.osama.cryptchat.worker.SyncMessagesWorker
+import cc.osama.cryptchat.worker.SyncUsersWorker
 import kotlinx.android.synthetic.main.activity_app_entry.*
 
 class AppEntry : AppCompatActivity() {
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
+    AsyncExec.run {
+      Cryptchat.db(applicationContext).also { db ->
+        db.servers().getAll().forEach { server ->
+          SyncUsersWorker.enqueue(
+            serverId = server.id,
+            scheduleMessagesSync = false,
+            context = applicationContext
+          )
+        }
+      }
+    }
     // Cryptchat.db(applicationContext).asyncExec({
       // w("USERRRR CRYPTCHAT", FirebaseInstanceId.getInstance().getToken("530989455642", "FCM"))
       // w("USERRRR SECHAT", FirebaseInstanceId.getInstance().getToken("108521922410", "FCM"))
     // })
 
-    val syncMessagesRequest = OneTimeWorkRequestBuilder<SyncMessagesWorker>()
-      .build()
-    WorkManager.getInstance(applicationContext).enqueue(syncMessagesRequest)
-    return
     /** val senderIdKeyPair = ECKeyPair(
       "niPLt99JahABLoSBx3vZK7kUWCyrrsF0RcVE9GYl3QY=",
       "qPsfwm+sTovdsv1/LpzYYbHhYQo3/UDs8LltDy72amI="

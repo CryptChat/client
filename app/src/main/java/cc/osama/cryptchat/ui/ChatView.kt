@@ -38,7 +38,7 @@ class ChatView : RecyclerViewImplementer<String>() {
     chatMessageSend.setOnClickListener {
       if (chatMessageInput.text.isNotEmpty()) {
         val plaintext = chatMessageInput.text.toString()
-        val handler = OutgoingMessageHandler(
+        val handler = OutboundMessageHandler(
           plaintext = plaintext,
           server = server,
           user = user,

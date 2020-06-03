@@ -48,5 +48,8 @@ data class User(
 
     @Query("SELECT * FROM users WHERE serverId = :serverId")
     fun findByServerId(serverId: Long): List<User>
+
+    @Query("SELECT * FROM users WHERE serverId = :serverId AND idOnServer = :idOnServer LIMIT 1")
+    fun findUserByServerIdAndIdOnServer(serverId: Long, idOnServer: Long): User?
   }
 }
