@@ -25,6 +25,8 @@ data class Message(
     const val DECRYPTED = 101
     const val DECRYPTION_FAILED = 102
     const val BAD_MAC = 103
+    const val DELETED_EPHEMERAL_KEYPAIR = 104
+    const val INCONSISTENT_STATE = 105
   }
 
   @Dao

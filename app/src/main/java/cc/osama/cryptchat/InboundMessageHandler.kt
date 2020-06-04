@@ -1,7 +1,6 @@
 package cc.osama.cryptchat
 
 import android.content.Context
-import android.util.Log
 import cc.osama.cryptchat.db.EphemeralKey
 import cc.osama.cryptchat.db.Message
 import cc.osama.cryptchat.db.Server
@@ -14,7 +13,6 @@ class InboundMessageHandler(
   private val context: Context
 ) {
   class UserNotFound() : Exception()
-  class InconsistentDecryptionData() : Exception()
 
   fun process() {
     val db = Cryptchat.db(context)
@@ -32,32 +30,40 @@ class InboundMessageHandler(
     val senderUser = db.users().findUserByServerIdAndIdOnServer(serverId = server.id, idOnServer = senderIdOnServer)
       ?: throw UserNotFound()
 
-    if ((senderEphPubKeyString == null && receiverEphKeyPairId != null) ||
-      (senderEphPubKeyString != null && receiverEphKeyPairId == null)) {
-      // if one is present and the other is null
-      return
-    }
-    var receiverEphKeyPair: EphemeralKey? = null
-    if (receiverEphKeyPairId != null) {
-      val receiverEphKeyPair = db.ephemeralKeys().findById(receiverEphKeyPairId) ?: return // TODO: handle this differently if somehow eph key is deleted?
-    }
     var status = Message.DECRYPTED
     var plaintext = ""
+    var receiverEphKeyPair: EphemeralKey? = null
+    var attemptDecryption = true
     try {
+      if ((senderEphPubKeyString == null && receiverEphKeyPairId != null) ||
+        (senderEphPubKeyString != null && receiverEphKeyPairId == null)) {
+        // if one is present and the other is null
+        status = Message.INCONSISTENT_STATE
+        attemptDecryption = false
+      }
+      if (receiverEphKeyPairId != null) {
+        receiverEphKeyPair = db.ephemeralKeys().findById(receiverEphKeyPairId)
+        if (receiverEphKeyPair == null) {
+          status = Message.DELETED_EPHEMERAL_KEYPAIR
+          attemptDecryption = false
+        }
+      }
       var senderEphPubKey: ECPublicKey? = null
-      if (senderEphPubKeyString != null) {
+      if (senderEphPubKeyString != null && attemptDecryption) {
         senderEphPubKey = ECPublicKey(senderEphPubKeyString)
       }
-      val decryptionInput = CryptchatSecurity.DecryptionInput(
-        iv = iv,
-        mac = mac,
-        ciphertext = body,
-        senderIdPubKey = senderUser.publicKey,
-        senderEphPubKey = senderEphPubKey,
-        receiverIdKeyPair = server.keyPair,
-        receiverEphPriKey = receiverEphKeyPair?.keyPair?.privateKey
-      )
-      plaintext = CryptchatSecurity().decrypt(decryptionInput)
+      if (attemptDecryption) {
+        val decryptionInput = CryptchatSecurity.DecryptionInput(
+          iv = iv,
+          mac = mac,
+          ciphertext = body,
+          senderIdPubKey = senderUser.publicKey,
+          senderEphPubKey = senderEphPubKey,
+          receiverIdKeyPair = server.keyPair,
+          receiverEphPriKey = receiverEphKeyPair?.keyPair?.privateKey
+        )
+        plaintext = CryptchatSecurity().decrypt(decryptionInput)
+      }
     } catch (ex: CryptchatSecurity.BadMac) {
       status = Message.BAD_MAC
       plaintext = "BAD MAC"
