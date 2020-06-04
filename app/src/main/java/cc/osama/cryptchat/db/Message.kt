@@ -1,6 +1,7 @@
 package cc.osama.cryptchat.db
 
 import androidx.annotation.NonNull
+import androidx.lifecycle.LiveData
 import androidx.room.*
 import cc.osama.cryptchat.ECKeyPair
 
@@ -45,6 +46,9 @@ data class Message(
 
     @Update
     fun update(message: Message)
+
+    @Query("SELECT * FROM messages WHERE serverId = :serverId AND userId = :userId AND id > :lastId ORDER BY createdAt")
+    fun findByServerAndUserLive(serverId: Long, userId: Long, lastId: Long) : LiveData<List<Message>>
 
     @Query("SELECT * FROM messages WHERE serverId = :serverId AND userId = :userId ORDER BY createdAt")
     fun findByServerAndUser(serverId: Long, userId: Long) : List<Message>

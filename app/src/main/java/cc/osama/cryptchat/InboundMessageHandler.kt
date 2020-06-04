@@ -28,7 +28,7 @@ class InboundMessageHandler(
     val senderEphPubKeyString = data["sender_ephemeral_public_key"] as? String
     val receiverEphKeyPairId = CryptchatUtils.toLong(data["ephemeral_key_id_on_user_device"])
     val senderUser = db.users().findUserByServerIdAndIdOnServer(serverId = server.id, idOnServer = senderIdOnServer)
-      ?: throw UserNotFound()
+      ?: throw UserNotFound() // TODO: add safety guards to ensure we remember not found IDs and not fail for them again
 
     var status = Message.DECRYPTED
     var plaintext = ""
