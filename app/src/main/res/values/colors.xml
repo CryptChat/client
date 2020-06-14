@@ -3,4 +3,19 @@
     <color name="colorPrimary">#008577</color>
     <color name="colorPrimaryDark">#00574B</color>
     <color name="colorAccent">#D81B60</color>
+    <color name="colorBlack">#000000</color>
+    <color name="colorDarkBlue">#14213D</color>
+    <color name="colorOrange">#FCA311</color>
+    <color name="colorGrey">#E5E5E5</color>
+    <color name="colorWhite">#FFFFFF</color>
+    <!--color name="cryptchatPrimary">#293241</color>
+    <color name="cryptchatSecondary">#E0FBFC</color>
+    <color name="cryptchatTertiary">#EE6C4D</color>
+    <color name="cryptchatQuaternary">#98C1D9</color>
+    <color name="cryptchatHeader">#3D5A80</color-->
+    <color name="cryptchatPrimary">#00B4D8</color>
+    <color name="cryptchatSecondary">#E0FBFC</color>
+    <color name="cryptchatTertiary">#EE6C4D</color>
+    <color name="cryptchatQuaternary">#98C1D9</color>
+    <color name="cryptchatHeader">#3D5A80</color>
 </resources>

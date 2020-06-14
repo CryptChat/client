@@ -30,7 +30,7 @@ class OutboundMessageHandler(
     val idOnUserDevice: Long
   )
 
-  fun saveToDb(callback: (Message) -> Unit) {
+  fun saveToDb(callback: (Message) -> Unit = {}) {
     Cryptchat.db(context).also { db ->
       AsyncExec.run {
         val message = db.messages().add(this.message)

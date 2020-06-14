@@ -1,6 +1,6 @@
 package cc.osama.cryptchat
 
-import android.util.Log
+import android.util.Log.w
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -11,11 +11,12 @@ import androidx.recyclerview.widget.RecyclerView
 interface OnClick {
   fun onClick(position: Int)
   fun onBindViewHolder(holder: RecyclerViewImplementer.Adapter.ListItemHolder, position: Int)
+  fun getItemViewType(position: Int) : Int
 }
 
 abstract class RecyclerViewImplementer<T> : AppCompatActivity(), OnClick {
   abstract val dataset: ArrayList<T>
-  abstract val layout: Int
+  abstract val defaultLayout: Int
   abstract val viewAdapter: Adapter<T>
   abstract val viewManager: LinearLayoutManager
 
@@ -33,8 +34,12 @@ abstract class RecyclerViewImplementer<T> : AppCompatActivity(), OnClick {
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ListItemHolder {
-      val view = LayoutInflater.from(parent.context).inflate(layout, parent, false)
+      val view = LayoutInflater.from(parent.context).inflate(viewType, parent, false)
       return ListItemHolder(view, listener)
+    }
+
+    override fun getItemViewType(position: Int): Int {
+      return listener.getItemViewType(position)
     }
 
     override fun getItemCount() = dataset.size
@@ -45,4 +50,7 @@ abstract class RecyclerViewImplementer<T> : AppCompatActivity(), OnClick {
   }
 
   override fun onClick(position: Int) {}
+  override fun getItemViewType(position: Int) : Int {
+    return defaultLayout
+  }
 }

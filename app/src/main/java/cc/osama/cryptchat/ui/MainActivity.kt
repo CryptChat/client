@@ -1,29 +1,19 @@
 package cc.osama.cryptchat.ui
 
-import android.content.Context
-import android.content.Intent
 import android.os.Bundle
-import android.security.keystore.KeyProperties
-import android.view.ViewGroup
-import android.widget.TextView
-import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
-import androidx.recyclerview.widget.RecyclerView
 import cc.osama.cryptchat.R
 import cc.osama.cryptchat.Cryptchat
-import cc.osama.cryptchat.CryptchatServer
 import cc.osama.cryptchat.RecyclerViewImplementer
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.server_users_list_item.view.*
-import org.json.JSONArray
 import org.json.JSONObject
-import java.security.KeyPairGenerator
 
 
 class MainActivity : RecyclerViewImplementer<String>() {
   override val dataset = ArrayList<String>()
-  override val layout = R.layout.server_users_list_item
-  override val viewAdapter = Adapter(dataset, layout, this)
+  override val defaultLayout = R.layout.server_users_list_item
+  override val viewAdapter = Adapter(dataset, defaultLayout, this)
   override val viewManager = LinearLayoutManager(this).also {
     it.stackFromEnd = true
   }

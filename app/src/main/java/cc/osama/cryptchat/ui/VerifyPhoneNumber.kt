@@ -9,7 +9,7 @@ import android.util.Log.w
 import cc.osama.cryptchat.*
 import cc.osama.cryptchat.db.EphemeralKey
 import cc.osama.cryptchat.db.Server
-import cc.osama.cryptchat.db.User
+import cc.osama.cryptchat.worker.SyncUsersWorker
 import com.google.firebase.iid.FirebaseInstanceId
 import kotlinx.android.synthetic.main.activity_verify_phone_number.*
 import org.json.JSONArray
@@ -29,7 +29,6 @@ class VerifyPhoneNumber : AppCompatActivity() {
       }
     })
     verificationCodeSubmit.setOnClickListener {
-      // fetchServerMembers("http://172.18.170.181:3000", 1, 2)
       submitButtonHandler()
     }
   }
@@ -83,63 +82,11 @@ class VerifyPhoneNumber : AppCompatActivity() {
         senderId = senderId
       ))
       supplyEphemeralKeys(address, server, userId)
-      fetchServerMembers(address, server, userId)
-    }
-  }
-
-  private fun fetchServerMembers(address: String, server: Server, userId: Long) {
-    CryptchatServer(applicationContext, address).get(
-      path = "/sync/users.json",
-      success = {
-        val usersJsonArray = it["users"] as? JSONArray
-        if (usersJsonArray != null) {
-          val users = mutableListOf<User>()
-          for (i in 0 until usersJsonArray.length()) {
-            val userJson = usersJsonArray[i] as? JSONObject
-            if (userJson != null) {
-              val publicKey = if (userJson["identity_key"] as? String != null) ECPublicKey(userJson["identity_key"] as String) else null
-              val countryCode = userJson["country_code"] as? String
-              val phoneNumber = userJson["phone_number"] as? String
-              val idOnServer = CryptchatUtils.toLong(userJson["id"])
-              val lastUpdatedAt = CryptchatUtils.toLong(userJson["updated_at"])
-              val name = userJson["name"] as? String
-              if (publicKey != null &&
-                countryCode != null &&
-                phoneNumber != null &&
-                idOnServer != null &&
-                idOnServer != userId &&
-                lastUpdatedAt != null
-              ) {
-                users.add(
-                  User(
-                    serverId = server.id,
-                    publicKey = publicKey,
-                    lastUpdatedAt = lastUpdatedAt,
-                    phoneNumber = phoneNumber,
-                    countryCode = countryCode,
-                    idOnServer = idOnServer,
-                    name = name
-                  )
-                )
-              }
-            }
-          }
-          val db = Cryptchat.db(applicationContext)
-          AsyncExec.run { runner ->
-            db.users().addMany(users)
-            runner.execMainThread {
-              val intent = Intent(this, ServerUsersList::class.java)
-              intent.putExtra("serverId", server.id)
-              intent.putExtra("server", server)
-              startActivity(intent)
-            }
-          }
-        } else {
-          w("USERSSS2", it["users"].javaClass.toString())
-          w("USERSSS2", it["users"].toString())
-        }
+      SyncUsersWorker.enqueue(serverId = server.id, context = applicationContext)
+      it.execMainThread {
+        startActivity(ServerUsersList.createIntent(server, applicationContext))
       }
-    )
+    }
   }
 
   private fun supplyEphemeralKeys(address: String, server: Server, userId: Long) {

@@ -57,7 +57,7 @@ class SyncMessagesWorker(context: Context, params: WorkerParameters) : Worker(co
           }
         },
         failure = {
-          Log.d("TOKEN", "MESSAGES SYNC HIT API POINT FAILURE")
+          Log.d("TOKEN", "MESSAGES SYNC HIT API POINT FAILURE ${it}")
         }
       )
     }

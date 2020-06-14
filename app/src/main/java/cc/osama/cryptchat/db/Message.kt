@@ -50,13 +50,13 @@ data class Message(
     @Query("SELECT * FROM messages WHERE serverId = :serverId AND userId = :userId AND id > :lastId ORDER BY createdAt")
     fun findByServerAndUserLive(serverId: Long, userId: Long, lastId: Long) : LiveData<List<Message>>
 
-    @Query("SELECT * FROM messages WHERE serverId = :serverId AND userId = :userId ORDER BY createdAt")
-    fun findByServerAndUser(serverId: Long, userId: Long) : List<Message>
-
     @Query("SELECT MAX(idOnServer) FROM messages WHERE serverId = :serverId AND status >= $UNDECRYPTED")
     fun findNewestReceivedMessageFromServer(serverId: Long) : Long?
 
     @Query("SELECT 1 FROM messages WHERE serverId = :serverId AND idOnServer = :idOnServer")
     fun checkMessageExists(serverId: Long, idOnServer: Long) : Boolean
+
+    @Query("UPDATE messages SET read = 1 WHERE serverId = :serverId AND userId = :userId")
+    fun setMessagesReadByServerAndUser(serverId: Long, userId: Long)
   }
 }

@@ -9,7 +9,7 @@ import org.json.JSONObject
 
 class SyncUsersWorker(context: Context, params: WorkerParameters) : Worker(context, params) {
   companion object {
-    fun enqueue(serverId: Long, scheduleMessagesSync: Boolean, context: Context) {
+    fun enqueue(serverId: Long, scheduleMessagesSync: Boolean = false, context: Context) {
       val workerArgs = Data.Builder().also { data ->
         data.putLong("serverId", serverId)
         data.putBoolean("scheduleMessagesSync", scheduleMessagesSync)
@@ -27,10 +27,10 @@ class SyncUsersWorker(context: Context, params: WorkerParameters) : Worker(conte
     val db = Cryptchat.db(applicationContext)
     val server = db.servers().findById(serverId) ?: return Result.success()
 
-    CryptchatServer(applicationContext, server.address).get(
+    CryptchatServer(applicationContext, server.address).post(
       path = "/sync/users.json",
       success = {
-        val usersJsonArray = it["users"] as? JSONArray ?: return@get
+        val usersJsonArray = it["users"] as? JSONArray ?: return@post
         val users = mutableListOf<User>()
         AsyncExec.run {
           for (i in 0 until usersJsonArray.length()) {

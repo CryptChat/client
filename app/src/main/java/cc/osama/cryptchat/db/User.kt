@@ -18,6 +18,13 @@ data class User(
 ) : Serializable {
   @Ignore val publicKey = ECPublicKey(identityKey)
 
+  data class Conversation(
+    val lastMessage: String?,
+    val lastMessageDate: Long?,
+    val unreadCount: Int,
+    @Embedded val user: User
+  )
+
   constructor(
     id: Long = 0,
     serverId: Long,
@@ -51,5 +58,8 @@ data class User(
 
     @Query("SELECT * FROM users WHERE serverId = :serverId AND idOnServer = :idOnServer LIMIT 1")
     fun findUserByServerIdAndIdOnServer(serverId: Long, idOnServer: Long): User?
+
+    @Query("SELECT u.*, m.plaintext AS lastMessage, m.lastMessageDate AS lastMessageDate, COALESCE(c.unreadCount, 0) AS unreadCount FROM users u LEFT JOIN (SELECT MAX(createdAt) AS lastMessageDate, userId, plaintext FROM messages WHERE serverId = :serverId GROUP BY userId) m ON m.userId = u.id LEFT JOIN (SELECT COUNT(*) AS unreadCount, userId FROM messages WHERE serverId = :serverId AND read = 0 GROUP BY userId) c ON c.userId = u.id WHERE serverId = :serverId ORDER BY lastMessageDate DESC")
+    fun findConversationsOnServer(serverId: Long) : List<Conversation>
   }
 }
