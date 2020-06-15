@@ -1,11 +1,14 @@
 package cc.osama.cryptchat.ui
 
+import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
+import android.content.IntentFilter
 import android.os.Bundle
 import android.text.format.DateUtils
 import android.util.Log.w
 import android.view.View
+import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import androidx.recyclerview.widget.LinearLayoutManager
 import cc.osama.cryptchat.AsyncExec
 import cc.osama.cryptchat.Cryptchat
@@ -25,12 +28,21 @@ class ServerUsersList : RecyclerViewImplementer<User.Conversation>() {
   override val viewAdapter = Adapter(dataset, defaultLayout, this)
   override val viewManager = LinearLayoutManager(this)
 
+  private val receiver = object : BroadcastReceiver() {
+    override fun onReceive(context: Context?, intent: Intent?) {
+      if (intent?.extras?.get("command") == REFRESH_COMMAND) {
+        refreshConversations()
+      }
+    }
+  }
+
   companion object {
     fun createIntent(server: Server, context: Context) : Intent {
       return Intent(context, ServerUsersList::class.java).also {
         it.putExtra("server", server)
       }
     }
+    const val REFRESH_COMMAND = "REFRESH_CONVERSATIONS_LIST"
   }
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
@@ -40,12 +52,27 @@ class ServerUsersList : RecyclerViewImplementer<User.Conversation>() {
       layoutManager = viewManager
       adapter = viewAdapter
     }
+  }
+
+  override fun onStart() {
+    super.onStart()
+    LocalBroadcastManager.getInstance(this).registerReceiver(receiver, IntentFilter(REFRESH_COMMAND))
+    refreshConversations()
+  }
+
+  override fun onStop() {
+    super.onStop()
+    LocalBroadcastManager.getInstance(this).unregisterReceiver(receiver)
+  }
+
+  fun refreshConversations() {
     val server = intent.extras?.get("server") as Server
     val db = Cryptchat.db(applicationContext)
+    dataset.removeAll(dataset)
     AsyncExec.run {
-      db.users().findConversationsOnServer(serverId = server.id).forEach {
-        dataset.add(it)
-        w("OSAMA", it.user.countryCode + it.user.phoneNumber)
+      dataset.addAll(db.users().findConversationsOnServer(serverId = server.id))
+      it.execMainThread {
+        viewAdapter.notifyDataSetChanged()
       }
     }
   }
@@ -68,11 +95,13 @@ class ServerUsersList : RecyclerViewImplementer<User.Conversation>() {
       } else {
         SimpleDateFormat("dd/MM/yy", Locale.getDefault())
       }
+      holder.view.conversationDateHolder.visibility = View.VISIBLE
       holder.view.conversationDateHolder.text = formatter.format(Date(conversation.lastMessageDate))
     } else {
       holder.view.conversationDateHolder.visibility = View.INVISIBLE
     }
     if (conversation.unreadCount > 0) {
+      holder.view.conversationUnreadCountHolder.visibility = View.VISIBLE
       holder.view.conversationUnreadCountHolder.text = conversation.unreadCount.toString()
     } else {
       holder.view.conversationUnreadCountHolder.visibility = View.INVISIBLE
