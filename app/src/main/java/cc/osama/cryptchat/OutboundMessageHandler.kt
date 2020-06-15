@@ -23,13 +23,6 @@ class OutboundMessageHandler(
     idOnServer = null
   )
 
-  private class EphPubKeyFromServer(
-    private val stringKey: String,
-    val key: ECPublicKey = ECPublicKey(stringKey),
-    val idOnServer: Long,
-    val idOnUserDevice: Long
-  )
-
   fun saveToDb(callback: (Message) -> Unit = {}) {
     Cryptchat.db(context).also { db ->
       AsyncExec.run {
@@ -85,7 +78,7 @@ class OutboundMessageHandler(
     )
   }
 
-  private fun encrypt(ephPubKey: EphPubKeyFromServer?) : CryptchatSecurity.EncryptionOutput {
+  private fun encrypt(ephPubKey: ECPublicKey.EphPubKeyFromServer?) : CryptchatSecurity.EncryptionOutput {
     return CryptchatSecurity().encrypt(
       message = message.plaintext,
       senderIdKeyPair = server.keyPair,
@@ -94,7 +87,7 @@ class OutboundMessageHandler(
     )
   }
 
-  private fun fetchReceiverEphemeralPublicKey(callback: (EphPubKeyFromServer?) -> Unit) {
+  private fun fetchReceiverEphemeralPublicKey(callback: (ECPublicKey.EphPubKeyFromServer?) -> Unit) {
     CryptchatServer(context, server.address).post(
       path = "/ephemeral-keys/grab.json",
       param = JSONObject().also { it.put("user_id", user.idOnServer) },
@@ -105,13 +98,13 @@ class OutboundMessageHandler(
     )
   }
 
-  private fun extractEphKeyFromJson(json: JSONObject) : EphPubKeyFromServer? {
+  private fun extractEphKeyFromJson(json: JSONObject) : ECPublicKey.EphPubKeyFromServer? {
     val keyJson = json["ephemeral_key"] as? JSONObject ?: return null
     val stringKey = keyJson["key"] as? String
     val idOnUserDevice = CryptchatUtils.toLong(keyJson["id_on_user_device"])
     val idOnServer = CryptchatUtils.toLong(keyJson["id"])
     return if (stringKey != null && idOnUserDevice != null && idOnServer != null) {
-      EphPubKeyFromServer(
+      ECPublicKey.EphPubKeyFromServer(
         stringKey = stringKey,
         idOnUserDevice = idOnUserDevice,
         idOnServer = idOnServer
