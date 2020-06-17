@@ -27,7 +27,7 @@ class SyncUsersWorker(context: Context, params: WorkerParameters) : Worker(conte
     val db = Cryptchat.db(applicationContext)
     val server = db.servers().findById(serverId) ?: return Result.success()
 
-    CryptchatServer(applicationContext, server.address).post(
+    CryptchatServer(applicationContext, server).post(
       path = "/sync/users.json",
       success = {
         val usersJsonArray = it["users"] as? JSONArray ?: return@post

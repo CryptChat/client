@@ -31,7 +31,7 @@ class SyncMessagesWorker(context: Context, params: WorkerParameters) : Worker(co
       val param = JSONObject()
       param.put("last_seen_id", lastSeenId)
       param.put("user_id", server.userId)
-      CryptchatServer(applicationContext, server.address).post(
+      CryptchatServer(applicationContext, server).post(
         path = "/sync/messages.json",
         param = param,
         success = {

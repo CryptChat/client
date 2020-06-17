@@ -1,6 +1,5 @@
 package cc.osama.cryptchat.ui
 
-import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.text.Editable
@@ -48,19 +47,21 @@ class VerifyPhoneNumber : AppCompatActivity() {
         null
       }
       val keyPair = CryptchatSecurity.genKeyPair()
-      val param = JSONObject().also { param ->
-        param.put("id", id)
-        param.put("instance_id", instanceId)
-        param.put("identity_key", keyPair.publicKey.toString())
-        param.put("verification_token", token)
+      val params = JSONObject().also { params ->
+        params.put("id", id)
+        params.put("instance_id", instanceId)
+        params.put("identity_key", keyPair.publicKey.toString())
+        params.put("verification_token", token)
       }
-      CryptchatServer(applicationContext, address).post(
-        path = "/register.json",
-        param = param,
+      CryptchatServer.registerAtServer(
+        applicationContext,
+        address,
+        params,
         success = {
           val userId = CryptchatUtils.toLong(it["id"])
-          if (userId != null) {
-            addServerToDatabase(address, userId, keyPair, senderId)
+          val authToken = it["auth_token"] as? String
+          if (userId != null && authToken != null) {
+            addServerToDatabase(address, userId, keyPair, senderId, authToken)
           }
           w("USERID", userId.toString())
         },
@@ -71,7 +72,7 @@ class VerifyPhoneNumber : AppCompatActivity() {
     }
   }
 
-  private fun addServerToDatabase(address: String, userId: Long, keyPair: ECKeyPair, senderId: String) {
+  private fun addServerToDatabase(address: String, userId: Long, keyPair: ECKeyPair, senderId: String, authToken: String) {
     val db = Cryptchat.db(applicationContext)
     AsyncExec.run {
       val server = db.servers().add(Server(
@@ -79,7 +80,8 @@ class VerifyPhoneNumber : AppCompatActivity() {
         name = "SErVeR!&#_X",
         userId = userId,
         keyPair = keyPair,
-        senderId = senderId
+        senderId = senderId,
+        authToken = authToken
       ))
       supplyEphemeralKeys(address, server, userId)
       SyncUsersWorker.enqueue(serverId = server.id, context = applicationContext)
@@ -115,7 +117,7 @@ class VerifyPhoneNumber : AppCompatActivity() {
       val params = JSONObject()
       params.put("user_id", userId)
       params.put("keys", jsonArray)
-      CryptchatServer(applicationContext, address).post(
+      CryptchatServer(applicationContext, server).post(
         path = "/ephemeral-keys.json",
         param = params,
         failure = {

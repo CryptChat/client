@@ -36,13 +36,15 @@ class EnterPhoneNumber : AppCompatActivity() {
       val address = intent.extras?.getString("address").toString()
       val code = countryCodeField.selectedItem.toString()
       val number = phoneNumberField.text.toString()
-      val param = JSONObject()
-      param.put("country_code", code)
-      param.put("phone_number", number)
+      val params = JSONObject().also { params ->
+        params.put("country_code", code)
+        params.put("phone_number", number)
+      }
       toggleErrorMessage()
-      CryptchatServer(applicationContext, address).post(
-        path = "/register.json",
-        param = param,
+      CryptchatServer.registerAtServer(
+        applicationContext,
+        address,
+        params,
         success = {
           val id = it["id"] as? Int
           val senderId = it["sender_id"] as? String

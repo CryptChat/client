@@ -9,12 +9,10 @@ import cc.osama.cryptchat.AsyncExec
 import cc.osama.cryptchat.R
 import cc.osama.cryptchat.Cryptchat
 import cc.osama.cryptchat.CryptchatServer
-import cc.osama.cryptchat.db.Server
 import com.android.volley.ClientError
 import com.android.volley.NoConnectionError
 import com.android.volley.ServerError
 import kotlinx.android.synthetic.main.activity_enter_server_address.*
-import org.json.JSONObject
 import java.net.MalformedURLException
 import java.net.URL
 import java.net.UnknownHostException
@@ -81,42 +79,37 @@ class EnterServerAddress : AppCompatActivity() {
 
   private fun validateServer(address: String, onValid: () -> Unit, onInvalid: (message: String) -> Unit) {
     return onValid()
-    CryptchatServer(applicationContext, address).get(
-      path = "/knock-knock.json",
-      param = JSONObject(),
-      success = {
-        val isCryptchat = it["is_cryptchat"] as? Boolean ?: false
-        if (isCryptchat) {
-          onValid()
-        } else {
-          onInvalid(resources.getString(R.string.not_a_cryptchat_server))
-        }
-      },
-      failure = {
-        val errorMessage = if (it is UnknownHostException) {
-          resources.getString(R.string.unknown_host)
-        } else if (it is ClientError) {
-          val responseCode = it.networkResponse?.statusCode ?: -1
-          if (responseCode == 404) {
-            resources.getString((R.string.not_a_cryptchat_server))
-          } else {
-            resources.getString(R.string.client_error_occurred, responseCode)
-          }
-        } else if (it is NoConnectionError) {
-          resources.getString(R.string.not_pointing_to_server)
-        } else if (it is ServerError) {
-          val responseCode = it.networkResponse?.statusCode ?: -1
-          if (responseCode >= 500) {
-            resources.getString(R.string.server_down)
-          } else {
-            resources.getString(R.string.server_error_occurred, responseCode)
-          }
-        } else {
-          resources.getString(R.string.unknown_error_occurred, "${it.javaClass}")
-        }
-        onInvalid(errorMessage)
+    CryptchatServer.checkAddress(applicationContext, address, success = {
+      val isCryptchat = it["is_cryptchat"] as? Boolean ?: false
+      if (isCryptchat) {
+        onValid()
+      } else {
+        onInvalid(resources.getString(R.string.not_a_cryptchat_server))
       }
-    )
+    }, failure = {
+      val errorMessage = if (it is UnknownHostException) {
+        resources.getString(R.string.unknown_host)
+      } else if (it is ClientError) {
+        val responseCode = it.networkResponse?.statusCode ?: -1
+        if (responseCode == 404) {
+          resources.getString((R.string.not_a_cryptchat_server))
+        } else {
+          resources.getString(R.string.client_error_occurred, responseCode)
+        }
+      } else if (it is NoConnectionError) {
+        resources.getString(R.string.not_pointing_to_server)
+      } else if (it is ServerError) {
+        val responseCode = it.networkResponse?.statusCode ?: -1
+        if (responseCode >= 500) {
+          resources.getString(R.string.server_down)
+        } else {
+          resources.getString(R.string.server_error_occurred, responseCode)
+        }
+      } else {
+        resources.getString(R.string.unknown_error_occurred, "${it.javaClass}")
+      }
+      onInvalid(errorMessage)
+    })
   }
 
   private fun getCanonicalAddress(address: String): String {

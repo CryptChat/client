@@ -62,7 +62,7 @@ class OutboundMessageHandler(
         msg.put("ephemeral_key_id_on_user_device", message.receiverEphemeralKeyPairId)
       })
     }
-    CryptchatServer(context, server.address).post(
+    CryptchatServer(context, server).post(
       path = "/message.json",
       param = param,
       success = { json ->
@@ -88,7 +88,7 @@ class OutboundMessageHandler(
   }
 
   private fun fetchReceiverEphemeralPublicKey(callback: (ECPublicKey.EphPubKeyFromServer?) -> Unit) {
-    CryptchatServer(context, server.address).post(
+    CryptchatServer(context, server).post(
       path = "/ephemeral-keys/grab.json",
       param = JSONObject().also { it.put("user_id", user.idOnServer) },
       success = {
