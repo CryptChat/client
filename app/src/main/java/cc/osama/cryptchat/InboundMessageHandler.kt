@@ -37,24 +37,29 @@ class InboundMessageHandler(
     var plaintext = ""
     var receiverEphKeyPair: EphemeralKey? = null
     var attemptDecryption = true
-    try {
-      if ((senderEphPubKeyString == null && receiverEphKeyPairId != null) ||
-        (senderEphPubKeyString != null && receiverEphKeyPairId == null)) {
-        // if one is present and the other is null
-        status = Message.INCONSISTENT_STATE
+    if ((senderEphPubKeyString == null && receiverEphKeyPairId != null) ||
+      (senderEphPubKeyString != null && receiverEphKeyPairId == null)) {
+      // if one is present and the other is null
+      status = Message.INCONSISTENT_STATE
+      attemptDecryption = false
+    }
+    if (attemptDecryption && receiverEphKeyPairId != null) {
+      receiverEphKeyPair = db.ephemeralKeys().findById(receiverEphKeyPairId)
+      if (receiverEphKeyPair == null) {
+        status = Message.DELETED_EPHEMERAL_KEYPAIR
         attemptDecryption = false
       }
-      if (receiverEphKeyPairId != null) {
-        receiverEphKeyPair = db.ephemeralKeys().findById(receiverEphKeyPairId)
-        if (receiverEphKeyPair == null) {
-          status = Message.DELETED_EPHEMERAL_KEYPAIR
-          attemptDecryption = false
-        }
-      }
-      var senderEphPubKey: ECPublicKey? = null
-      if (senderEphPubKeyString != null && attemptDecryption) {
+    }
+    var senderEphPubKey: ECPublicKey? = null
+    if (senderEphPubKeyString != null && attemptDecryption) {
+      try {
         senderEphPubKey = ECPublicKey(senderEphPubKeyString)
+      } catch (ex: Exception) {
+        attemptDecryption = false
+        status = Message.BAD_SENDER_EPH_PUB_KEY
       }
+    }
+    try {
       if (attemptDecryption) {
         val decryptionInput = CryptchatSecurity.DecryptionInput(
           iv = iv,
@@ -73,6 +78,9 @@ class InboundMessageHandler(
     } catch (ex: Exception) {
       plaintext = ex.javaClass.name + ex.stackTrace.joinToString(",\n") { "${it.className} # ${it.fileName} # ${it.methodName} + ${it.lineNumber}" }
       status = Message.DECRYPTION_FAILED
+    }
+    if (receiverEphKeyPairId != null) {
+      db.ephemeralKeys().delete(receiverEphKeyPairId)
     }
     db.messages().add(Message(
       plaintext = plaintext,

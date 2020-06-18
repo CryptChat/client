@@ -28,6 +28,7 @@ data class Message(
     const val BAD_MAC = 103
     const val DELETED_EPHEMERAL_KEYPAIR = 104
     const val INCONSISTENT_STATE = 105
+    const val BAD_SENDER_EPH_PUB_KEY = 106
   }
 
   @Dao

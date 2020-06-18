@@ -25,6 +25,9 @@ data class EphemeralKey(
     fun findById(id: Long): EphemeralKey?
 
     @Delete
-    fun deleteMany(ids: List<EphemeralKey>)
+    fun deleteMany(keys: List<EphemeralKey>)
+
+    @Delete
+    fun delete(keyId: Long)
   }
 }
