@@ -79,8 +79,8 @@ class InboundMessageHandler(
       plaintext = ex.javaClass.name + ex.stackTrace.joinToString(",\n") { "${it.className} # ${it.fileName} # ${it.methodName} + ${it.lineNumber}" }
       status = Message.DECRYPTION_FAILED
     }
-    if (receiverEphKeyPairId != null) {
-      db.ephemeralKeys().delete(receiverEphKeyPairId)
+    if (receiverEphKeyPair != null) {
+      db.ephemeralKeys().delete(receiverEphKeyPair)
     }
     db.messages().add(Message(
       plaintext = plaintext,

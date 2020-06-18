@@ -28,6 +28,6 @@ data class EphemeralKey(
     fun deleteMany(keys: List<EphemeralKey>)
 
     @Delete
-    fun delete(keyId: Long)
+    fun delete(key: EphemeralKey)
   }
 }
