@@ -1,6 +1,7 @@
 package cc.osama.cryptchat
 
 import android.util.Log.d
+import cc.osama.cryptchat.worker.InstanceIdsManagerWorker
 import cc.osama.cryptchat.worker.SyncMessagesWorker
 import cc.osama.cryptchat.worker.SyncUsersWorker
 import com.google.firebase.messaging.FirebaseMessagingService
@@ -24,5 +25,10 @@ class CryptchatFirebaseMessagingService : FirebaseMessagingService() {
         context = applicationContext
       )
     }
+  }
+
+  override fun onNewToken(p0: String) {
+    super.onNewToken(p0)
+    InstanceIdsManagerWorker.enqueue(applicationContext)
   }
 }

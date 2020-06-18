@@ -19,7 +19,6 @@ class SyncMessagesWorker(context: Context, params: WorkerParameters) : Worker(co
         .setInputData(workerArgs)
         .build()
       WorkManager.getInstance(context).enqueue(syncMessagesRequest)
-
     }
   }
   override fun doWork() : Result {
