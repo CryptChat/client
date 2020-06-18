@@ -10,11 +10,11 @@ data class User(
   @PrimaryKey(autoGenerate = true) val id: Long = 0,
   @NonNull val serverId: Long,
   @NonNull val idOnServer: Long,
-  @NonNull val countryCode: String,
-  @NonNull val phoneNumber: String,
+  @NonNull var countryCode: String,
+  @NonNull var phoneNumber: String,
   @NonNull val identityKey: String, // ideally this should be private...
-  @NonNull val lastUpdatedAt: Long,
-  val name: String? = null
+  @NonNull var lastUpdatedAt: Long,
+  var name: String? = null
 ) : Serializable {
   @Ignore val publicKey = ECPublicKey(identityKey)
 
@@ -61,5 +61,11 @@ data class User(
 
     @Query("SELECT u.*, m.plaintext AS lastMessage, m.lastMessageDate AS lastMessageDate, COALESCE(c.unreadCount, 0) AS unreadCount FROM users u LEFT JOIN (SELECT MAX(createdAt) AS lastMessageDate, userId, plaintext FROM messages WHERE serverId = :serverId GROUP BY userId) m ON m.userId = u.id LEFT JOIN (SELECT COUNT(*) AS unreadCount, userId FROM messages WHERE serverId = :serverId AND read = 0 GROUP BY userId) c ON c.userId = u.id WHERE serverId = :serverId ORDER BY lastMessageDate DESC")
     fun findConversationsOnServer(serverId: Long) : List<Conversation>
+
+    @Query("SELECT MAX(lastUpdatedAt) FROM users WHERE serverId = :serverId")
+    fun findMaxLastUpdatedAtOnServer(serverId: Long) : Long?
+
+    @Update
+    fun update(user: User)
   }
 }

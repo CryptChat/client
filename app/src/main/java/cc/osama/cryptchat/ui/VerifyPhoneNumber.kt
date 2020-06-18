@@ -83,7 +83,7 @@ class VerifyPhoneNumber : AppCompatActivity() {
         senderId = senderId,
         authToken = authToken
       ))
-      supplyEphemeralKeys(address, server, userId)
+      supplyEphemeralKeys(server)
       SyncUsersWorker.enqueue(serverId = server.id, context = applicationContext)
       it.execMainThread {
         startActivity(ServerUsersList.createIntent(server, applicationContext))
@@ -91,7 +91,7 @@ class VerifyPhoneNumber : AppCompatActivity() {
     }
   }
 
-  private fun supplyEphemeralKeys(address: String, server: Server, userId: Long) {
+  private fun supplyEphemeralKeys(server: Server) {
     val ephemeralKeysList = mutableListOf<EphemeralKey>()
     for (i in 1..500) {
       val keyPair = CryptchatSecurity.genKeyPair()
@@ -115,7 +115,6 @@ class VerifyPhoneNumber : AppCompatActivity() {
         jsonArray.put(jsonKey)
       }
       val params = JSONObject()
-      params.put("user_id", userId)
       params.put("keys", jsonArray)
       CryptchatServer(applicationContext, server).post(
         path = "/ephemeral-keys.json",

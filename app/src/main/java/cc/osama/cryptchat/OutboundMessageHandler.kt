@@ -6,6 +6,7 @@ import cc.osama.cryptchat.db.Message
 import cc.osama.cryptchat.db.Server
 import cc.osama.cryptchat.db.User
 import org.json.JSONObject
+import java.lang.IllegalArgumentException
 
 class OutboundMessageHandler(
   plaintext: String,
@@ -57,7 +58,6 @@ class OutboundMessageHandler(
         msg.put("mac", encryptionOutput.mac)
         msg.put("iv", encryptionOutput.iv)
         msg.put("receiver_user_id", user.idOnServer)
-        msg.put("sender_user_id", server.userId) // TODO: Remove when auth is implemented
         msg.put("sender_ephemeral_public_key", encryptionOutput.senderEphPubKey?.toString())
         msg.put("ephemeral_key_id_on_user_device", message.receiverEphemeralKeyPairId)
       })
@@ -104,11 +104,15 @@ class OutboundMessageHandler(
     val idOnUserDevice = CryptchatUtils.toLong(keyJson["id_on_user_device"])
     val idOnServer = CryptchatUtils.toLong(keyJson["id"])
     return if (stringKey != null && idOnUserDevice != null && idOnServer != null) {
-      ECPublicKey.EphPubKeyFromServer(
-        stringKey = stringKey,
-        idOnUserDevice = idOnUserDevice,
-        idOnServer = idOnServer
-      )
+      try {
+        ECPublicKey.EphPubKeyFromServer(
+          stringKey = stringKey,
+          idOnUserDevice = idOnUserDevice,
+          idOnServer = idOnServer
+        )
+      } catch (ex: IllegalArgumentException) {
+        null
+      }
     } else {
       null
     }

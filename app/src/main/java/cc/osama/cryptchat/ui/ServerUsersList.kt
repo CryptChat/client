@@ -30,9 +30,7 @@ class ServerUsersList : RecyclerViewImplementer<User.Conversation>() {
 
   private val receiver = object : BroadcastReceiver() {
     override fun onReceive(context: Context?, intent: Intent?) {
-      if (intent?.extras?.get("command") == REFRESH_COMMAND) {
-        refreshConversations()
-      }
+      refreshConversations()
     }
   }
 
@@ -42,7 +40,7 @@ class ServerUsersList : RecyclerViewImplementer<User.Conversation>() {
         it.putExtra("server", server)
       }
     }
-    const val REFRESH_COMMAND = "REFRESH_CONVERSATIONS_LIST"
+    const val REFRESH_COMMAND = "REFRESH_SERVER_USERS_LIST"
   }
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)

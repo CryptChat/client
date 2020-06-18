@@ -9,6 +9,7 @@ import cc.osama.cryptchat.db.Server
 import cc.osama.cryptchat.ui.ServerUsersList
 import org.json.JSONObject
 import java.lang.Exception
+import java.lang.IllegalArgumentException
 
 class InboundMessageHandler(
   private val data: JSONObject,
@@ -54,7 +55,7 @@ class InboundMessageHandler(
     if (senderEphPubKeyString != null && attemptDecryption) {
       try {
         senderEphPubKey = ECPublicKey(senderEphPubKeyString)
-      } catch (ex: Exception) {
+      } catch (ex: IllegalArgumentException) {
         attemptDecryption = false
         status = Message.BAD_SENDER_EPH_PUB_KEY
       }
@@ -95,7 +96,6 @@ class InboundMessageHandler(
     ))
     LocalBroadcastManager.getInstance(context).also { broadcast ->
       val intent = Intent(ServerUsersList.REFRESH_COMMAND)
-      intent.putExtra("command", ServerUsersList.REFRESH_COMMAND)
       broadcast.sendBroadcast(intent)
     }
   }
