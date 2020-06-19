@@ -51,5 +51,6 @@ class InstanceIdsManagerWorker(context: Context, params: WorkerParameters) : Wor
         }
       }
     }
+    return Result.success()
   }
 }
