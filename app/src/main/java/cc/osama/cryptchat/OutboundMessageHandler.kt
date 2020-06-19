@@ -1,52 +1,96 @@
 package cc.osama.cryptchat
 
 import android.content.Context
+import android.util.Log.e
 import android.util.Log.w
 import cc.osama.cryptchat.db.Message
 import cc.osama.cryptchat.db.Server
 import cc.osama.cryptchat.db.User
+import com.android.volley.VolleyError
 import org.json.JSONObject
+import java.lang.Exception
 import java.lang.IllegalArgumentException
 
 class OutboundMessageHandler(
-  plaintext: String,
+  private var message: Message,
   private val user: User,
   private val server: Server,
   private val context: Context
 ) {
-  private var message: Message = Message(
-    serverId = server.id,
-    userId = user.id,
-    status = Message.PENDING,
-    plaintext = plaintext,
-    createdAt = System.currentTimeMillis(),
-    read = true,
-    idOnServer = null
+  constructor(
+    plaintext: String,
+    user: User,
+    server: Server,
+    context: Context
+  ) : this(
+    context = context,
+    message = Message(
+      serverId = server.id,
+      userId = user.id,
+      status = Message.INITIAL_STATE,
+      plaintext = plaintext,
+      createdAt = System.currentTimeMillis(),
+      read = true,
+      idOnServer = null
+    ),
+    server = server,
+    user = user
   )
 
-  fun saveToDb(callback: (Message) -> Unit = {}) {
-    Cryptchat.db(context).also { db ->
-      AsyncExec.run {
-        val message = db.messages().add(this.message)
-        this.message = message
-        it.execMainThread {
-          callback(message)
+  fun process() {
+    val stringKey = message.receiverEphemeralPublicKey
+    val idOnReceiverDevice = message.receiverEphemeralKeyPairId
+    if (stringKey != null && idOnReceiverDevice != null) {
+      val ephPubKey = ECPublicKey.EphPubKeyFromServer(
+        stringKey = stringKey,
+        idOnUserDevice = idOnReceiverDevice
+      )
+      encryptAndSend(ephPubKey)
+    } else {
+      fetchReceiverEphemeralPublicKey { ephPubKey, serverError ->
+        if (serverError == null) {
+          message.receiverEphemeralKeyPairId = ephPubKey?.idOnUserDevice
+          message.receiverEphemeralPublicKey = ephPubKey?.key?.toString()
+          encryptAndSend(ephPubKey)
+        } else {
+          message.status = Message.NEEDS_RETRY
+          updateMessageInDb()
         }
       }
     }
   }
 
-  fun encryptAndSend() {
-    val message = this.message ?: return
-    fetchReceiverEphemeralPublicKey() {
-      val encryptionOutput = encrypt(ephPubKey = it)
-      message.receiverEphemeralKeyPairId = it?.idOnUserDevice
-      message.senderPublicEphemeralKey = encryptionOutput.senderEphPubKey?.toString()
+  fun saveToDb(callback: () -> Unit) {
+    Cryptchat.db(context).also { db ->
+      AsyncExec.run {
+        val message = db.messages().add(this.message)
+        this.message = message
+        it.execMainThread(callback)
+      }
+    }
+  }
+
+  private fun encryptAndSend(ephPubKey: ECPublicKey.EphPubKeyFromServer?) {
+    var encryptionOutput: CryptchatSecurity.EncryptionOutput? = null
+    try {
+      encryptionOutput = encrypt(ephPubKey)
+    } catch (ex: Exception) {
+      e("ENCRYPTION", "ENCRYPTION FAILED", ex)
       Cryptchat.db(context).also { db ->
         AsyncExec.run {
+          message.status = Message.ENCRYPTION_FAILED
           db.messages().update(message)
-          send(message, encryptionOutput)
         }
+      }
+    }
+    if (encryptionOutput != null) send(message, encryptionOutput)
+  }
+
+  private fun updateMessageInDb(callback: (() -> Unit)? = null) {
+    Cryptchat.db(context).also { db ->
+      AsyncExec.run {
+        db.messages().update(message)
+        if (callback != null) it.execMainThread(callback)
       }
     }
   }
@@ -62,17 +106,21 @@ class OutboundMessageHandler(
         msg.put("ephemeral_key_id_on_user_device", message.receiverEphemeralKeyPairId)
       })
     }
+    val db = Cryptchat.db(context)
     CryptchatServer(context, server).post(
       path = "/message.json",
       param = param,
       success = { json ->
         val idOnServer = CryptchatUtils.toLong((json["message"] as? JSONObject)?.get("id"))
-        Cryptchat.db(context).also { db ->
-          AsyncExec.run {
-            message.status = Message.SENT
-            message.idOnServer = idOnServer
-            db.messages().update(message)
-          }
+        AsyncExec.run {
+          message.status = Message.SENT
+          message.idOnServer = idOnServer
+          db.messages().update(message)
+        }
+      }, failure = {
+        AsyncExec.run {
+          message.status = Message.NEEDS_RETRY
+          db.messages().update(message)
         }
       }
     )
@@ -87,13 +135,26 @@ class OutboundMessageHandler(
     )
   }
 
-  private fun fetchReceiverEphemeralPublicKey(callback: (ECPublicKey.EphPubKeyFromServer?) -> Unit) {
+  private fun fetchReceiverEphemeralPublicKey(
+    callback: (
+      ECPublicKey.EphPubKeyFromServer?,
+      CryptchatServer.CryptchatServerError?
+    ) -> Unit
+  ) {
     CryptchatServer(context, server).post(
       path = "/ephemeral-keys/grab.json",
       param = JSONObject().also { it.put("user_id", user.idOnServer) },
       success = {
         val ephemeralPublicKey = extractEphKeyFromJson(it)
-        callback(ephemeralPublicKey)
+        callback(ephemeralPublicKey, null)
+      },
+      failure = {
+        if (it.statusCode == 404) {
+          message.status = Message.RECEIVER_DELETED
+          updateMessageInDb()
+          return@post
+        }
+        callback(null, it)
       }
     )
   }
@@ -102,13 +163,11 @@ class OutboundMessageHandler(
     val keyJson = json["ephemeral_key"] as? JSONObject ?: return null
     val stringKey = keyJson["key"] as? String
     val idOnUserDevice = CryptchatUtils.toLong(keyJson["id_on_user_device"])
-    val idOnServer = CryptchatUtils.toLong(keyJson["id"])
-    return if (stringKey != null && idOnUserDevice != null && idOnServer != null) {
+    return if (stringKey != null && idOnUserDevice != null) {
       try {
         ECPublicKey.EphPubKeyFromServer(
           stringKey = stringKey,
-          idOnUserDevice = idOnUserDevice,
-          idOnServer = idOnServer
+          idOnUserDevice = idOnUserDevice
         )
       } catch (ex: IllegalArgumentException) {
         null

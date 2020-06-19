@@ -92,7 +92,8 @@ class InboundMessageHandler(
       read = false,
       status = status,
       senderPublicEphemeralKey = senderEphPubKeyString,
-      receiverEphemeralKeyPairId = receiverEphKeyPair?.id
+      receiverEphemeralKeyPairId = receiverEphKeyPair?.id,
+      receiverEphemeralPublicKey = receiverEphKeyPair?.keyPair?.publicKey?.toString()
     ))
     LocalBroadcastManager.getInstance(context).also { broadcast ->
       val intent = Intent(ServerUsersList.REFRESH_COMMAND)

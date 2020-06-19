@@ -4,13 +4,13 @@ import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.os.Looper
+import android.util.Log.e
 import android.util.Log.w
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
-import cc.osama.cryptchat.AsyncExec
-import cc.osama.cryptchat.Cryptchat
-import cc.osama.cryptchat.R
+import cc.osama.cryptchat.*
 import cc.osama.cryptchat.db.Message
+import cc.osama.cryptchat.db.Server
 import cc.osama.cryptchat.worker.SyncMessagesWorker
 import cc.osama.cryptchat.worker.SyncUsersWorker
 import kotlinx.android.synthetic.main.activity_app_entry.*
@@ -19,6 +19,24 @@ class AppEntry : AppCompatActivity() {
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
+    val server = Server(
+      address = "http://10.0.2.2:3000",
+      userId = 1,
+      keyPair = CryptchatSecurity.genKeyPair(),
+      authToken = "sas",
+      senderId = "aSASSAD",
+      instanceId = null,
+      name = "dasd"
+    )
+    CryptchatServer(applicationContext, server).get(
+      path = "/knock-knock.json",
+      param = null,
+      success = {},
+      failure = {
+        e("CRYPTCHAT222", "2222222 $it")
+      },
+      authenticate = false
+    )
     AsyncExec.run {
       Cryptchat.db(applicationContext).also { db ->
         db.servers().getAll().forEach { server ->

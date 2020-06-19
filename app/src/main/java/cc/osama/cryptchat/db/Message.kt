@@ -15,12 +15,16 @@ data class Message(
   var plaintext: String,
   var senderPublicEphemeralKey: String? = null,
   var receiverEphemeralKeyPairId: Long? = null,
+  var receiverEphemeralPublicKey: String? = null,
   @NonNull val createdAt: Long,
   @NonNull var read: Boolean
 ) {
   companion object {
-    const val PENDING = 1
-    const val SENT = 2
+    const val INITIAL_STATE = 1
+    const val NEEDS_RETRY = 2
+    const val SENT = 3
+    const val RECEIVER_DELETED = 4
+    const val ENCRYPTION_FAILED = 5
 
     const val UNDECRYPTED = 100
     const val DECRYPTED = 101

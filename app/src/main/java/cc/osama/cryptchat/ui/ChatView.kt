@@ -66,8 +66,9 @@ class ChatView : RecyclerViewImplementer<ChatView.DisplayMessageStruct>() {
           user = user,
           context = applicationContext
         )
-        handler.saveToDb()
-        handler.encryptAndSend()
+        handler.saveToDb {
+          handler.process()
+        }
       }
     }
   }

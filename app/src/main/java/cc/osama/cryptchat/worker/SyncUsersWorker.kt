@@ -31,7 +31,8 @@ class SyncUsersWorker(context: Context, params: WorkerParameters) : Worker(conte
     val scheduleMessagesSync = inputData.getBoolean("scheduleMessagesSync", false)
     val db = Cryptchat.db(applicationContext)
     val server = db.servers().findById(serverId) ?: return Result.success()
-    val maxLastUpdatedAt = db.users().findMaxLastUpdatedAtOnServer(server.id) ?: 0
+    // unit is ms since epoch
+    val maxLastUpdatedAt = (db.users().findMaxLastUpdatedAtOnServer(server.id) ?: 0) - 10
 
     CryptchatServer(applicationContext, server).post(
       path = "/sync/users.json",
@@ -51,13 +52,13 @@ class SyncUsersWorker(context: Context, params: WorkerParameters) : Worker(conte
             val countryCode = userJson["country_code"] as? String
             val phoneNumber = userJson["phone_number"] as? String
             val idOnServer = CryptchatUtils.toLong(userJson["id"])
+            if (idOnServer == server.userId) continue
             val lastUpdatedAt = CryptchatUtils.toLong(userJson["updated_at"])
             val name = userJson["name"] as? String
             if (publicKey != null &&
               countryCode != null &&
               phoneNumber != null &&
               idOnServer != null &&
-              idOnServer != server.userId &&
               lastUpdatedAt != null
             ) {
               val existingUser = db.users().findUserByServerIdAndIdOnServer(server.id, idOnServer)
@@ -74,11 +75,26 @@ class SyncUsersWorker(context: Context, params: WorkerParameters) : Worker(conte
                   )
                 )
               } else {
-                existingUser.countryCode = countryCode
-                existingUser.lastUpdatedAt = lastUpdatedAt
-                existingUser.phoneNumber = phoneNumber
-                existingUser.name = name
-                db.users().update(existingUser)
+                var changed = false
+                if (existingUser.countryCode != countryCode) {
+                  existingUser.countryCode = countryCode
+                  changed = true
+                }
+                if (existingUser.lastUpdatedAt != lastUpdatedAt) {
+                  existingUser.lastUpdatedAt = lastUpdatedAt
+                  changed = true
+                }
+                if (existingUser.phoneNumber != phoneNumber) {
+                  existingUser.phoneNumber = phoneNumber
+                  changed = true
+                }
+                if (existingUser.name != name) {
+                  existingUser.name = name
+                  changed = true
+                }
+                if (changed) {
+                  db.users().update(existingUser)
+                }
               }
             }
           }

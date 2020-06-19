@@ -9,7 +9,6 @@ class ECPublicKey(private val publicKey: ByteArray) : Serializable {
   class EphPubKeyFromServer(
     private val stringKey: String,
     val key: ECPublicKey = ECPublicKey(stringKey),
-    val idOnServer: Long,
     val idOnUserDevice: Long
   )
 
