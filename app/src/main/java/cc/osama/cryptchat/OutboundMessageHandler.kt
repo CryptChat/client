@@ -76,14 +76,10 @@ class OutboundMessageHandler(
       encryptionOutput = encrypt(ephPubKey)
     } catch (ex: Exception) {
       e("ENCRYPTION", "ENCRYPTION FAILED", ex)
-      Cryptchat.db(context).also { db ->
-        AsyncExec.run {
-          message.status = Message.ENCRYPTION_FAILED
-          db.messages().update(message)
-        }
-      }
+      message.status = Message.ENCRYPTION_FAILED
+      updateMessageInDb()
     }
-    if (encryptionOutput != null) send(message, encryptionOutput)
+    if (encryptionOutput != null) send(encryptionOutput)
   }
 
   private fun updateMessageInDb(callback: (() -> Unit)? = null) {
@@ -95,7 +91,7 @@ class OutboundMessageHandler(
     }
   }
 
-  private fun send(message: Message, encryptionOutput: CryptchatSecurity.EncryptionOutput) {
+  private fun send(encryptionOutput: CryptchatSecurity.EncryptionOutput) {
     val param = JSONObject().also { param ->
       param.put("message", JSONObject().also { msg ->
         msg.put("body", encryptionOutput.ciphertext)
@@ -106,7 +102,6 @@ class OutboundMessageHandler(
         msg.put("ephemeral_key_id_on_user_device", message.receiverEphemeralKeyPairId)
       })
     }
-    val db = Cryptchat.db(context)
     CryptchatServer(context, server).post(
       path = "/message.json",
       param = param,
@@ -115,13 +110,11 @@ class OutboundMessageHandler(
         AsyncExec.run {
           message.status = Message.SENT
           message.idOnServer = idOnServer
-          db.messages().update(message)
+
         }
       }, failure = {
-        AsyncExec.run {
-          message.status = Message.NEEDS_RETRY
-          db.messages().update(message)
-        }
+        message.status = Message.NEEDS_RETRY
+        updateMessageInDb()
       }
     )
   }
