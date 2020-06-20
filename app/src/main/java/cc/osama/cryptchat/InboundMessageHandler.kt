@@ -6,6 +6,7 @@ import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import cc.osama.cryptchat.db.EphemeralKey
 import cc.osama.cryptchat.db.Message
 import cc.osama.cryptchat.db.Server
+import cc.osama.cryptchat.ui.ChatView
 import cc.osama.cryptchat.ui.ServerUsersList
 import org.json.JSONObject
 import java.lang.Exception
@@ -99,5 +100,6 @@ class InboundMessageHandler(
       val intent = Intent(ServerUsersList.REFRESH_COMMAND)
       broadcast.sendBroadcast(intent)
     }
+    ChatView.notifyNewMessage(context)
   }
 }

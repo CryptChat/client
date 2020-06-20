@@ -53,7 +53,7 @@ data class Message(
     fun update(message: Message)
 
     @Query("SELECT * FROM messages WHERE serverId = :serverId AND userId = :userId AND id > :lastId ORDER BY createdAt")
-    fun findByServerAndUserLive(serverId: Long, userId: Long, lastId: Long) : LiveData<List<Message>>
+    fun findConversationMessages(serverId: Long, userId: Long, lastId: Long = 0) : List<Message>
 
     @Query("SELECT MAX(idOnServer) FROM messages WHERE serverId = :serverId AND status >= $UNDECRYPTED")
     fun findNewestReceivedMessageFromServer(serverId: Long) : Long?

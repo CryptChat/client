@@ -34,7 +34,7 @@ class CryptchatServer(private val context: Context, private val server: Server) 
   class CryptchatServerError(
     val statusCode: Int?,
     val serverMessages: ArrayList<String>,
-    val volleyError: VolleyError
+    val volleyError: VolleyError?
   ) {
     override fun toString() : String {
       return "Status code: ${this.statusCode ?: "Unknown"}\n" +
@@ -45,11 +45,44 @@ class CryptchatServer(private val context: Context, private val server: Server) 
 
   companion object {
     const val AUTH_TOKEN_HEADER = "Cryptchat-Auth-Token"
+    private fun defaultErrorHandler(
+      volleyError: VolleyError?,
+      failure: ((CryptchatServerError) -> Unit)? = null,
+      always: (() -> Unit)? = null
+    ) {
+      if (failure == null && always == null) return
+      val errorMessages = ArrayList<String>()
+      val data = volleyError?.networkResponse?.data
+      if (data != null) {
+        val errorJson = try {
+          val jsonString = String(data, Charset.forName("UTF-8"))
+          JSONObject(jsonString)
+        } catch (ex: UnsupportedEncodingException) {
+          null
+        } catch (ex: JSONException) {
+          null
+        }
+        if (errorJson != null) {
+          val messages = errorJson["messages"] as? JSONArray
+          for (i in 0 until (messages?.length() ?: 0)) {
+            (messages?.get(i) as? String)?.also { msg -> errorMessages.add(msg) }
+          }
+        }
+      }
+      val statusCode = volleyError?.networkResponse?.statusCode
+      failure?.invoke(CryptchatServerError(
+        statusCode = statusCode,
+        serverMessages = errorMessages,
+        volleyError = volleyError
+      ))
+      always?.invoke()
+    }
+
     fun checkAddress(
       context: Context,
       address: String,
       success: (data: JSONObject) -> Unit,
-      failure: (error: VolleyError) -> Unit
+      failure: (CryptchatServerError) -> Unit
     ) {
       val request = JsonObjectRequest(
         Request.Method.GET,
@@ -59,7 +92,10 @@ class CryptchatServer(private val context: Context, private val server: Server) 
           success(it)
         },
         Response.ErrorListener {
-          failure(it)
+          defaultErrorHandler(
+            volleyError = it,
+            failure = failure
+          )
         }
       )
       QueueHandler.instance(context).queue.add(request)
@@ -70,7 +106,7 @@ class CryptchatServer(private val context: Context, private val server: Server) 
       address: String,
       params: JSONObject,
       success: (data: JSONObject) -> Unit,
-      failure: (error: VolleyError) -> Unit
+      failure: (CryptchatServerError) -> Unit
     ) {
       val request = JsonObjectRequest(
         Request.Method.POST,
@@ -80,7 +116,10 @@ class CryptchatServer(private val context: Context, private val server: Server) 
           success(it)
         },
         Response.ErrorListener {
-          failure(it)
+          defaultErrorHandler(
+            volleyError = it,
+            failure = failure
+          )
         }
       )
       QueueHandler.instance(context).queue.add(request)
@@ -114,9 +153,9 @@ class CryptchatServer(private val context: Context, private val server: Server) 
   fun get(
     path: String,
     param: JSONObject? = null,
-    success: (JSONObject) -> Unit =  {},
-    failure: (CryptchatServerError) -> Unit = {},
-    always: () -> Unit = {},
+    success: ((JSONObject) -> Unit)? = null,
+    failure: ((CryptchatServerError) -> Unit)? = null,
+    always: (() -> Unit)? = null,
     authenticate: Boolean
   ) {
     request(Request.Method.GET, path, param, success, failure, always, authenticate = authenticate)
@@ -125,9 +164,9 @@ class CryptchatServer(private val context: Context, private val server: Server) 
   fun post(
     path: String,
     param: JSONObject? = null,
-    success: (JSONObject) -> Unit =  {},
-    failure: (CryptchatServerError) -> Unit = {},
-    always: () -> Unit = {},
+    success: ((JSONObject) -> Unit)? = null,
+    failure: ((CryptchatServerError) -> Unit)? = null,
+    always: (() -> Unit)? = null,
     authenticate: Boolean = true
   ) {
     request(Request.Method.POST, path, param, success, failure, always, authenticate = authenticate)
@@ -136,9 +175,9 @@ class CryptchatServer(private val context: Context, private val server: Server) 
   fun put(
     path: String,
     param: JSONObject? = null,
-    success: (data: JSONObject) -> Unit = {},
-    failure: (CryptchatServerError) -> Unit = {},
-    always: () -> Unit = {},
+    success: ((JSONObject) -> Unit)? = null,
+    failure: ((CryptchatServerError) -> Unit)? = null,
+    always: (() -> Unit)? = null,
     authenticate: Boolean = true
   ) {
     request(Request.Method.PUT, path, param, success, failure, always, authenticate = authenticate)
@@ -148,15 +187,15 @@ class CryptchatServer(private val context: Context, private val server: Server) 
     method: Int,
     path: String,
     param: JSONObject? = null,
-    success: (data: JSONObject) -> Unit,
-    failure: (CryptchatServerError) -> Unit = {},
-    always: () -> Unit = {},
-    headersCallback: (Map<String, String>?) -> Unit = {},
-    extraHeaders: HashMap<String, String> = HashMap(),
+    success: ((JSONObject) -> Unit)? = null,
+    failure: ((CryptchatServerError) -> Unit)? = null,
+    always: (() -> Unit)? = null,
+    headersCallback: ((Map<String, String>?) -> Unit)? = null,
+    extraHeaders: HashMap<String, String>? = null,
     authenticate: Boolean = true
   ) {
     val url = server.address + path
-    val headers = HashMap(extraHeaders)
+    val headers = if (extraHeaders == null) HashMap() else HashMap(extraHeaders)
     if (authenticate) {
       headers[AUTH_TOKEN_HEADER] = server.authToken
     }
@@ -165,34 +204,15 @@ class CryptchatServer(private val context: Context, private val server: Server) 
       url,
       param,
       Response.Listener {
-        success(it)
-        always()
+        success?.invoke(it)
+        always?.invoke()
       },
       Response.ErrorListener {
-        val errorMessages = ArrayList<String>()
-        if (it?.networkResponse?.data != null) {
-          val errorJson = try {
-            val jsonString = String(it.networkResponse.data, Charset.forName("UTF-8"))
-            JSONObject(jsonString)
-          } catch (ex: UnsupportedEncodingException) {
-            null
-          } catch (ex: JSONException) {
-            null
-          }
-          if (errorJson != null) {
-            val messages = errorJson["messages"] as? JSONArray
-            for (i in 0 until (messages?.length() ?: 0)) {
-              (messages?.get(i) as? String)?.also { msg -> errorMessages.add(msg) }
-            }
-          }
-        }
-        val statusCode = it?.networkResponse?.statusCode
-        failure(CryptchatServerError(
-          statusCode = statusCode,
-          serverMessages = errorMessages,
-          volleyError = it
-        ))
-        always()
+        defaultErrorHandler(
+          volleyError = it,
+          failure = failure,
+          always = always
+        )
       },
       headersHandler = {
         if (it == null) return@CryptchatJsonRequest
@@ -203,7 +223,7 @@ class CryptchatServer(private val context: Context, private val server: Server) 
             Cryptchat.db(context).servers().update(server)
           }
         }
-        headersCallback(it)
+        headersCallback?.invoke(it)
       },
       extraHeaders = headers
     )

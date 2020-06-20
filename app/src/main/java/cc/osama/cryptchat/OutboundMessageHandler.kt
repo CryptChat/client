@@ -6,6 +6,7 @@ import android.util.Log.w
 import cc.osama.cryptchat.db.Message
 import cc.osama.cryptchat.db.Server
 import cc.osama.cryptchat.db.User
+import cc.osama.cryptchat.ui.ChatView
 import com.android.volley.VolleyError
 import org.json.JSONObject
 import java.lang.Exception
@@ -66,6 +67,7 @@ class OutboundMessageHandler(
         val message = db.messages().add(this.message)
         this.message = message
         it.execMainThread(callback)
+        ChatView.notifyNewMessage(context)
       }
     }
   }
@@ -87,6 +89,7 @@ class OutboundMessageHandler(
       AsyncExec.run {
         db.messages().update(message)
         if (callback != null) it.execMainThread(callback)
+        ChatView.notifyModifiedMessage(message.id, context)
       }
     }
   }
@@ -110,7 +113,7 @@ class OutboundMessageHandler(
         AsyncExec.run {
           message.status = Message.SENT
           message.idOnServer = idOnServer
-
+          updateMessageInDb()
         }
       }, failure = {
         message.status = Message.NEEDS_RETRY

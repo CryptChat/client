@@ -89,7 +89,7 @@ class ServerUsersList : RecyclerViewImplementer<User.Conversation>() {
     holder.view.lastMessageContainer.text = conversation.lastMessage ?: ""
     if (conversation.lastMessageDate != null) {
       val formatter = if (DateUtils.isToday(conversation.lastMessageDate)) {
-        SimpleDateFormat("HH:mm a", Locale.getDefault())
+        SimpleDateFormat("HH:mm", Locale.getDefault())
       } else {
         SimpleDateFormat("dd/MM/yy", Locale.getDefault())
       }

@@ -87,19 +87,19 @@ class EnterServerAddress : AppCompatActivity() {
         onInvalid(resources.getString(R.string.not_a_cryptchat_server))
       }
     }, failure = {
-      val errorMessage = if (it is UnknownHostException) {
+      val errorMessage = if (it.volleyError is UnknownHostException) {
         resources.getString(R.string.unknown_host)
-      } else if (it is ClientError) {
-        val responseCode = it.networkResponse?.statusCode ?: -1
+      } else if (it.volleyError is ClientError) {
+        val responseCode = it.volleyError.networkResponse?.statusCode ?: -1
         if (responseCode == 404) {
           resources.getString((R.string.not_a_cryptchat_server))
         } else {
           resources.getString(R.string.client_error_occurred, responseCode)
         }
-      } else if (it is NoConnectionError) {
+      } else if (it.volleyError is NoConnectionError) {
         resources.getString(R.string.not_pointing_to_server)
-      } else if (it is ServerError) {
-        val responseCode = it.networkResponse?.statusCode ?: -1
+      } else if (it.volleyError is ServerError) {
+        val responseCode = it.volleyError.networkResponse?.statusCode ?: -1
         if (responseCode >= 500) {
           resources.getString(R.string.server_down)
         } else {
