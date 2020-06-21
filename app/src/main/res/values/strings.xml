@@ -19,6 +19,11 @@
     <string name="invalid_address">"Invalid address: \"%1$s\""</string>
     <string name="empty_address">"Empty address"</string>
     <string name="unsupported_protocol">"Unsupported protocol: \"%1$s\""</string>
+    <string name="enter_your_name_alert_dialog">"Enter your name"</string>
+    <string name="dialog_save">"Save"</string>
+    <string name="dialog_cancel">"Cancel"</string>
+    <string name="server_settings_name_label">"Name"</string>
+    <string name="server_settings_profile_avatar">"Profile avatar"</string>
     <string-array name="countries_codes">
         <item>+965</item>
         <item>+966</item>

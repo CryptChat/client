@@ -14,8 +14,8 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme"
         android:usesCleartextTraffic="${usesCleartextTraffic}">
-        <activity android:name=".ui.ChatView">
-        </activity>
+        <activity android:name=".ui.ServerSettings"></activity>
+        <activity android:name=".ui.ChatView"></activity>
         <activity
             android:name=".ui.AppEntry"
             android:launchMode="singleInstance"
@@ -32,6 +32,7 @@
         <activity android:name=".ui.EnterPhoneNumber" />
         <activity android:name=".ui.EnterServerAddress" />
         <activity android:name=".ui.MainActivity">
+
             <!--
             intent-filter>
                 <action android:name="android.intent.action.MAIN" />

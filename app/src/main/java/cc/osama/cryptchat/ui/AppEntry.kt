@@ -28,6 +28,10 @@ class AppEntry : AppCompatActivity() {
       instanceId = null,
       name = "dasd"
     )
+    ServerSettings.createIntent(server, this).also { intent ->
+      startActivity(intent)
+    }
+    return
     CryptchatServer(applicationContext, server).get(
       path = "/knock-knock.json",
       param = null,
