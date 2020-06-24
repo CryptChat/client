@@ -1,27 +1,22 @@
 package cc.osama.cryptchat.ui
 
-import android.app.Activity
 import android.content.Context
 import android.content.Intent
-import androidx.appcompat.app.AppCompatActivity
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.os.Bundle
-import android.util.Log.e
-import android.util.Log.w
-import android.view.LayoutInflater
+import android.os.Handler
+import android.provider.MediaStore
 import android.view.View
-import android.view.ViewGroup
-import android.widget.EditText
-import android.widget.LinearLayout
 import androidx.appcompat.app.AlertDialog
-import androidx.constraintlayout.widget.ConstraintLayout
-import androidx.core.view.marginLeft
-import androidx.core.view.marginRight
-import androidx.core.view.setMargins
-import cc.osama.cryptchat.CryptchatTextWatcher
+import androidx.appcompat.app.AppCompatActivity
+import cc.osama.cryptchat.CryptchatServer
+import cc.osama.cryptchat.CryptchatUtils
 import cc.osama.cryptchat.R
 import cc.osama.cryptchat.db.Server
 import kotlinx.android.synthetic.main.activity_server_settings.*
-import kotlinx.android.synthetic.main.edit_dialog.view.*
+import java.io.ByteArrayOutputStream
+
 
 class ServerSettings : AppCompatActivity() {
   companion object {
@@ -33,47 +28,101 @@ class ServerSettings : AppCompatActivity() {
     }
   }
 
+  private val handler = Handler()
   override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-    if (requestCode == PICK_IMAGE && data != null) {
-      avatarHolder.setImageURI(data.data)
-      e("PICKERRR", "$data")
+    val uri = data?.data
+    if (requestCode == PICK_IMAGE && uri != null) {
+      contentResolver.openFileDescriptor(uri, "r")?.fileDescriptor?.also { fileDescriptor ->
+        BitmapFactory.Options().apply {
+          inJustDecodeBounds = true
+          BitmapFactory.decodeFileDescriptor(fileDescriptor, null, this)
+          inSampleSize = CryptchatUtils.calcSampleSize(this, 700, 700)
+          inJustDecodeBounds = false
+          BitmapFactory.decodeFileDescriptor(fileDescriptor, null, this).also view@ {
+            var bitmap = it
+            val stream = ByteArrayOutputStream()
+            val successfulCompression = bitmap.compress(Bitmap.CompressFormat.JPEG, 90, stream)
+            stream.close()
+            if (successfulCompression) {
+              val server  = intent?.extras?.get("server") as Server
+              avatarUploadProgressBar.visibility = View.VISIBLE
+              changeAvatarButton.visibility = View.GONE
+              CryptchatServer(applicationContext, server).upload(
+                path = "/avatar.json",
+                file = stream.toByteArray(),
+                fileContentType = "image/jpeg",
+                success = {
+                  uploadSuccessfulIcon.visibility = View.VISIBLE
+                  handler.postDelayed({
+                    uploadSuccessfulIcon.visibility = View.GONE
+                  }, 1000)
+                },
+                failure = {
+                  AlertDialog.Builder(this@ServerSettings).also { builder ->
+                    builder.setNegativeButton(R.string.dialog_ok) { _, _ ->  }
+                    if (it.serverMessages.size > 0) {
+                      builder.setMessage(it.serverMessages.joinToString("\n"))
+                    } else {
+                      builder.setMessage(resources.getString(R.string.server_responded_with_error, it.statusCode ?: -1))
+                    }
+                    builder.create().show()
+                  }
+                },
+                always = {
+                  avatarUploadProgressBar.visibility = View.GONE
+                  changeAvatarButton.visibility = View.VISIBLE
+                }
+              )
+            } else {
+              AlertDialog.Builder(this@ServerSettings).apply {
+                setNegativeButton(R.string.dialog_ok) { _, _ ->  }
+                setMessage(R.string.somehow_failed_to_compress_avatar)
+                create().show()
+              }
+            }
+            avatarHolder.setImageBitmap(bitmap)
+          }
+        }
+      }
     }
     super.onActivityResult(requestCode, resultCode, data)
+  }
+
+  override fun onStart() {
+    super.onStart()
+    avatarUploadProgressBar.visibility = View.GONE
+    changeAvatarButton.visibility = View.VISIBLE
+    uploadSuccessfulIcon.visibility = View.GONE
+  }
+
+  override fun onStop() {
+    super.onStop()
+    handler.removeCallbacksAndMessages(null)
+  }
+
+  override fun onDestroy() {
+    super.onDestroy()
+    handler.removeCallbacksAndMessages(null)
   }
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
     setContentView(R.layout.activity_server_settings)
     val server = intent?.extras?.get("server") as Server
-    nameInput.setText(server.name ?: "")
+    serverNameInput.setText(server.name ?: "")
 
     changeAvatarButton.setOnClickListener {
-      Intent().also { intent ->
+      Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI).also { intent ->
         intent.type = "image/*"
-        intent.action = Intent.ACTION_GET_CONTENT
-        startActivityForResult(Intent.createChooser(intent, "Select avatar"), PICK_IMAGE)
+        startActivityForResult(Intent.createChooser(intent, null), PICK_IMAGE)
       }
     }
-    saveChangesButton.visibility = View.INVISIBLE
-    nameInput.addTextChangedListener(CryptchatTextWatcher(
-      on = { s, _, _, _ ->
-        if (s != null && s.isNotEmpty() && s.trim().toString() != server.name) {
-          saveChangesButton.visibility = View.VISIBLE
-        } else {
-          saveChangesButton.visibility = View.INVISIBLE
-        }
-      }
-    ))
-    // AlertDialog.Builder(this).also { dialog ->
-    //   return@also
-    //   val view = layoutInflater.inflate(R.layout.edit_dialog, null, false)
-    //   view.dialogTitle.text = resources.getString(R.string.enter_your_name_alert_dialog)
-    //   dialog.setView(view)
-    //   dialog.setNegativeButton(R.string.dialog_cancel, null)
-    //   dialog.setPositiveButton(R.string.dialog_save) { _, _ ->
-    //     e("CLICKED SAVE", "111111")
-    //   }
-    //   dialog.create().show()
-    // }
+    setSupportActionBar(toolbar)
+    val serverName = server.name
+    if (serverName != null) {
+      supportActionBar?.title = resources.getString(R.string.settings_activity_title, serverName.capitalize())
+    } else {
+      supportActionBar?.title = resources.getString(R.string.settings_activity_title_without_server_name)
+    }
   }
 }

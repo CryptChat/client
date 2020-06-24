@@ -19,39 +19,20 @@ class AppEntry : AppCompatActivity() {
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
-    val server = Server(
-      address = "http://10.0.2.2:3000",
-      userId = 1,
-      keyPair = CryptchatSecurity.genKeyPair(),
-      authToken = "sas",
-      senderId = "aSASSAD",
-      instanceId = null,
-      name = "dasd"
-    )
-    ServerSettings.createIntent(server, this).also { intent ->
-      startActivity(intent)
-    }
-    return
-    CryptchatServer(applicationContext, server).get(
-      path = "/knock-knock.json",
-      param = null,
-      success = {},
-      failure = {
-        e("CRYPTCHAT222", "2222222 $it")
-      },
-      authenticate = false
-    )
-    AsyncExec.run {
-      Cryptchat.db(applicationContext).also { db ->
-        db.servers().getAll().forEach { server ->
-          SyncUsersWorker.enqueue(
-            serverId = server.id,
-            scheduleMessagesSync = false,
-            context = applicationContext
-          )
-        }
-      }
-    }
+    // val server = Server(
+    //   address = "http://10.0.2.2:3000",
+    //   userId = 1,
+    //   keyPair = CryptchatSecurity.genKeyPair(),
+    //   authToken = "sas",
+    //   senderId = "aSASSAD",
+    //   instanceId = null,
+    //   name = "dasd",
+    //   userName = null
+    // )
+    // ServerSettings.createIntent(server, this).also { intent ->
+    //   startActivity(intent)
+    // }
+    // return
     // Cryptchat.db(applicationContext).asyncExec({
       // w("USERRRR CRYPTCHAT", FirebaseInstanceId.getInstance().getToken("530989455642", "FCM"))
       // w("USERRRR SECHAT", FirebaseInstanceId.getInstance().getToken("108521922410", "FCM"))

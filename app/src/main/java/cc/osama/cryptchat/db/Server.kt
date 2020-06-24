@@ -15,7 +15,8 @@ data class Server (
   @NonNull val senderId: String,
   @NonNull var authToken: String,
   var name: String?,
-  var instanceId: String?
+  var instanceId: String?,
+  val userName: String?
 ) : Serializable {
   @Ignore val keyPair = ECKeyPair(publicKey = publicKey, privateKey = privateKey)
 
@@ -27,7 +28,8 @@ data class Server (
     keyPair: ECKeyPair,
     authToken: String,
     senderId: String,
-    instanceId: String?
+    instanceId: String?,
+    userName: String?
   ) : this(
     id = id,
     name = name,
@@ -37,7 +39,8 @@ data class Server (
     privateKey = keyPair.privateKey.toString(),
     senderId = senderId,
     authToken = authToken,
-    instanceId = instanceId
+    instanceId = instanceId,
+    userName = userName
   )
 
   @Dao

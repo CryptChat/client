@@ -22,8 +22,15 @@
     <string name="enter_your_name_alert_dialog">"Enter your name"</string>
     <string name="dialog_save">"Save"</string>
     <string name="dialog_cancel">"Cancel"</string>
-    <string name="server_settings_name_label">"Name"</string>
+    <string name="dialog_ok">"OK"</string>
+    <string name="server_settings_server_name_label">"Server Name"</string>
+    <string name="server_settings_user_name_label">"Your Name"</string>
     <string name="server_settings_profile_avatar">"Profile avatar"</string>
+    <string name="server_responded_with_error">"Server responded with a non-200 status code: '%1$d'"</string>
+    <string name="somehow_failed_to_compress_avatar">"Image compression was not successful; image upload was not initiated."</string>
+    <string name="settings_activity_title">"%1$s Settings"</string>
+    <string name="settings_activity_title_without_server_name">"Server Settings"</string>
+    <string name="server_users_list_menue_go_to_server_settings">"Settings"</string>
     <string-array name="countries_codes">
         <item>+965</item>
         <item>+966</item>

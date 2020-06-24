@@ -82,7 +82,8 @@ class VerifyPhoneNumber : AppCompatActivity() {
         keyPair = keyPair,
         senderId = senderId,
         authToken = authToken,
-        instanceId = instanceId
+        instanceId = instanceId,
+        userName = null
       ))
       supplyEphemeralKeys(server)
       SyncUsersWorker.enqueue(serverId = server.id, context = applicationContext)

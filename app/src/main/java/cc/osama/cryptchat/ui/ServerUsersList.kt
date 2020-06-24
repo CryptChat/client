@@ -7,6 +7,8 @@ import android.content.IntentFilter
 import android.os.Bundle
 import android.text.format.DateUtils
 import android.util.Log.w
+import android.view.Menu
+import android.view.MenuItem
 import android.view.View
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -50,8 +52,25 @@ class ServerUsersList : RecyclerViewImplementer<User.Conversation>() {
       layoutManager = viewManager
       adapter = viewAdapter
     }
+    setSupportActionBar(serverUsersListToolbar)
+    val server = intent.extras?.get("server") as Server
+    supportActionBar?.title = server.name ?: "Server"
   }
 
+  override fun onCreateOptionsMenu(menu: Menu?): Boolean {
+    menuInflater.inflate(R.menu.server_users_list, menu)
+    return true
+  }
+
+  override fun onOptionsItemSelected(item: MenuItem): Boolean {
+    val server = intent.extras?.get("server") as Server
+    if (item.itemId == R.id.go_to_server_settings) {
+      startActivity(ServerSettings.createIntent(server, this))
+    } else {
+      return super.onOptionsItemSelected(item)
+    }
+    return true
+  }
   override fun onStart() {
     super.onStart()
     LocalBroadcastManager.getInstance(this).registerReceiver(receiver, IntentFilter(REFRESH_COMMAND))

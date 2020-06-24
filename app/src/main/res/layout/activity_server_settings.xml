@@ -31,51 +31,128 @@
         app:cardElevation="0dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent">
+        app:layout_constraintTop_toBottomOf="@+id/toolbar">
 
-        <ImageView
-            android:id="@+id/avatarHolder"
+        <androidx.constraintlayout.widget.ConstraintLayout
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:contentDescription="@string/server_settings_profile_avatar"
-            android:scaleType="fitXY"
-            app:srcCompat="@drawable/default_avatar" />
+            android:layout_height="match_parent">
+
+            <ImageView
+                android:id="@+id/avatarHolder"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:contentDescription="@string/server_settings_profile_avatar"
+                android:scaleType="fitXY"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                app:srcCompat="@drawable/default_avatar" />
+
+            <ProgressBar
+                android:id="@+id/avatarUploadProgressBar"
+                style="?android:attr/progressBarStyle"
+                android:layout_width="0dp"
+                android:layout_height="0dp"
+                android:background="#90000000"
+                android:indeterminateTint="#FFFFFF"
+                android:padding="40dp"
+                android:visibility="gone"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="@+id/avatarHolder"
+                app:layout_constraintStart_toStartOf="@+id/avatarHolder"
+                app:layout_constraintTop_toTopOf="@+id/avatarHolder" />
+
+            <ImageView
+                android:id="@+id/uploadSuccessfulIcon"
+                android:layout_width="0dp"
+                android:layout_height="0dp"
+                android:background="#90000000"
+                android:padding="45dp"
+                android:tint="#FFFFFF"
+                android:visibility="gone"
+                app:layout_constraintBottom_toBottomOf="@+id/avatarHolder"
+                app:layout_constraintEnd_toEndOf="@+id/avatarHolder"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="@+id/avatarHolder"
+                app:srcCompat="@drawable/ic_check_black_24dp" />
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
+
     </androidx.cardview.widget.CardView>
 
     <TextView
-        android:id="@+id/nameInputLabel"
+        android:id="@+id/serverNameInputLabel"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="70dp"
-        android:labelFor="@id/nameInput"
-        android:text="@string/server_settings_name_label"
-        app:layout_constraintBottom_toTopOf="@+id/nameInput"
-        app:layout_constraintStart_toStartOf="@+id/nameInput"
+        android:labelFor="@id/serverNameInput"
+        android:text="@string/server_settings_server_name_label"
+        app:layout_constraintBottom_toTopOf="@+id/serverNameInput"
+        app:layout_constraintStart_toStartOf="@+id/serverNameInput"
         app:layout_constraintTop_toBottomOf="@+id/avatarCardView"
         app:layout_constraintVertical_chainStyle="packed" />
 
     <EditText
-        android:id="@+id/nameInput"
+        android:id="@+id/serverNameInput"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginStart="30dp"
         android:layout_marginTop="10dp"
         android:layout_marginEnd="30dp"
         android:ems="10"
+        android:importantForAutofill="no"
         android:inputType="textPersonName"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/nameInputLabel"
-        android:importantForAutofill="no" />
+        app:layout_constraintTop_toBottomOf="@+id/serverNameInputLabel" />
+
+    <TextView
+        android:id="@+id/userNameInputLabel"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="15dp"
+        android:labelFor="@id/serverNameInput"
+        android:text="@string/server_settings_user_name_label"
+        app:layout_constraintBottom_toTopOf="@+id/userNameInput"
+        app:layout_constraintStart_toStartOf="@+id/serverNameInput"
+        app:layout_constraintTop_toBottomOf="@+id/serverNameInput"
+        app:layout_constraintVertical_chainStyle="packed" />
+
+    <EditText
+        android:id="@+id/userNameInput"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="10dp"
+        android:layout_marginEnd="30dp"
+        android:ems="10"
+        android:importantForAutofill="no"
+        android:inputType="textPersonName"
+        app:layout_constraintBottom_toTopOf="@+id/saveChangesButton"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintStart_toStartOf="@+id/userNameInputLabel"
+        app:layout_constraintTop_toBottomOf="@+id/userNameInputLabel"
+        app:layout_constraintVertical_chainStyle="packed" />
 
     <ImageButton
         android:id="@+id/saveChangesButton"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:contentDescription="@string/dialog_save"
-        android:visibility="visible"
-        app:layout_constraintEnd_toEndOf="@+id/nameInput"
-        app:layout_constraintTop_toBottomOf="@+id/nameInput"
+        app:layout_constraintEnd_toEndOf="@+id/userNameInput"
+        app:layout_constraintTop_toBottomOf="@+id/userNameInput"
         app:srcCompat="@drawable/ic_check_black_24dp" />
+
+    <androidx.appcompat.widget.Toolbar
+        android:id="@+id/toolbar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@color/cryptchatHeader"
+        android:minHeight="?attr/actionBarSize"
+        android:theme="?attr/actionBarTheme"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
