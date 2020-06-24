@@ -52,10 +52,11 @@ class ServerSettings : AppCompatActivity() {
                 file = stream.toByteArray(),
                 fileContentType = "image/jpeg",
                 success = {
+                  avatarHolder.setImageBitmap(bitmap)
                   uploadSuccessfulIcon.visibility = View.VISIBLE
                   handler.postDelayed({
                     uploadSuccessfulIcon.visibility = View.GONE
-                  }, 1000)
+                  }, 1500)
                 },
                 failure = {
                   AlertDialog.Builder(this@ServerSettings).also { builder ->
@@ -80,7 +81,6 @@ class ServerSettings : AppCompatActivity() {
                 create().show()
               }
             }
-            avatarHolder.setImageBitmap(bitmap)
           }
         }
       }
@@ -88,15 +88,11 @@ class ServerSettings : AppCompatActivity() {
     super.onActivityResult(requestCode, resultCode, data)
   }
 
-  override fun onStart() {
-    super.onStart()
+  override fun onStop() {
+    super.onStop()
     avatarUploadProgressBar.visibility = View.GONE
     changeAvatarButton.visibility = View.VISIBLE
     uploadSuccessfulIcon.visibility = View.GONE
-  }
-
-  override fun onStop() {
-    super.onStop()
     handler.removeCallbacksAndMessages(null)
   }
 
