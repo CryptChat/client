@@ -16,7 +16,7 @@ data class Server (
   @NonNull var authToken: String,
   var name: String?,
   var instanceId: String?,
-  val userName: String?
+  var userName: String?
 ) : Serializable {
   @Ignore val keyPair = ECKeyPair(publicKey = publicKey, privateKey = privateKey)
 

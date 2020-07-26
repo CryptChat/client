@@ -132,7 +132,7 @@ class CryptchatServer(private val context: Context, private val server: Server) 
     private fun defaultErrorHandler(
       volleyError: VolleyError?,
       failure: ((CryptchatServerError) -> Unit)? = null,
-      always: (() -> Unit)? = null
+      always: ((Boolean, JSONObject?, CryptchatServerError?) -> Unit)? = null
     ) {
       if (failure == null && always == null) return
       val errorMessages = ArrayList<String>()
@@ -154,12 +154,13 @@ class CryptchatServer(private val context: Context, private val server: Server) 
         }
       }
       val statusCode = volleyError?.networkResponse?.statusCode
-      failure?.invoke(CryptchatServerError(
+      val serverError = CryptchatServerError(
         statusCode = statusCode,
         serverMessages = errorMessages,
         volleyError = volleyError
-      ))
-      always?.invoke()
+      )
+      failure?.invoke(serverError)
+      always?.invoke(false, null, serverError)
     }
 
     fun checkAddress(
@@ -215,7 +216,7 @@ class CryptchatServer(private val context: Context, private val server: Server) 
     param: JSONObject? = null,
     success: ((JSONObject) -> Unit)? = null,
     failure: ((CryptchatServerError) -> Unit)? = null,
-    always: (() -> Unit)? = null,
+    always: ((Boolean, JSONObject?, CryptchatServerError?) -> Unit)? = null,
     authenticate: Boolean
   ) {
     request(Request.Method.GET, path, param, success, failure, always, authenticate = authenticate)
@@ -226,7 +227,7 @@ class CryptchatServer(private val context: Context, private val server: Server) 
     param: JSONObject? = null,
     success: ((JSONObject) -> Unit)? = null,
     failure: ((CryptchatServerError) -> Unit)? = null,
-    always: (() -> Unit)? = null,
+    always: ((Boolean, JSONObject?, CryptchatServerError?) -> Unit)? = null,
     authenticate: Boolean = true
   ) {
     request(Request.Method.POST, path, param, success, failure, always, authenticate = authenticate)
@@ -239,7 +240,7 @@ class CryptchatServer(private val context: Context, private val server: Server) 
     fileContentType: String,
     success: ((JSONObject) -> Unit)? = null,
     failure: ((CryptchatServerError) -> Unit)? = null,
-    always: (() -> Unit)? = null,
+    always: ((Boolean, JSONObject?, CryptchatServerError?) -> Unit)? = null,
     authenticate: Boolean = true
   ) {
     val extraHeaders = if (authenticate) HashMap<String, String>().also {
@@ -252,7 +253,7 @@ class CryptchatServer(private val context: Context, private val server: Server) 
       fileContentType = fileContentType,
       listener = Response.Listener {
         success?.invoke(it)
-        always?.invoke()
+        always?.invoke(true, it, null)
       },
       errorListener = Response.ErrorListener {
         defaultErrorHandler(it, failure, always)
@@ -273,7 +274,7 @@ class CryptchatServer(private val context: Context, private val server: Server) 
     param: JSONObject? = null,
     success: ((JSONObject) -> Unit)? = null,
     failure: ((CryptchatServerError) -> Unit)? = null,
-    always: (() -> Unit)? = null,
+    always: ((Boolean, JSONObject?, CryptchatServerError?) -> Unit)? = null,
     authenticate: Boolean = true
   ) {
     request(Request.Method.PUT, path, param, success, failure, always, authenticate = authenticate)
@@ -285,7 +286,7 @@ class CryptchatServer(private val context: Context, private val server: Server) 
     param: JSONObject? = null,
     success: ((JSONObject) -> Unit)? = null,
     failure: ((CryptchatServerError) -> Unit)? = null,
-    always: (() -> Unit)? = null,
+    always: ((Boolean, JSONObject?, CryptchatServerError?) -> Unit)? = null,
     authenticate: Boolean = true
   ) {
     val url = server.address + path
@@ -298,7 +299,7 @@ class CryptchatServer(private val context: Context, private val server: Server) 
       param,
       Response.Listener {
         success?.invoke(it)
-        always?.invoke()
+        always?.invoke(true, it, null)
       },
       Response.ErrorListener {
         defaultErrorHandler(

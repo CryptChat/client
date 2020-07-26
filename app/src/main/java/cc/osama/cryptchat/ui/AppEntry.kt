@@ -83,9 +83,10 @@ class AppEntry : AppCompatActivity() {
         if (servers.isEmpty()) {
           intent = Intent(this, EnterServerAddress::class.java)
         } else {
-          intent = Intent(this, ServerUsersList::class.java)
-          intent.putExtra("serverId", servers[0].id)
-          intent.putExtra("server", servers[0])
+          intent = ServerUsersList.createIntent(
+            servers[0].id,
+            this
+          )
         }
         it.execMainThread {
           startActivity(intent)

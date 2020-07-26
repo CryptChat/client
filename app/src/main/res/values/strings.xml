@@ -30,6 +30,7 @@
     <string name="somehow_failed_to_compress_avatar">"Image compression was not successful; image upload was not initiated."</string>
     <string name="settings_activity_title">"%1$s Settings"</string>
     <string name="settings_activity_title_without_server_name">"Server Settings"</string>
+    <string name="server_settings_info_updated_successfully">"Your settings have been saved successfully!"</string>
     <string name="server_users_list_menue_go_to_server_settings">"Settings"</string>
     <string-array name="countries_codes">
         <item>+965</item>

@@ -29,6 +29,8 @@ class ServerUsersList : RecyclerViewImplementer<User.Conversation>() {
   override val defaultLayout = R.layout.server_users_list_item
   override val viewAdapter = Adapter(dataset, defaultLayout, this)
   override val viewManager = LinearLayoutManager(this)
+  private lateinit var server: Server
+  private var serverId: Long = -1
 
   private val receiver = object : BroadcastReceiver() {
     override fun onReceive(context: Context?, intent: Intent?) {
@@ -37,24 +39,30 @@ class ServerUsersList : RecyclerViewImplementer<User.Conversation>() {
   }
 
   companion object {
-    fun createIntent(server: Server, context: Context) : Intent {
+    fun createIntent(serverId: Long, context: Context) : Intent {
       return Intent(context, ServerUsersList::class.java).also {
-        it.putExtra("server", server)
+        it.putExtra("serverId", serverId)
       }
     }
     const val REFRESH_COMMAND = "REFRESH_SERVER_USERS_LIST"
   }
+
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
-    setContentView(R.layout.activity_server_users_list)
-    usersList.apply {
-      setHasFixedSize(true)
-      layoutManager = viewManager
-      adapter = viewAdapter
+    serverId = intent.extras?.getLong("serverId") as Long
+    AsyncExec.run {
+      server = Cryptchat.db(applicationContext).servers().findById(serverId) as Server
+      it.execMainThread {
+        setContentView(R.layout.activity_server_users_list)
+        usersList.apply {
+          setHasFixedSize(true)
+          layoutManager = viewManager
+          adapter = viewAdapter
+        }
+        setSupportActionBar(serverUsersListToolbar)
+        supportActionBar?.title = server.name ?: "Server"
+      }
     }
-    setSupportActionBar(serverUsersListToolbar)
-    val server = intent.extras?.get("server") as Server
-    supportActionBar?.title = server.name ?: "Server"
   }
 
   override fun onCreateOptionsMenu(menu: Menu?): Boolean {
@@ -63,18 +71,26 @@ class ServerUsersList : RecyclerViewImplementer<User.Conversation>() {
   }
 
   override fun onOptionsItemSelected(item: MenuItem): Boolean {
-    val server = intent.extras?.get("server") as Server
     if (item.itemId == R.id.go_to_server_settings) {
-      startActivity(ServerSettings.createIntent(server, this))
+      startActivity(ServerSettings.createIntent(server.id, this))
     } else {
       return super.onOptionsItemSelected(item)
     }
     return true
   }
+
   override fun onStart() {
     super.onStart()
-    LocalBroadcastManager.getInstance(this).registerReceiver(receiver, IntentFilter(REFRESH_COMMAND))
-    refreshConversations()
+    AsyncExec.run {
+      // TODO: Maybe it's worth adding a check here in case the server
+      // is deleted and redirect the user if it's deleted.
+      server = Cryptchat.db(applicationContext).servers().findById(serverId) as Server
+      it.execMainThread {
+        LocalBroadcastManager.getInstance(this).registerReceiver(receiver, IntentFilter(REFRESH_COMMAND))
+        supportActionBar?.title = server.name ?: "Server"
+        refreshConversations()
+      }
+    }
   }
 
   override fun onStop() {
@@ -83,7 +99,6 @@ class ServerUsersList : RecyclerViewImplementer<User.Conversation>() {
   }
 
   fun refreshConversations() {
-    val server = intent.extras?.get("server") as Server
     val db = Cryptchat.db(applicationContext)
     dataset.removeAll(dataset)
     AsyncExec.run {
@@ -96,7 +111,6 @@ class ServerUsersList : RecyclerViewImplementer<User.Conversation>() {
 
   override fun onClick(position: Int) {
     val user = dataset[position].user
-    val server = intent.extras?.get("server") as Server
     val intent = ChatView.createIntent(server = server, user = user, context = this)
     startActivity(intent)
   }
