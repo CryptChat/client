@@ -13,7 +13,8 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/serverUsersListToolbar" />
+        app:layout_constraintTop_toBottomOf="@+id/serverUsersListToolbar"
+        tools:listitem="@layout/server_users_list_item" />
 
     <androidx.appcompat.widget.Toolbar
         android:id="@+id/serverUsersListToolbar"

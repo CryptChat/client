@@ -3,22 +3,32 @@ package cc.osama.cryptchat.ui
 import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import android.os.Looper
-import android.util.Log.e
 import android.util.Log.w
-import androidx.work.OneTimeWorkRequestBuilder
-import androidx.work.WorkManager
 import cc.osama.cryptchat.*
-import cc.osama.cryptchat.db.Message
-import cc.osama.cryptchat.db.Server
-import cc.osama.cryptchat.worker.SyncMessagesWorker
-import cc.osama.cryptchat.worker.SyncUsersWorker
-import kotlinx.android.synthetic.main.activity_app_entry.*
 
 class AppEntry : AppCompatActivity() {
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
+    // fileList().forEach {
+    //   var file = getFileStreamPath(it)
+    //   if (file.exists() && file.absolutePath.toLowerCase().indexOf("avatar") > -1) {
+    //     file.delete()
+    //   }
+    // }
+    // val store = AvatarsStore(1, 1, applicationContext)
+    // AsyncExec.run {
+    //   store.download("https://effigis.com/wp-content/themes/effigis_2014/img/RapidEye_RapidEye_5m_RGB_Altotting_Germany_Agriculture_and_Forestry_2009MAY17_8bits_sub_r_2.jpg", resources)
+    //   store.bitmap(AvatarsStore.Companion.Sizes.Big)
+    //   store.bitmap(AvatarsStore.Companion.Sizes.Small)
+    //   fileList().forEach {
+    //     var file = getFileStreamPath(it)
+    //     if (file.exists() && file.absolutePath.toLowerCase().indexOf("avatar") > -1) {
+    //       file.delete()
+    //     }
+    //   }
+    // }
+    // return
     // val server = Server(
     //   address = "http://10.0.2.2:3000",
     //   userId = 1,

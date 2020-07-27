@@ -3,12 +3,9 @@ package cc.osama.cryptchat.ui
 import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
-import android.graphics.BitmapFactory
 import android.os.Bundle
-import android.os.Environment
 import android.os.Handler
 import android.provider.MediaStore
-import android.util.Log.w
 import android.view.MenuItem
 import android.view.View
 import androidx.appcompat.app.AlertDialog
@@ -18,7 +15,6 @@ import cc.osama.cryptchat.db.Server
 import kotlinx.android.synthetic.main.activity_server_settings.*
 import org.json.JSONObject
 import java.io.ByteArrayOutputStream
-import java.net.URL
 
 
 class ServerSettings : AppCompatActivity() {
@@ -38,53 +34,48 @@ class ServerSettings : AppCompatActivity() {
   override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
     val uri = data?.data
     if (requestCode == PICK_IMAGE && uri != null) {
-      contentResolver.openFileDescriptor(uri, "r")?.fileDescriptor?.also { fileDescriptor ->
-        BitmapFactory.Options().apply {
-          inJustDecodeBounds = true
-          BitmapFactory.decodeFileDescriptor(fileDescriptor, null, this)
-          inSampleSize = CryptchatUtils.calcSampleSize(this, 700, 700)
-          inJustDecodeBounds = false
-          BitmapFactory.decodeFileDescriptor(fileDescriptor, null, this).also { bitmap ->
-            val stream = ByteArrayOutputStream()
-            val successfulCompression = bitmap.compress(Bitmap.CompressFormat.JPEG, 90, stream)
-            stream.close()
-            if (successfulCompression) {
-              avatarUploadProgressBar.visibility = View.VISIBLE
-              changeAvatarButton.visibility = View.GONE
-              CryptchatServer(applicationContext, server).upload(
-                path = "/avatar.json",
-                file = stream.toByteArray(),
-                fileContentType = "image/jpeg",
-                success = {
-                  avatarHolder.setImageBitmap(bitmap)
-                  uploadSuccessfulIcon.visibility = View.VISIBLE
-                  handler.postDelayed({
-                    uploadSuccessfulIcon.visibility = View.GONE
-                  }, 1500)
-                },
-                failure = {
-                  AlertDialog.Builder(this@ServerSettings).also { builder ->
-                    builder.setNegativeButton(R.string.dialog_ok) { _, _ ->  }
-                    if (it.serverMessages.size > 0) {
-                      builder.setMessage(it.serverMessages.joinToString("\n"))
-                    } else {
-                      builder.setMessage(resources.getString(R.string.server_responded_with_error, it.statusCode ?: -1))
-                    }
-                    builder.create().show()
-                  }
-                },
-                always = { _, _, _ ->
-                  avatarUploadProgressBar.visibility = View.GONE
-                  changeAvatarButton.visibility = View.VISIBLE
-                }
-              )
-            } else {
-              AlertDialog.Builder(this@ServerSettings).apply {
-                setNegativeButton(R.string.dialog_ok) { _, _ ->  }
-                setMessage(R.string.somehow_failed_to_compress_avatar)
-                create().show()
+      AsyncExec.run { asyncTask ->
+        contentResolver.openInputStream(uri)?.use { input ->
+          val tempPath = "_AVATAR_PICK_${CryptchatUtils.secureRandomHex(16)}"
+          try {
+            openFileOutput(tempPath, Context.MODE_PRIVATE).use { output ->
+              val bytes = ByteArray(1024)
+              var bytesRead = input.read(bytes)
+              while (bytesRead != -1) {
+                output.write(bytes, 0, bytesRead)
+                bytesRead = input.read(bytes)
               }
             }
+            val store = AvatarsStore(server.id, null, applicationContext)
+            store.process(getFileStreamPath(tempPath), resources)
+            val bigBitmap = store.bitmap(AvatarsStore.Companion.Sizes.Big)
+            val smallBitmap = store.bitmap(AvatarsStore.Companion.Sizes.Small)
+            if (bigBitmap != null && smallBitmap != null) {
+              val stream = ByteArrayOutputStream()
+              val successfulCompression = bigBitmap.compress(Bitmap.CompressFormat.JPEG, 90, stream)
+              stream.close()
+              asyncTask.execMainThread {
+                if (successfulCompression) {
+                  uploadAvatar(stream, smallBitmap)
+                } else {
+                  AlertDialog.Builder(this).apply {
+                    setNegativeButton(R.string.dialog_ok) { _, _ ->  }
+                    setMessage(R.string.somehow_failed_to_compress_avatar)
+                    create().show()
+                  }
+                }
+              }
+            } else {
+              asyncTask.execMainThread {
+                AlertDialog.Builder(this).apply {
+                  setNegativeButton(R.string.dialog_ok) { _, _ ->  }
+                  setMessage("Weird condition occurred where bigBitmap or smallBitmap are null")
+                  create().show()
+                }
+              }
+            }
+          } finally {
+            getFileStreamPath(tempPath).delete()
           }
         }
       }
@@ -194,6 +185,10 @@ class ServerSettings : AppCompatActivity() {
         } else {
           resources.getString(R.string.settings_activity_title_without_server_name)
         }
+        val bitmap = AvatarsStore(server.id, null, applicationContext).bitmap(AvatarsStore.Companion.Sizes.Small)
+        if (bitmap != null) {
+          avatarHolder.setImageBitmap(bitmap)
+        }
       }
     }
     saveChangesButton.isEnabled = true
@@ -210,18 +205,35 @@ class ServerSettings : AppCompatActivity() {
     }
   }
 
-  fun downloadImage() {
-    AsyncExec.run {
-      val url = URL("http://10.0.2.2:3000/avatar/4649ff268589e29ba929bb09679df202a5c80571")
-      val connection = url.openConnection()
-      Environment.getExternalStorageDirectory()
-      connection.doInput = true
-      connection.connect()
-      val input = connection.getInputStream()
-      val bitmap = BitmapFactory.decodeStream(input)
-      it.execMainThread {
-        avatarHolder.setImageBitmap(bitmap)
+  private fun uploadAvatar(stream: ByteArrayOutputStream, smallBitmap: Bitmap) {
+    avatarUploadProgressBar.visibility = View.VISIBLE
+    changeAvatarButton.visibility = View.GONE
+    CryptchatServer(applicationContext, server).upload(
+      path = "/avatar.json",
+      file = stream.toByteArray(),
+      fileContentType = "image/jpeg",
+      success = {
+        avatarHolder.setImageBitmap(smallBitmap)
+        uploadSuccessfulIcon.visibility = View.VISIBLE
+        handler.postDelayed({
+          uploadSuccessfulIcon.visibility = View.GONE
+        }, 1500)
+      },
+      failure = {
+        AlertDialog.Builder(this@ServerSettings).also { builder ->
+          builder.setNegativeButton(R.string.dialog_ok) { _, _ ->  }
+          if (it.serverMessages.size > 0) {
+            builder.setMessage(it.serverMessages.joinToString("\n"))
+          } else {
+            builder.setMessage(resources.getString(R.string.server_responded_with_error, it.statusCode ?: -1))
+          }
+          builder.create().show()
+        }
+      },
+      always = { _, _, _ ->
+        avatarUploadProgressBar.visibility = View.GONE
+        changeAvatarButton.visibility = View.VISIBLE
       }
-    }
+    )
   }
 }
