@@ -19,17 +19,17 @@ class InboundMessageHandler(
 ) {
   class UserNotFound() : Exception()
 
-  fun process() {
+  fun process() : Message? {
     val db = Cryptchat.db(context)
-    val messageIdOnServer = CryptchatUtils.toLong(data["id"]) ?: return
+    val messageIdOnServer = CryptchatUtils.toLong(data["id"]) ?: return null
     if (db.messages().checkMessageExists(serverId = server.id, idOnServer = messageIdOnServer)) {
-      return
+      return null
     }
-    val body = data["body"] as? String ?: return
-    val iv = data["iv"] as? String ?: return
-    val mac = data["mac"] as? String ?: return
-    val senderIdOnServer = CryptchatUtils.toLong(data["sender_user_id"]) ?: return
-    val createdAt = CryptchatUtils.toLong(data["created_at"]) ?: return
+    val body = data["body"] as? String ?: return null
+    val iv = data["iv"] as? String ?: return null
+    val mac = data["mac"] as? String ?: return null
+    val senderIdOnServer = CryptchatUtils.toLong(data["sender_user_id"]) ?: return null
+    val createdAt = CryptchatUtils.toLong(data["created_at"]) ?: return null
     val senderEphPubKeyString = data["sender_ephemeral_public_key"] as? String
     val receiverEphKeyPairId = CryptchatUtils.toLong(data["ephemeral_key_id_on_user_device"])
     val senderUser = db.users().findUserByServerIdAndIdOnServer(serverId = server.id, idOnServer = senderIdOnServer)
@@ -84,7 +84,7 @@ class InboundMessageHandler(
     if (receiverEphKeyPair != null) {
       db.ephemeralKeys().delete(receiverEphKeyPair)
     }
-    db.messages().add(Message(
+    val message = db.messages().add(Message(
       plaintext = plaintext,
       userId = senderUser.id,
       idOnServer = messageIdOnServer,
@@ -101,5 +101,6 @@ class InboundMessageHandler(
       broadcast.sendBroadcast(intent)
     }
     ChatView.notifyNewMessage(context)
+    return message
   }
 }

@@ -18,14 +18,8 @@ class MainActivity : RecyclerViewImplementer<String>() {
     it.stackFromEnd = true
   }
 
-  override fun onDestroy() {
-    super.onDestroy()
-    Cryptchat.currentChatView = null
-  }
-
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
-    Cryptchat.currentChatView = this
     setContentView(R.layout.activity_main)
     messagesContainer.apply {
       setHasFixedSize(true)

@@ -35,6 +35,22 @@ data class Message(
     const val BAD_SENDER_EPH_PUB_KEY = 106
   }
 
+  fun decrypted() : Boolean {
+    return status == DECRYPTED
+  }
+
+  fun sent() : Boolean {
+    return status == SENT
+  }
+
+  fun byMe() : Boolean {
+    return status < UNDECRYPTED
+  }
+
+  fun byOthers() : Boolean {
+    return !byMe()
+  }
+
   @Dao
   interface DataAccessObject {
     @Query("SELECT * FROM messages WHERE id = :id LIMIT 1")

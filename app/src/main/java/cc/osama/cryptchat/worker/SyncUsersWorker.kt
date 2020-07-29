@@ -39,7 +39,6 @@ class SyncUsersWorker(context: Context, params: WorkerParameters) : Worker(conte
       param = JSONObject().also { it.put("updated_at", maxLastUpdatedAt) },
       success = {
         val usersJsonArray = it["users"] as? JSONArray ?: return@post
-        val users = mutableListOf<User>()
         AsyncExec.run {
           for (i in 0 until usersJsonArray.length()) {
             val userJson = usersJsonArray[i] as? JSONObject ?: continue
@@ -55,6 +54,7 @@ class SyncUsersWorker(context: Context, params: WorkerParameters) : Worker(conte
             if (idOnServer == server.userId) continue
             val lastUpdatedAt = CryptchatUtils.toLong(userJson["updated_at"])
             val name = userJson["name"] as? String
+            val avatarUrl = userJson["avatar_url"] as? String
             if (publicKey != null &&
               countryCode != null &&
               phoneNumber != null &&
@@ -63,7 +63,7 @@ class SyncUsersWorker(context: Context, params: WorkerParameters) : Worker(conte
             ) {
               val existingUser = db.users().findUserByServerIdAndIdOnServer(server.id, idOnServer)
               if (existingUser == null) {
-                users.add(
+                val id = db.users().add(
                   User(
                     serverId = server.id,
                     publicKey = publicKey,
@@ -71,9 +71,17 @@ class SyncUsersWorker(context: Context, params: WorkerParameters) : Worker(conte
                     phoneNumber = phoneNumber,
                     countryCode = countryCode,
                     idOnServer = idOnServer,
-                    name = name
+                    name = name,
+                    avatarUrl = avatarUrl
                   )
                 )
+                if (avatarUrl != null) {
+                  AvatarsStore(
+                    serverId = server.id,
+                    userId = id,
+                    context = applicationContext
+                  ).download(server.address + avatarUrl, applicationContext.resources)
+                }
               } else {
                 var changed = false
                 if (existingUser.countryCode != countryCode) {
@@ -92,13 +100,25 @@ class SyncUsersWorker(context: Context, params: WorkerParameters) : Worker(conte
                   existingUser.name = name
                   changed = true
                 }
+                if (existingUser.avatarUrl != avatarUrl) {
+                  existingUser.avatarUrl = avatarUrl
+                  changed = true
+                }
                 if (changed) {
                   db.users().update(existingUser)
+                }
+                if (avatarUrl == null) {
+                  AvatarsStore(server.id, existingUser.id, applicationContext).delete()
+                } else {
+                  AvatarsStore(
+                    serverId = server.id,
+                    userId = existingUser.id,
+                    context = applicationContext
+                  ).download(server.address + avatarUrl, applicationContext.resources)
                 }
               }
             }
           }
-          db.users().addMany(users)
           LocalBroadcastManager.getInstance(applicationContext).also { broadcast ->
             val intent = Intent(ServerUsersList.REFRESH_COMMAND)
             broadcast.sendBroadcast(intent)

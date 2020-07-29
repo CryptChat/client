@@ -97,10 +97,11 @@ class ServerUsersList : RecyclerViewImplementer<User.Conversation>() {
 
   fun refreshConversations() {
     val db = Cryptchat.db(applicationContext)
-    dataset.removeAll(dataset)
     AsyncExec.run {
-      dataset.addAll(db.users().findConversationsOnServer(serverId = server.id))
+      val newSet = db.users().findConversationsOnServer(serverId = server.id)
       it.execMainThread {
+        dataset.removeAll(dataset)
+        dataset.addAll(newSet)
         viewAdapter.notifyDataSetChanged()
       }
     }
@@ -117,6 +118,12 @@ class ServerUsersList : RecyclerViewImplementer<User.Conversation>() {
     val user = conversation.user
     holder.view.displayName.text = user.name ?: user.countryCode + user.phoneNumber
     holder.view.lastMessageContainer.text = conversation.lastMessage ?: ""
+    if (user.avatarUrl != null) {
+      val bitmap = AvatarsStore(server.id, user.id, applicationContext).bitmap(AvatarsStore.Companion.Sizes.Small)
+      if (bitmap != null) {
+        holder.view.avatarHolder.setImageBitmap(bitmap)
+      }
+    }
     if (conversation.lastMessageDate != null) {
       val formatter = if (DateUtils.isToday(conversation.lastMessageDate)) {
         SimpleDateFormat("HH:mm", Locale.getDefault())

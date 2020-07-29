@@ -43,6 +43,15 @@ data class Server (
     userName = userName
   )
 
+  fun displayName() : String {
+    val serverName = name?.trim()
+    return if (serverName != null && serverName.isNotEmpty()) {
+      serverName
+    } else {
+      address
+    }
+  }
+
   @Dao
   interface DataAccessObject {
     @Query("SELECT * FROM servers")

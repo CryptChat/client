@@ -60,10 +60,8 @@ class EnterPhoneNumber : AppCompatActivity() {
           }
         },
         failure = {
-          w("TESXXTSTS", it.javaClass.toString())
         }
       )
-      w("TXXXXXXST", countryCodeField.selectedItem.toString())
     }
   }
 

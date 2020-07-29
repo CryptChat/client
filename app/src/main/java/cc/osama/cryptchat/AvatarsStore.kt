@@ -81,6 +81,13 @@ class AvatarsStore(
     }
   }
 
+  fun delete() {
+    for (size in Sizes.values()) {
+      val file = context.getFileStreamPath(pathForSize(size))
+      if (file.exists()) file.deleteOnExit()
+    }
+  }
+
   private fun pathForSize(size: Sizes) : String {
     var savePath = "avatar-$serverId"
     if (userId != null) {

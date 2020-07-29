@@ -1,13 +1,20 @@
 package cc.osama.cryptchat.worker
 
+import android.app.Notification
+import android.app.NotificationManager
 import android.content.Context
 import android.util.Log
+import android.util.Log.e
 import android.util.Log.w
+import androidx.core.app.NotificationCompat
+import androidx.core.app.NotificationManagerCompat
 import androidx.work.*
 import cc.osama.cryptchat.*
+import cc.osama.cryptchat.R
 import cc.osama.cryptchat.db.Message
 import org.json.JSONArray
 import org.json.JSONObject
+import java.security.SecureRandom
 
 class SyncMessagesWorker(context: Context, params: WorkerParameters) : Worker(context, params) {
   companion object {
@@ -23,42 +30,59 @@ class SyncMessagesWorker(context: Context, params: WorkerParameters) : Worker(co
   }
   override fun doWork() : Result {
     val serverId = inputData.getLong("serverId", -1)
-    AsyncExec.run {
-      val db = Cryptchat.db(applicationContext)
-      val server = db.servers().findById(serverId) ?: return@run
-      val lastSeenId = db.messages().findNewestReceivedMessageFromServer(server.id) ?: 0
-      val param = JSONObject()
-      param.put("last_seen_id", lastSeenId)
-      CryptchatServer(applicationContext, server).post(
-        path = "/sync/messages.json",
-        param = param,
-        success = {
-          val messages = it["messages"] as? JSONArray ?: return@post
-          AsyncExec.run {
-            try {
-              for (m in 0 until messages.length()) {
-                val messageJson = messages[m] as? JSONObject ?: continue
-                val handler = InboundMessageHandler(
-                  data = messageJson,
-                  server = server,
-                  context = applicationContext
-                )
-                handler.process()
-              }
-            } catch (ex: InboundMessageHandler.UserNotFound) {
-              SyncUsersWorker.enqueue(
-                serverId = server.id,
-                scheduleMessagesSync = true,
+    val db = Cryptchat.db(applicationContext)
+    val server = db.servers().findById(serverId) ?: return Result.success()
+    val lastSeenId = db.messages().findNewestReceivedMessageFromServer(server.id) ?: 0
+    val param = JSONObject()
+    param.put("last_seen_id", lastSeenId)
+    CryptchatServer(applicationContext, server).post(
+      path = "/sync/messages.json",
+      param = param,
+      success = {
+        val messages = it["messages"] as? JSONArray ?: return@post
+        // Needs to run in a new thread because Volley executes
+        // listeners in UI thread even though we made the
+        // request in a worker thread :/
+        AsyncExec.run {
+          try {
+            for (m in 0 until messages.length()) {
+              val messageJson = messages[m] as? JSONObject ?: continue
+              val handler = InboundMessageHandler(
+                data = messageJson,
+                server = server,
                 context = applicationContext
               )
+              val message = handler.process() ?: return@run
+              val user = db.users().find(message.userId) ?: return@run
+              if (message.decrypted()) {
+                NotificationCompat.Builder(applicationContext, Cryptchat.MESSAGES_CHANNEL_ID).also { builder ->
+                  builder.setContentText(message.plaintext)
+                  builder.setContentTitle(
+                    applicationContext.resources.getString(
+                      R.string.message_notification_title, user.displayName(), server.displayName()
+                    )
+                  )
+                  builder.priority = NotificationCompat.PRIORITY_DEFAULT
+                  builder.setSmallIcon(R.drawable.ic_check_black_24dp)
+                  with(NotificationManagerCompat.from(applicationContext)) {
+                    notify(SecureRandom().nextInt(), builder.build())
+                  }
+                }
+              }
             }
+          } catch (ex: InboundMessageHandler.UserNotFound) {
+            SyncUsersWorker.enqueue(
+              serverId = server.id,
+              scheduleMessagesSync = true,
+              context = applicationContext
+            )
           }
-        },
-        failure = {
-          Log.d("TOKEN", "MESSAGES SYNC HIT API POINT FAILURE ${it}")
         }
-      )
-    }
+      },
+      failure = {
+        e("MESSAGE SYNC", "MESSAGES SYNC API POINT FAILURE $it")
+      }
+    )
     return Result.success()
   }
 }

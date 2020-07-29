@@ -32,6 +32,7 @@ class ServerSettings : AppCompatActivity() {
   private lateinit var server: Server
 
   override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+    super.onActivityResult(requestCode, resultCode, data)
     val uri = data?.data
     if (requestCode == PICK_IMAGE && uri != null) {
       AsyncExec.run { asyncTask ->
@@ -80,7 +81,6 @@ class ServerSettings : AppCompatActivity() {
         }
       }
     }
-    super.onActivityResult(requestCode, resultCode, data)
   }
 
   override fun onStop() {

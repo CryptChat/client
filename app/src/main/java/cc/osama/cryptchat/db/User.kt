@@ -14,7 +14,8 @@ data class User(
   @NonNull var phoneNumber: String,
   @NonNull val identityKey: String, // ideally this should be private...
   @NonNull var lastUpdatedAt: Long,
-  var name: String? = null
+  var name: String? = null,
+  var avatarUrl: String? = null
 ) : Serializable {
   @Ignore val publicKey = ECPublicKey(identityKey)
 
@@ -33,7 +34,8 @@ data class User(
     phoneNumber: String,
     publicKey: ECPublicKey,
     lastUpdatedAt: Long,
-    name: String? = null
+    name: String? = null,
+    avatarUrl: String? = null
   ) : this(
     id = id,
     serverId = serverId,
@@ -42,13 +44,26 @@ data class User(
     phoneNumber = phoneNumber,
     identityKey = publicKey.toString(),
     lastUpdatedAt = lastUpdatedAt,
-    name = name
+    name = name,
+    avatarUrl = avatarUrl
   )
+
+  fun displayName() : String {
+    val userName = name?.trim()
+    return if (userName != null && userName.isNotEmpty()) {
+      userName
+    } else {
+      countryCode + phoneNumber
+    }
+  }
 
   @Dao
   interface DataAccessObject {
     @Insert
     fun addMany(users: List<User>): List<Long>
+
+    @Insert
+    fun add(user: User) : Long
 
     @Query("SELECT * FROM users")
     fun getAll(): List<User>
@@ -67,5 +82,8 @@ data class User(
 
     @Update
     fun update(user: User)
+
+    @Query("SELECT * FROM users WHERE id = :id")
+    fun find(id: Long) : User?
   }
 }
