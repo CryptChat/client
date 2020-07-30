@@ -19,12 +19,12 @@ class CryptchatRequest(
   val url: String,
   val method: Methods,
   val body: ByteArray?,
-  val successCallback: (JSONObject) -> Unit,
-  val failureCallback: (ErrorBox) -> Unit,
   private val requestHeaders: HashMap<String, String>? = null
 ) {
   enum class Methods { GET, PUT, POST, DELETE }
-  class ErrorBox(
+  class TooLateCallbacksDeclarationException : Exception()
+
+  class ErrorMetadata(
     val statusCode: Int,
     val isClientError: Boolean = false,
     val isServerError: Boolean = false,
@@ -32,25 +32,89 @@ class CryptchatRequest(
     val isNoConnectionError: Boolean = false,
     val isTimeoutError: Boolean = false,
     val isEncodingError: Boolean = false,
+    val isMalformedJsonError: Boolean = false,
     val serverMessages: Array<String> = emptyArray(),
     val originalError: Throwable? = null
-  )
+  ) {
+    override fun toString() : String {
+      val fullError = if (originalError != null) {
+        arrayOf(
+          "${originalError.javaClass}",
+          "${originalError.message}",
+          originalError.stackTrace.joinToString("\n")
+        ).joinToString("\n")
+      } else {
+        "null"
+      }
+      return arrayOf(
+        "statusCode: $statusCode",
+        "isClientError: $isClientError",
+        "isServerError: $isServerError",
+        "isUnknownHostError: $isUnknownHostError",
+        "isNoConnectionError: $isNoConnectionError",
+        "isTimeoutError: $isTimeoutError",
+        "isEncodingError: $isEncodingError",
+        "isMalformedJsonError: $isMalformedJsonError",
+        "serverMessages: ${serverMessages.joinToString(", ")}",
+        "fullError: $fullError"
+      ).joinToString("\n")
+    }
+  }
 
-  private class EmptyResponseError : Exception()
   private var headers: HashMap<String, String>? = null
   private var statusCode = -1
-  private var rawResponse: String? = null
 
-  fun run() {
-    perform()
-  }
+  private var initiated = false
+  private var successCallback: ((JSONObject) -> Unit)? = null
+  private var failureCallback: ((ErrorMetadata) -> Unit)? = null
+  private var alwaysCallback: ((Boolean) -> Unit)? = null
 
   fun headers() : HashMap<String, String>? = headers
 
-  private fun perform() {
+  fun perform() {
+    execute()
+  }
+
+  fun success(callback: (JSONObject) -> Unit) {
+    setCallback {
+      successCallback = callback
+    }
+  }
+
+  fun failure(callback: (ErrorMetadata) -> Unit) {
+    setCallback {
+      failureCallback = callback
+    }
+  }
+
+  fun always(callback: (Boolean) -> Unit) {
+    setCallback {
+      alwaysCallback = callback
+    }
+  }
+
+  private fun success(json: JSONObject) {
+    successCallback?.invoke(json)
+    alwaysCallback?.invoke(true)
+  }
+
+  private fun failure(errorData: ErrorMetadata) {
+    failureCallback?.invoke(errorData)
+    alwaysCallback?.invoke(false)
+  }
+
+  private fun setCallback(lambda: () -> Unit) {
+    if (initiated) {
+      throw TooLateCallbacksDeclarationException()
+    } else {
+      lambda()
+    }
+  }
+
+  private fun execute() {
     try {
-      performSync()
-      val json = processResponse(rawResponse)
+      val response = connect()
+      val json = processResponse(response)
       val errorMessages = ArrayList<String>().also { list ->
         if (statusCode >= 400) {
           (json["messages"] as? JSONArray)?.also {
@@ -63,16 +127,16 @@ class CryptchatRequest(
       when (statusCode) {
         -1 -> {
           w("CRYPTCHAT HTTP ERROR", "WEIRD CONDITION OCCURRED!")
-          failureCallback(ErrorBox(
+          failure(ErrorMetadata(
             statusCode = statusCode,
             serverMessages = errorMessages
           ))
         }
         in 200..299 -> {
-          successCallback(json)
+          success(json)
         }
         else -> {
-          failureCallback(ErrorBox(
+          failure(ErrorMetadata(
             statusCode = statusCode,
             serverMessages = errorMessages,
             isClientError = statusCode in 400..499,
@@ -81,38 +145,45 @@ class CryptchatRequest(
         }
       }
     } catch (ex: UnknownHostException) {
-      failureCallback(ErrorBox(
+      failure(ErrorMetadata(
         statusCode = statusCode,
         isUnknownHostError = true,
         originalError = ex
       ))
     } catch (ex: SocketTimeoutException) {
-      failureCallback(ErrorBox(
+      failure(ErrorMetadata(
         statusCode = statusCode,
         isTimeoutError = true,
         originalError = ex
       ))
     } catch (ex: UnsupportedEncodingException) {
-      failureCallback(ErrorBox(
+      failure(ErrorMetadata(
         statusCode = statusCode,
         isEncodingError = true,
         originalError = ex
       ))
+    } catch (ex: JSONException) {
+      failure(ErrorMetadata(
+        statusCode = statusCode,
+        isMalformedJsonError = true,
+        originalError = ex
+      ))
     } catch (ex: IOException) {
-      failureCallback(ErrorBox(
+      failure(ErrorMetadata(
         statusCode = statusCode,
         isNoConnectionError = true,
         originalError = ex
       ))
     } catch (ex: Throwable) {
-      failureCallback(ErrorBox(
+      failure(ErrorMetadata(
         statusCode = statusCode,
         originalError = ex
       ))
     }
 }
 
-  private fun performSync() {
+  private fun connect() : String {
+    initiated = true
     val urlObj = URL(url)
     val connection = urlObj.openConnection() as HttpURLConnection
     connection.requestMethod = method.name
@@ -154,7 +225,7 @@ class CryptchatRequest(
         responseBuilder.append(line)
         line = input.readLine()
       }
-      rawResponse = responseBuilder.toString()
+      return responseBuilder.toString()
     } finally {
       stream?.close()
     }

@@ -3,6 +3,7 @@ package cc.osama.cryptchat.ui
 import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.util.Log.w
 import cc.osama.cryptchat.*
 import org.json.JSONObject
 
@@ -15,7 +16,17 @@ class AppEntry : AppCompatActivity() {
         url = "http://10.0.2.2:3000/knock-knock.json",
         method = CryptchatRequest.Methods.GET,
         body = JSONObject().apply { put("test", 1); put("osama", "ssd") }.toString().toByteArray()
-      ).run()
+      ).apply {
+        success {
+          w("SSSSSSSSSSSS", it.toString())
+        }
+        failure {
+          w("SSSSSSSSSSSS", it.toString())
+        }
+        always {
+          w("SSSSSSSSSSSS", "ALWAYS $it")
+        }
+      }.perform()
     }
     return
     // fileList().forEach {
