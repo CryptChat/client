@@ -49,8 +49,8 @@ class ServerSettings : AppCompatActivity() {
             }
             val store = AvatarsStore(server.id, null, applicationContext)
             store.process(getFileStreamPath(tempPath), resources)
-            val bigBitmap = store.bitmap(AvatarsStore.Companion.Sizes.Big)
-            val smallBitmap = store.bitmap(AvatarsStore.Companion.Sizes.Small)
+            val bigBitmap = store.bitmap(AvatarsStore.Sizes.Big)
+            val smallBitmap = store.bitmap(AvatarsStore.Sizes.Small)
             if (bigBitmap != null && smallBitmap != null) {
               val stream = ByteArrayOutputStream()
               val successfulCompression = bigBitmap.compress(Bitmap.CompressFormat.JPEG, 90, stream)
@@ -185,7 +185,7 @@ class ServerSettings : AppCompatActivity() {
         } else {
           resources.getString(R.string.settings_activity_title_without_server_name)
         }
-        val bitmap = AvatarsStore(server.id, null, applicationContext).bitmap(AvatarsStore.Companion.Sizes.Small)
+        val bitmap = AvatarsStore(server.id, null, applicationContext).bitmap(AvatarsStore.Sizes.Small)
         if (bitmap != null) {
           avatarHolder.setImageBitmap(bitmap)
         }

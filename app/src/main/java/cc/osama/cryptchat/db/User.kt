@@ -1,7 +1,9 @@
 package cc.osama.cryptchat.db
 
+import android.content.Context
 import androidx.annotation.NonNull
 import androidx.room.*
+import cc.osama.cryptchat.Cryptchat
 import cc.osama.cryptchat.ECPublicKey
 import java.io.Serializable
 

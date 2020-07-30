@@ -23,21 +23,24 @@ class ChatView : RecyclerViewImplementer<ChatView.DisplayMessageStruct>() {
     val plaintext: String,
     val id: Long,
     val status: Int,
-    val createdAt: Long
+    val createdAt: Long,
+    val byMe: Boolean
   ) {
     constructor(message: Message) : this(
       id = message.id,
       plaintext = message.plaintext,
       status = message.status,
-      createdAt = message.createdAt
+      createdAt = message.createdAt,
+      byMe = message.byMe()
     )
-
-    fun isFirstParty() = status < Message.UNDECRYPTED
   }
   override val dataset = ArrayList<DisplayMessageStruct>()
   override val defaultLayout = R.layout.chat_message_first_party
   override val viewAdapter = Adapter(dataset, defaultLayout, this)
   override val viewManager = LinearLayoutManager(this)
+  private lateinit var server: Server
+  private lateinit var user: User
+  private var maxId: Long = 0
 
   private val receiver = object : BroadcastReceiver() {
     override fun onReceive(context: Context?, intent: Intent?) {
@@ -85,14 +88,14 @@ class ChatView : RecyclerViewImplementer<ChatView.DisplayMessageStruct>() {
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
+    user = intent?.extras?.get("user") as User
+    server = intent?.extras?.get("server") as Server
     setContentView(R.layout.activity_chat_view)
     chatBody.apply {
       setHasFixedSize(true)
       layoutManager = viewManager
       adapter = viewAdapter
     }
-    val user = intent?.extras?.get("user") as User
-    val server = intent?.extras?.get("server") as Server
     refreshMessagesStream()
     chatMessageSend.addTextChangedListener(CryptchatTextWatcher(
       on = { s, _, _, _ ->
@@ -126,10 +129,8 @@ class ChatView : RecyclerViewImplementer<ChatView.DisplayMessageStruct>() {
     LocalBroadcastManager.getInstance(this).registerReceiver(receiver, IntentFilter(BROADCAST_INTENT))
   }
 
-  @Synchronized private fun refreshMessagesStream() {
-    val user = intent?.extras?.get("user") as User
-    val server = intent?.extras?.get("server") as Server
-    val maxId = dataset.maxBy { it.id }?.id ?: 0
+  private fun refreshMessagesStream() {
+    updateMaxId()
     Cryptchat.db(applicationContext).also { db ->
       AsyncExec.run {
         val messages = db.messages().findConversationMessages(
@@ -137,8 +138,9 @@ class ChatView : RecyclerViewImplementer<ChatView.DisplayMessageStruct>() {
           userId = user.id,
           lastId = maxId
         )
-        dataset.addAll(messages.map { m -> DisplayMessageStruct(m) })
+        if (messages.isEmpty()) return@run
         it.execMainThread {
+          dataset.addAll(messages.map { m -> DisplayMessageStruct(m) })
           viewAdapter.notifyDataSetChanged()
           chatBody.scrollToPosition(dataset.size - 1)
         }
@@ -147,18 +149,25 @@ class ChatView : RecyclerViewImplementer<ChatView.DisplayMessageStruct>() {
     }
   }
 
-  @Synchronized fun refreshMessage(messageId: Long) {
+  private fun refreshMessage(messageId: Long) {
     Cryptchat.db(applicationContext).also { db ->
       AsyncExec.run {
         val message = db.messages().findById(messageId)
-        val index = dataset.indexOfFirst { m -> m.id == messageId }
-        if (message != null && index != -1) {
-          dataset[index] = DisplayMessageStruct(message)
-          it.execMainThread {
+        it.execMainThread {
+          val index = dataset.indexOfFirst { m -> m.id == messageId }
+          if (message != null && index != -1) {
+            dataset[index] = DisplayMessageStruct(message)
             viewAdapter.notifyItemChanged(index)
           }
         }
       }
+    }
+  }
+
+  @Synchronized private fun updateMaxId() {
+    val newMax = dataset.maxBy { it.id }?.id ?: 0
+    if (newMax > maxId) {
+      maxId = newMax
     }
   }
 
@@ -170,7 +179,7 @@ class ChatView : RecyclerViewImplementer<ChatView.DisplayMessageStruct>() {
   }
 
   override fun getItemViewType(position: Int): Int {
-    return if (dataset[position].isFirstParty()) {
+    return if (dataset[position].byMe) {
       super.getItemViewType(position)
     } else {
       R.layout.chat_message_second_party

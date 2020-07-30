@@ -14,11 +14,11 @@ class AvatarsStore(
   private val userId: Long?,
   private val context: Context
 ) {
+  enum class Sizes {
+    Big, // ~1000 px
+    Small // 55 dp converted to px
+  }
   companion object {
-    enum class Sizes {
-      Big, // ~1000 px
-      Small // 55 dp converted to px
-    }
     private const val USERS_LIST_AVATARS_SIZE = 55 // dp
   }
   fun download(url: String, r: Resources) {

@@ -3,13 +3,21 @@ package cc.osama.cryptchat.ui
 import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import android.util.Log.w
 import cc.osama.cryptchat.*
+import org.json.JSONObject
 
 class AppEntry : AppCompatActivity() {
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
+    AsyncExec.run {
+      CryptchatRequest(
+        url = "http://10.0.2.2:3000/knock-knock.json",
+        method = CryptchatRequest.Methods.GET,
+        body = JSONObject().apply { put("test", 1); put("osama", "ssd") }.toString().toByteArray()
+      ).run()
+    }
+    return
     // fileList().forEach {
     //   var file = getFileStreamPath(it)
     //   if (file.exists() && file.absolutePath.toLowerCase().indexOf("avatar") > -1) {
@@ -94,7 +102,7 @@ class AppEntry : AppCompatActivity() {
           intent = Intent(this, EnterServerAddress::class.java)
         } else {
           intent = ServerUsersList.createIntent(
-            servers[0].id,
+            servers[0],
             this
           )
         }

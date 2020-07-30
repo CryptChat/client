@@ -1,7 +1,10 @@
 package cc.osama.cryptchat.db
 
+import android.content.Context
 import androidx.annotation.NonNull
 import androidx.room.*
+import cc.osama.cryptchat.AsyncExec
+import cc.osama.cryptchat.Cryptchat
 import cc.osama.cryptchat.ECKeyPair
 import java.io.Serializable
 
@@ -19,6 +22,7 @@ data class Server (
   var userName: String?
 ) : Serializable {
   @Ignore val keyPair = ECKeyPair(publicKey = publicKey, privateKey = privateKey)
+  @Ignore private var lastReloadedAt = System.currentTimeMillis()
 
   constructor(
     id: Long = 0,
@@ -50,6 +54,21 @@ data class Server (
     } else {
       address
     }
+  }
+
+  fun reload(context: Context) {
+    Cryptchat.db(context).also {
+      val newCopy = it.servers().findById(this.id) ?: return@also
+      authToken = newCopy.authToken
+      name = newCopy.name
+      instanceId = newCopy.instanceId
+      userName = newCopy.userName
+      lastReloadedAt = System.currentTimeMillis()
+    }
+  }
+
+  fun shouldReload() : Boolean {
+    return System.currentTimeMillis() - 1000 * 60 > lastReloadedAt
   }
 
   @Dao

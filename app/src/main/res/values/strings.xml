@@ -35,6 +35,7 @@
     <string name="notification_channel_messages">"Messages"</string>
     <string name="notification_channel_messages_desc">"Notifications for received messages."</string>
     <string name="message_notification_title">"%1$s@%2$s"</string>
+    <string name="server">"Server"</string>
     <string-array name="countries_codes">
         <item>+965</item>
         <item>+966</item>

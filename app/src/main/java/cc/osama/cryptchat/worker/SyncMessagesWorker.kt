@@ -12,6 +12,7 @@ import androidx.work.*
 import cc.osama.cryptchat.*
 import cc.osama.cryptchat.R
 import cc.osama.cryptchat.db.Message
+import cc.osama.cryptchat.ui.ServerUsersList
 import org.json.JSONArray
 import org.json.JSONObject
 import java.security.SecureRandom
@@ -54,6 +55,7 @@ class SyncMessagesWorker(context: Context, params: WorkerParameters) : Worker(co
               )
               val message = handler.process() ?: return@run
               val user = db.users().find(message.userId) ?: return@run
+              ServerUsersList.refreshUsersList(applicationContext)
               if (message.decrypted()) {
                 NotificationCompat.Builder(applicationContext, Cryptchat.MESSAGES_CHANNEL_ID).also { builder ->
                   builder.setContentText(message.plaintext)
@@ -63,6 +65,7 @@ class SyncMessagesWorker(context: Context, params: WorkerParameters) : Worker(co
                     )
                   )
                   builder.priority = NotificationCompat.PRIORITY_DEFAULT
+                  // TODO: Replace this with a proper icon
                   builder.setSmallIcon(R.drawable.ic_check_black_24dp)
                   with(NotificationManagerCompat.from(applicationContext)) {
                     notify(SecureRandom().nextInt(), builder.build())

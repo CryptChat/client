@@ -96,10 +96,6 @@ class InboundMessageHandler(
       receiverEphemeralKeyPairId = receiverEphKeyPair?.id,
       receiverEphemeralPublicKey = receiverEphKeyPair?.keyPair?.publicKey?.toString()
     ))
-    LocalBroadcastManager.getInstance(context).also { broadcast ->
-      val intent = Intent(ServerUsersList.REFRESH_COMMAND)
-      broadcast.sendBroadcast(intent)
-    }
     ChatView.notifyNewMessage(context)
     return message
   }

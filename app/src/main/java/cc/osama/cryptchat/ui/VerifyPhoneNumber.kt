@@ -88,7 +88,7 @@ class VerifyPhoneNumber : AppCompatActivity() {
       supplyEphemeralKeys(server)
       SyncUsersWorker.enqueue(serverId = server.id, context = applicationContext)
       it.execMainThread {
-        startActivity(ServerUsersList.createIntent(server.id, applicationContext))
+        startActivity(ServerUsersList.createIntent(server, applicationContext))
       }
     }
   }

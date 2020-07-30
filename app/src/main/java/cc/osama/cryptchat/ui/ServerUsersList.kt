@@ -6,7 +6,6 @@ import android.content.Intent
 import android.content.IntentFilter
 import android.os.Bundle
 import android.text.format.DateUtils
-import android.util.Log.w
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
@@ -27,7 +26,6 @@ class ServerUsersList : RecyclerViewImplementer<User.Conversation>() {
   override val viewAdapter = Adapter(dataset, defaultLayout, this)
   override val viewManager = LinearLayoutManager(this)
   private lateinit var server: Server
-  private var serverId: Long = -1
 
   private val receiver = object : BroadcastReceiver() {
     override fun onReceive(context: Context?, intent: Intent?) {
@@ -36,30 +34,32 @@ class ServerUsersList : RecyclerViewImplementer<User.Conversation>() {
   }
 
   companion object {
-    fun createIntent(serverId: Long, context: Context) : Intent {
+    private const val REFRESH_INTENT_ACTION = "CRYPTCHAT_REFRESH_SERVER_USERS_LIST"
+    fun createIntent(server: Server, context: Context) : Intent {
       return Intent(context, ServerUsersList::class.java).also {
-        it.putExtra("serverId", serverId)
+        it.putExtra("server", server)
       }
     }
-    const val REFRESH_COMMAND = "REFRESH_SERVER_USERS_LIST"
+
+    fun refreshUsersList(context: Context) {
+      LocalBroadcastManager.getInstance(context).also { broadcast ->
+        val intent = Intent(REFRESH_INTENT_ACTION)
+        broadcast.sendBroadcast(intent)
+      }
+    }
   }
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
-    serverId = intent.extras?.getLong("serverId") as Long
-    AsyncExec.run {
-      server = Cryptchat.db(applicationContext).servers().findById(serverId) as Server
-      it.execMainThread {
-        setContentView(R.layout.activity_server_users_list)
-        usersList.apply {
-          setHasFixedSize(true)
-          layoutManager = viewManager
-          adapter = viewAdapter
-        }
-        setSupportActionBar(serverUsersListToolbar)
-        supportActionBar?.title = server.name ?: "Server"
-      }
+    server = intent.extras?.get("server") as Server
+    setContentView(R.layout.activity_server_users_list)
+    usersList.apply {
+      setHasFixedSize(true)
+      layoutManager = viewManager
+      adapter = viewAdapter
     }
+    setSupportActionBar(serverUsersListToolbar)
+    supportActionBar?.title = server.name ?: resources.getString(R.string.server)
   }
 
   override fun onCreateOptionsMenu(menu: Menu?): Boolean {
@@ -78,15 +78,20 @@ class ServerUsersList : RecyclerViewImplementer<User.Conversation>() {
 
   override fun onStart() {
     super.onStart()
-    AsyncExec.run {
-      // TODO: Maybe it's worth adding a check here in case the server
-      // is deleted and redirect the user if it's deleted.
-      server = Cryptchat.db(applicationContext).servers().findById(serverId) as Server
-      it.execMainThread {
-        LocalBroadcastManager.getInstance(this).registerReceiver(receiver, IntentFilter(REFRESH_COMMAND))
-        supportActionBar?.title = server.name ?: "Server"
-        refreshConversations()
+    val callback = {
+      LocalBroadcastManager
+        .getInstance(this)
+        .registerReceiver(receiver, IntentFilter(REFRESH_INTENT_ACTION))
+      supportActionBar?.title = server.name ?: resources.getString(R.string.server)
+      refreshConversations()
+    }
+    if (server.shouldReload()) {
+      AsyncExec.run {
+        server.reload(applicationContext)
+        it.execMainThread(callback)
       }
+    } else {
+      callback()
     }
   }
 
@@ -119,7 +124,7 @@ class ServerUsersList : RecyclerViewImplementer<User.Conversation>() {
     holder.view.displayName.text = user.name ?: user.countryCode + user.phoneNumber
     holder.view.lastMessageContainer.text = conversation.lastMessage ?: ""
     if (user.avatarUrl != null) {
-      val bitmap = AvatarsStore(server.id, user.id, applicationContext).bitmap(AvatarsStore.Companion.Sizes.Small)
+      val bitmap = AvatarsStore(server.id, user.id, applicationContext).bitmap(AvatarsStore.Sizes.Small)
       if (bitmap != null) {
         holder.view.avatarHolder.setImageBitmap(bitmap)
       }

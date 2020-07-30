@@ -119,10 +119,7 @@ class SyncUsersWorker(context: Context, params: WorkerParameters) : Worker(conte
               }
             }
           }
-          LocalBroadcastManager.getInstance(applicationContext).also { broadcast ->
-            val intent = Intent(ServerUsersList.REFRESH_COMMAND)
-            broadcast.sendBroadcast(intent)
-          }
+          ServerUsersList.refreshUsersList(applicationContext)
           if (scheduleMessagesSync) {
             SyncMessagesWorker.enqueue(
               serverId = server.id,
