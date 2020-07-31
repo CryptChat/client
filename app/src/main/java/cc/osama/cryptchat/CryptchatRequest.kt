@@ -31,8 +31,8 @@ class CryptchatRequest(
     val isUnknownHostError: Boolean = false,
     val isNoConnectionError: Boolean = false,
     val isTimeoutError: Boolean = false,
-    val isEncodingError: Boolean = false,
-    val isMalformedJsonError: Boolean = false,
+    val hadEncodingError: Boolean = false,
+    val hadMalformedJson: Boolean = false,
     val serverMessages: Array<String> = emptyArray(),
     val originalError: Throwable? = null
   ) {
@@ -53,8 +53,8 @@ class CryptchatRequest(
         "isUnknownHostError: $isUnknownHostError",
         "isNoConnectionError: $isNoConnectionError",
         "isTimeoutError: $isTimeoutError",
-        "isEncodingError: $isEncodingError",
-        "isMalformedJsonError: $isMalformedJsonError",
+        "hadEncodingError: $hadEncodingError",
+        "hadMalformedJson: $hadMalformedJson",
         "serverMessages: ${serverMessages.joinToString(", ")}",
         "fullError: $fullError"
       ).joinToString("\n")
@@ -112,12 +112,24 @@ class CryptchatRequest(
   }
 
   private fun execute() {
+    var isEncodingError = false
+    var isMalformedJsonError = false
     try {
       val response = connect()
-      val json = processResponse(response)
+      isEncodingError = response == null
+      val json = if (response != null) {
+        try {
+          processResponse(response)
+        } catch (ex: JSONException) {
+          isMalformedJsonError = true
+          JSONObject()
+        }
+      } else {
+        JSONObject()
+      }
       val errorMessages = ArrayList<String>().also { list ->
         if (statusCode >= 400) {
-          (json["messages"] as? JSONArray)?.also {
+          (json.optJSONArray("messages"))?.also {
             for (m in 0 until it.length()) {
               (it.get(m) as? String)?.also { msg -> list.add(msg) }
             }
@@ -126,9 +138,13 @@ class CryptchatRequest(
       }.toTypedArray()
       when (statusCode) {
         -1 -> {
+          // I doubt this case is needed, but let's add just to
+          // be on the safe side
           w("CRYPTCHAT HTTP ERROR", "WEIRD CONDITION OCCURRED!")
           failure(ErrorMetadata(
             statusCode = statusCode,
+            hadMalformedJson = isMalformedJsonError,
+            hadEncodingError = isEncodingError,
             serverMessages = errorMessages
           ))
         }
@@ -139,6 +155,8 @@ class CryptchatRequest(
           failure(ErrorMetadata(
             statusCode = statusCode,
             serverMessages = errorMessages,
+            hadMalformedJson = isMalformedJsonError,
+            hadEncodingError = isEncodingError,
             isClientError = statusCode in 400..499,
             isServerError = statusCode !in 400..499
           ))
@@ -156,18 +174,6 @@ class CryptchatRequest(
         isTimeoutError = true,
         originalError = ex
       ))
-    } catch (ex: UnsupportedEncodingException) {
-      failure(ErrorMetadata(
-        statusCode = statusCode,
-        isEncodingError = true,
-        originalError = ex
-      ))
-    } catch (ex: JSONException) {
-      failure(ErrorMetadata(
-        statusCode = statusCode,
-        isMalformedJsonError = true,
-        originalError = ex
-      ))
     } catch (ex: IOException) {
       failure(ErrorMetadata(
         statusCode = statusCode,
@@ -177,12 +183,14 @@ class CryptchatRequest(
     } catch (ex: Throwable) {
       failure(ErrorMetadata(
         statusCode = statusCode,
+        hadMalformedJson = isMalformedJsonError,
+        hadEncodingError = isEncodingError,
         originalError = ex
       ))
     }
 }
 
-  private fun connect() : String {
+  private fun connect() : String? {
     initiated = true
     val urlObj = URL(url)
     val connection = urlObj.openConnection() as HttpURLConnection
@@ -226,6 +234,8 @@ class CryptchatRequest(
         line = input.readLine()
       }
       return responseBuilder.toString()
+    } catch (ex: UnsupportedEncodingException) {
+      return null
     } finally {
       stream?.close()
     }
