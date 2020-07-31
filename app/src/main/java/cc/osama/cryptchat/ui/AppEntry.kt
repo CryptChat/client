@@ -26,6 +26,9 @@ class AppEntry : AppCompatActivity() {
         always {
           w("SSSSSSSSSSSS", "ALWAYS $it")
         }
+        headers {
+          w("SSSSSSSSSSSSSS", it.toString())
+        }
       }.perform()
     }
     return

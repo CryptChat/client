@@ -61,15 +61,15 @@ class CryptchatRequest(
     }
   }
 
-  private var headers: HashMap<String, String>? = null
+  private var headers: Map<String, String>? = null
   private var statusCode = -1
 
   private var initiated = false
+
   private var successCallback: ((JSONObject) -> Unit)? = null
   private var failureCallback: ((ErrorMetadata) -> Unit)? = null
   private var alwaysCallback: ((Boolean) -> Unit)? = null
-
-  fun headers() : HashMap<String, String>? = headers
+  private var headersCallback: ((Map<String, String>) -> Unit)? = null
 
   fun perform() {
     execute()
@@ -93,6 +93,12 @@ class CryptchatRequest(
     }
   }
 
+  fun headers(callback: (Map<String, String>) -> Unit) {
+    setCallback {
+      headersCallback = callback
+    }
+  }
+
   private fun success(json: JSONObject) {
     successCallback?.invoke(json)
     alwaysCallback?.invoke(true)
@@ -101,6 +107,13 @@ class CryptchatRequest(
   private fun failure(errorData: ErrorMetadata) {
     failureCallback?.invoke(errorData)
     alwaysCallback?.invoke(false)
+  }
+
+  private fun headers() {
+    val headers = headers
+    if (headers != null) {
+      headersCallback?.invoke(headers)
+    }
   }
 
   private fun setCallback(lambda: () -> Unit) {
@@ -129,6 +142,7 @@ class CryptchatRequest(
       }
       val errorMessages = ArrayList<String>().also { list ->
         if (statusCode >= 400) {
+          // TODO: use opt{type} methods everywhere we use JSON
           (json.optJSONArray("messages"))?.also {
             for (m in 0 until it.length()) {
               (it.get(m) as? String)?.also { msg -> list.add(msg) }
@@ -187,6 +201,8 @@ class CryptchatRequest(
         hadEncodingError = isEncodingError,
         originalError = ex
       ))
+    } finally {
+      headers()
     }
 }
 
@@ -209,13 +225,14 @@ class CryptchatRequest(
       connection.outputStream.write(body, 0, body.size)
     }
     statusCode = connection.responseCode
-    headers = HashMap<String, String>().also {
+    headers = HashMap<String, String>().let {
       for (i in connection.headerFields ?: HashMap<String, List<String>>()) {
         if (i.key == null) continue
         // this is probably not perfect for all headers
         // but should be good enough for us
         it[i.key.toLowerCase(Locale.ROOT)] = i.value?.joinToString(", ") ?: ""
       }
+      it.toMap()
     }
     var stream: InputStream? = null
     try {
