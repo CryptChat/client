@@ -1,7 +1,9 @@
 package cc.osama.cryptchat
 
+import android.os.Handler
+import android.os.Looper
 import android.util.Log.w
-import org.json.JSONArray
+import cc.osama.cryptchat.db.Server
 import org.json.JSONException
 import org.json.JSONObject
 import java.io.*
@@ -12,17 +14,39 @@ import java.net.SocketTimeoutException
 import java.net.URL
 import java.net.UnknownHostException
 import java.util.*
+import java.util.concurrent.Executors
 import kotlin.collections.ArrayList
 import kotlin.collections.HashMap
 
 class CryptchatRequest(
   val url: String,
   val method: Methods,
-  val body: ByteArray?,
   private val requestHeaders: HashMap<String, String>? = null
 ) {
   enum class Methods { GET, PUT, POST, DELETE }
   class TooLateCallbacksDeclarationException : Exception()
+
+  class CallbacksExecutor {
+    fun onMainThread(callback: CallbacksExecutor.() -> Unit) {
+      if (Looper.myLooper() == Looper.getMainLooper()) {
+        callback()
+      } else {
+        handler.post {
+          callback()
+        }
+      }
+    }
+  }
+
+  companion object {
+    private val executor = Executors.newSingleThreadExecutor()
+    private val handler = Handler(Looper.getMainLooper())
+    private fun queue(request: CryptchatRequest) {
+      executor.execute {
+        request.perform()
+      }
+    }
+  }
 
   class ErrorMetadata(
     val statusCode: Int,
@@ -61,58 +85,97 @@ class CryptchatRequest(
     }
   }
 
-  private var headers: Map<String, String>? = null
+  constructor(
+    server: Server,
+    path: String,
+    method: Methods,
+    requestHeaders: HashMap<String, String>? = null
+  ) : this(
+    url = server.urlForPath(path),
+    method = method,
+    requestHeaders = requestHeaders
+  )
+
+  private var responseHeaders: Map<String, String>? = null
   private var statusCode = -1
 
   private var initiated = false
+  private var body: ByteArray? = null
+  private var queryString: String = ""
 
-  private var successCallback: ((JSONObject) -> Unit)? = null
-  private var failureCallback: ((ErrorMetadata) -> Unit)? = null
-  private var alwaysCallback: ((Boolean) -> Unit)? = null
-  private var headersCallback: ((Map<String, String>) -> Unit)? = null
+  private var successCallback: (CallbacksExecutor.(JSONObject) -> Unit)? = null
+  private var failureCallback: (CallbacksExecutor.(ErrorMetadata) -> Unit)? = null
+  private var alwaysCallback: (CallbacksExecutor.(Boolean) -> Unit)? = null
+  private var headersCallback: (CallbacksExecutor.(Map<String, String>) -> Unit)? = null
+
+  private val callbacksCaller = CallbacksExecutor()
+
+  fun perform(body: ByteArray) {
+    this.body = body
+    perform()
+  }
+
+  fun perform(params: JSONObject) {
+    setParams(params)
+    perform()
+  }
 
   fun perform() {
     execute()
   }
 
-  fun success(callback: (JSONObject) -> Unit) {
+  fun performAsync(body: ByteArray) {
+    this.body = body
+    performAsync()
+  }
+
+  fun performAsync(params: JSONObject) {
+    setParams(params)
+    performAsync()
+  }
+
+  fun performAsync() {
+    queue(this)
+  }
+
+  fun success(callback: CallbacksExecutor.(JSONObject) -> Unit) {
     setCallback {
       successCallback = callback
     }
   }
 
-  fun failure(callback: (ErrorMetadata) -> Unit) {
+  fun failure(callback: CallbacksExecutor.(ErrorMetadata) -> Unit) {
     setCallback {
       failureCallback = callback
     }
   }
 
-  fun always(callback: (Boolean) -> Unit) {
+  fun always(callback: CallbacksExecutor.(Boolean) -> Unit) {
     setCallback {
       alwaysCallback = callback
     }
   }
 
-  fun headers(callback: (Map<String, String>) -> Unit) {
+  fun headers(callback: CallbacksExecutor.(Map<String, String>) -> Unit) {
     setCallback {
       headersCallback = callback
     }
   }
 
   private fun success(json: JSONObject) {
-    successCallback?.invoke(json)
-    alwaysCallback?.invoke(true)
+    successCallback?.invoke(callbacksCaller, json)
+    alwaysCallback?.invoke(callbacksCaller, true)
   }
 
   private fun failure(errorData: ErrorMetadata) {
-    failureCallback?.invoke(errorData)
-    alwaysCallback?.invoke(false)
+    failureCallback?.invoke(callbacksCaller, errorData)
+    alwaysCallback?.invoke(callbacksCaller, false)
   }
 
   private fun headers() {
-    val headers = headers
+    val headers = responseHeaders
     if (headers != null) {
-      headersCallback?.invoke(headers)
+      headersCallback?.invoke(callbacksCaller, headers)
     }
   }
 
@@ -194,13 +257,13 @@ class CryptchatRequest(
         isNoConnectionError = true,
         originalError = ex
       ))
-    } catch (ex: Throwable) {
-      failure(ErrorMetadata(
-        statusCode = statusCode,
-        hadMalformedJson = isMalformedJsonError,
-        hadEncodingError = isEncodingError,
-        originalError = ex
-      ))
+    // } catch (ex: Throwable) {
+    //   failure(ErrorMetadata(
+    //     statusCode = statusCode,
+    //     hadMalformedJson = isMalformedJsonError,
+    //     hadEncodingError = isEncodingError,
+    //     originalError = ex
+    //   ))
     } finally {
       headers()
     }
@@ -208,7 +271,12 @@ class CryptchatRequest(
 
   private fun connect() : String? {
     initiated = true
-    val urlObj = URL(url)
+    var fullUrl = url
+    if (queryString.isNotEmpty()) {
+      fullUrl += if (url.indexOf('?') == -1) '?' else '&'
+      fullUrl += queryString
+    }
+    val urlObj = URL(fullUrl)
     val connection = urlObj.openConnection() as HttpURLConnection
     connection.requestMethod = method.name
     connection.setRequestProperty("Content-Type", "application/json; utf-8")
@@ -219,13 +287,14 @@ class CryptchatRequest(
         connection.setRequestProperty(header.key, header.value)
       }
     }
+    val body = body
     // GET requests should not have body
     if (method != Methods.GET && body != null && body.isNotEmpty()) {
       connection.doOutput = true
       connection.outputStream.write(body, 0, body.size)
     }
     statusCode = connection.responseCode
-    headers = HashMap<String, String>().let {
+    responseHeaders = HashMap<String, String>().let {
       for (i in connection.headerFields ?: HashMap<String, List<String>>()) {
         if (i.key == null) continue
         // this is probably not perfect for all headers
@@ -260,5 +329,24 @@ class CryptchatRequest(
 
   private fun processResponse(response: String?) : JSONObject {
     return JSONObject(response)
+  }
+
+  private fun setParams(params: JSONObject) {
+    if (method == Methods.GET) {
+      val queryStringBuilder = StringBuilder()
+      val iterator = params.keys().iterator()
+      while (iterator.hasNext()) {
+        val key = iterator.next()
+        queryStringBuilder.append(key)
+        queryStringBuilder.append('=')
+        queryStringBuilder.append(params[key].toString())
+        if (iterator.hasNext()) {
+          queryStringBuilder.append('&')
+        }
+      }
+      queryString = queryStringBuilder.toString()
+    } else {
+      body = params.toString().toByteArray(Charsets.UTF_8)
+    }
   }
 }

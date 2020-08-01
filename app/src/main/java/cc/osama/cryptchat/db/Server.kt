@@ -71,6 +71,10 @@ data class Server (
     return System.currentTimeMillis() - 1000 * 60 > lastReloadedAt
   }
 
+  fun urlForPath(path: String) : String {
+    return address + path
+  }
+
   @Dao
   interface DataAccessObject {
     @Query("SELECT * FROM servers")
