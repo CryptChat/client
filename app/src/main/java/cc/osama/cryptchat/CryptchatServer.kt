@@ -1,92 +1,66 @@
 package cc.osama.cryptchat
 
 import android.content.Context
-import android.util.Base64
-import android.util.Log.e
-import android.util.Log.w
 import cc.osama.cryptchat.db.Server
 import com.android.volley.*
 import com.android.volley.toolbox.JsonObjectRequest
-import com.android.volley.toolbox.JsonRequest
-import com.android.volley.toolbox.StringRequest
-import com.android.volley.toolbox.Volley
-import org.json.JSONArray
-import org.json.JSONException
 import org.json.JSONObject
 import java.io.ByteArrayOutputStream
-import java.io.UnsupportedEncodingException
 import java.lang.StringBuilder
-import java.net.UnknownHostException
-import java.nio.charset.Charset
-import java.security.SecureRandom
-import java.util.*
-import kotlin.collections.ArrayList
 import kotlin.collections.HashMap
 
 class CryptchatServer(private val context: Context, private val server: Server) {
-  private class QueueHandler(val context: Context) {
-    companion object {
-      private var INSTANCE: QueueHandler? = null
-      fun instance(context: Context) =
-        INSTANCE ?: synchronized(this) {
-          INSTANCE ?: QueueHandler(context).also {
-            INSTANCE = it
-          }
-        }
+  companion object {
+    private const val AUTH_TOKEN_HEADER = "Cryptchat-Auth-Token"
+
+    fun checkAddress(
+      address: String,
+      success: CryptchatRequest.OnUiThread.(JSONObject) -> Unit,
+      failure: CryptchatRequest.OnUiThread.(CryptchatRequest.ErrorMetadata) -> Unit
+    ) {
+      CryptchatRequest(
+        url = "$address/knock-knock.json",
+        method = CryptchatRequest.Methods.GET
+      ).apply {
+        success(success)
+        failure(failure)
+        perform()
+      }
     }
 
-    val queue: RequestQueue by lazy {
-      Volley.newRequestQueue(context)
+    fun registerAtServer(
+      address: String,
+      params: JSONObject,
+      success: CryptchatRequest.OnUiThread.(JSONObject) -> Unit,
+      failure: CryptchatRequest.OnUiThread.(CryptchatRequest.ErrorMetadata) -> Unit
+    ) {
+      CryptchatRequest(
+        url = "$address/register.json",
+        method = CryptchatRequest.Methods.POST
+      ).apply {
+        success(success)
+        failure(failure)
+        perform(params)
+      }
     }
   }
 
-  private open class CryptchatJsonRequest(
-    method: Int,
-    url: String,
-    jsonRequest: JSONObject?,
-    listener: Response.Listener<JSONObject>,
-    errorListener : Response.ErrorListener,
-    val extraHeaders: HashMap<String, String>?,
-    val headersHandler: ((Map<String, String>?) -> Unit)? = null
-  ) : JsonObjectRequest(method, url, jsonRequest, listener, errorListener) {
-    override fun parseNetworkResponse(response: NetworkResponse?): Response<JSONObject> {
-      headersHandler?.invoke(response?.headers)
-      return super.parseNetworkResponse(response)
-    }
-
-    override fun getHeaders() : MutableMap<String, String> {
-      val superHeaders = super.getHeaders()
-      if (extraHeaders == null) {
-        return superHeaders
-      }
-      val newHeaders = HashMap(superHeaders)
-      for (it in extraHeaders) {
-        newHeaders[it.key] = it.value
-      }
-      return newHeaders
-    }
-  }
-
-  private class CryptchatMultipartFormDataRequest(
-    url: String,
-    listener: Response.Listener<JSONObject>,
-    errorListener: Response.ErrorListener,
-    extraHeaders: HashMap<String, String>?,
-    headersHandler: ((Map<String, String>?) -> Unit)?,
-    private val form: JSONObject? = null,
-    private val file: ByteArray,
-    private val fileContentType: String
-  ) : CryptchatJsonRequest(
-    Method.POST,
-    url,
-    form,
-    listener,
-    errorListener,
-    extraHeaders,
-    headersHandler
+  fun upload(
+    path: String,
+    form: JSONObject? = null,
+    file: ByteArray,
+    fileContentType: String,
+    success: (CryptchatRequest.OnUiThread.(JSONObject) -> Unit)? = null,
+    failure: (CryptchatRequest.OnUiThread.(CryptchatRequest.ErrorMetadata) -> Unit)? = null,
+    always: (CryptchatRequest.OnUiThread.(Boolean) -> Unit)? = null,
+    authenticate: Boolean = true
   ) {
-    private val boundary = "--CryptchatFormBoundary" + CryptchatUtils.secureRandomHex(8)
-    private val body = ByteArrayOutputStream().apply {
+    val headers = if (authenticate) authHeaders() else null
+    val boundary = "--CryptchatFormBoundary" + CryptchatUtils.secureRandomHex(8)
+    (headers ?: HashMap()).also {
+      it["Content-Type"] = "multipart/form-data; boundary=$boundary"
+    }
+    val body = ByteArrayOutputStream().apply {
       val contentDisposition = "Content-Disposition"
       val contentType = "Content-Type"
       form?.keys()?.forEach { key ->
@@ -96,7 +70,7 @@ class CryptchatServer(private val context: Context, private val server: Server) 
       }
       write("--$boundary".toByteArray())
       write("\r\n$contentDisposition: form-data; name=\"file\"; filename=\"file.${
-        fileContentType.split("/").last()
+      fileContentType.split("/").last()
       }\"".toByteArray())
       write("\r\n$contentType: $fileContentType".toByteArray())
       write("\r\n\r\n".toByteArray())
@@ -105,232 +79,88 @@ class CryptchatServer(private val context: Context, private val server: Server) 
       write("--$boundary--".toByteArray())
     }.toByteArray()
 
-    override fun getBody(): ByteArray {
-      return body
-    }
-
-    override fun getBodyContentType(): String {
-      return "multipart/form-data; boundary=$boundary"
-    }
-  }
-
-  class CryptchatServerError(
-    val statusCode: Int?,
-    val serverMessages: ArrayList<String>,
-    val volleyError: VolleyError?
-  ) {
-    override fun toString() : String {
-      return "Status code: ${this.statusCode ?: "Unknown"}\n" +
-        "Server messages: $serverMessages\n" +
-        "Original Volley error: $volleyError"
-    }
-  }
-
-  companion object {
-    const val AUTH_TOKEN_HEADER = "Cryptchat-Auth-Token"
-
-    private fun defaultErrorHandler(
-      volleyError: VolleyError?,
-      failure: ((CryptchatServerError) -> Unit)? = null,
-      always: ((Boolean, JSONObject?, CryptchatServerError?) -> Unit)? = null
-    ) {
-      if (failure == null && always == null) return
-      val errorMessages = ArrayList<String>()
-      val data = volleyError?.networkResponse?.data
-      if (data != null) {
-        val errorJson = try {
-          val jsonString = String(data, Charset.forName("UTF-8"))
-          JSONObject(jsonString)
-        } catch (ex: UnsupportedEncodingException) {
-          null
-        } catch (ex: JSONException) {
-          null
-        }
-        if (errorJson != null) {
-          val messages = errorJson["messages"] as? JSONArray
-          for (i in 0 until (messages?.length() ?: 0)) {
-            (messages?.get(i) as? String)?.also { msg -> errorMessages.add(msg) }
-          }
-        }
+    CryptchatRequest(
+      url = server.urlForPath(path),
+      method = CryptchatRequest.Methods.POST,
+      requestHeaders = headers
+    ).apply {
+      if (success != null) success(success)
+      if (failure != null) failure(failure)
+      if (always != null) always(always)
+      headers {
+        if (authenticate) updateAuthToken(it)
       }
-      val statusCode = volleyError?.networkResponse?.statusCode
-      val serverError = CryptchatServerError(
-        statusCode = statusCode,
-        serverMessages = errorMessages,
-        volleyError = volleyError
-      )
-      failure?.invoke(serverError)
-      always?.invoke(false, null, serverError)
-    }
-
-    fun checkAddress(
-      context: Context,
-      address: String,
-      success: (data: JSONObject) -> Unit,
-      failure: (CryptchatServerError) -> Unit
-    ) {
-      val request = JsonObjectRequest(
-        Request.Method.GET,
-        "$address/knock-knock.json",
-        JSONObject(),
-        Response.Listener<JSONObject> {
-          success(it)
-        },
-        Response.ErrorListener {
-          defaultErrorHandler(
-            volleyError = it,
-            failure = failure
-          )
-        }
-      )
-      QueueHandler.instance(context).queue.add(request)
-    }
-
-    fun registerAtServer(
-      context: Context,
-      address: String,
-      params: JSONObject,
-      success: (data: JSONObject) -> Unit,
-      failure: (CryptchatServerError) -> Unit
-    ) {
-      val request = JsonObjectRequest(
-        Request.Method.POST,
-        "$address/register.json",
-        params,
-        Response.Listener<JSONObject> {
-          success(it)
-        },
-        Response.ErrorListener {
-          defaultErrorHandler(
-            volleyError = it,
-            failure = failure
-          )
-        }
-      )
-      QueueHandler.instance(context).queue.add(request)
+      perform(body)
     }
   }
 
-  fun get(
+  fun request(
+    method: CryptchatRequest.Methods,
     path: String,
     param: JSONObject? = null,
-    success: ((JSONObject) -> Unit)? = null,
-    failure: ((CryptchatServerError) -> Unit)? = null,
-    always: ((Boolean, JSONObject?, CryptchatServerError?) -> Unit)? = null,
-    authenticate: Boolean
+    success: (CryptchatRequest.OnUiThread.(JSONObject) -> Unit)? = null,
+    failure: (CryptchatRequest.OnUiThread.(CryptchatRequest.ErrorMetadata) -> Unit)? = null,
+    always: (CryptchatRequest.OnUiThread.(Boolean) -> Unit)? = null,
+    authenticate: Boolean = true,
+    async: Boolean = true
   ) {
-    request(Request.Method.GET, path, param, success, failure, always, authenticate = authenticate)
-  }
-
-  fun post(
-    path: String,
-    param: JSONObject? = null,
-    success: ((JSONObject) -> Unit)? = null,
-    failure: ((CryptchatServerError) -> Unit)? = null,
-    always: ((Boolean, JSONObject?, CryptchatServerError?) -> Unit)? = null,
-    authenticate: Boolean = true
-  ) {
-    request(Request.Method.POST, path, param, success, failure, always, authenticate = authenticate)
-  }
-
-  fun upload(
-    path: String,
-    form: JSONObject? = null,
-    file: ByteArray,
-    fileContentType: String,
-    success: ((JSONObject) -> Unit)? = null,
-    failure: ((CryptchatServerError) -> Unit)? = null,
-    always: ((Boolean, JSONObject?, CryptchatServerError?) -> Unit)? = null,
-    authenticate: Boolean = true
-  ) {
-    val extraHeaders = if (authenticate) HashMap<String, String>().also {
-      it[AUTH_TOKEN_HEADER] = server.authToken
-    } else null
-    val request = CryptchatMultipartFormDataRequest(
-      url = "${server.address}$path",
-      form = form,
-      file = file,
-      fileContentType = fileContentType,
-      listener = Response.Listener {
-        success?.invoke(it)
-        always?.invoke(true, it, null)
-      },
-      errorListener = Response.ErrorListener {
-        defaultErrorHandler(it, failure, always)
-      },
-      extraHeaders = extraHeaders,
-      headersHandler = {
-        defaultHeadersHandler(
-          headers = it,
-          authenticate = authenticate
-        )
+    var url = server.urlForPath(path)
+    val headers = if (authenticate) authHeaders() else null
+    // Function parameters in Kotlin are final... let's work around that limitation
+    // by declaring a local variable with the same name
+    var param = param
+    // Make the request body null in GET requests and convert params
+    // to query string
+    if (method == CryptchatRequest.Methods.GET && param != null) {
+      val queryString = buildQueryString(param)
+      if (queryString.isNotEmpty()) {
+        url += if (url.indexOf('?') == -1) '?' else '&'
+        url += queryString
       }
-    )
-    QueueHandler.instance(context).queue.add(request)
+      param = null
+    }
+    CryptchatRequest(
+      url = url,
+      method = method,
+      async = async,
+      requestHeaders = headers
+    ).apply {
+      if (success != null) success(success)
+      if (failure != null) failure(failure)
+      if (always != null) always(always)
+      headers {
+        if (authenticate) updateAuthToken(it)
+      }
+      if (param != null) perform(param) else perform()
+    }
   }
 
-  fun put(
-    path: String,
-    param: JSONObject? = null,
-    success: ((JSONObject) -> Unit)? = null,
-    failure: ((CryptchatServerError) -> Unit)? = null,
-    always: ((Boolean, JSONObject?, CryptchatServerError?) -> Unit)? = null,
-    authenticate: Boolean = true
-  ) {
-    request(Request.Method.PUT, path, param, success, failure, always, authenticate = authenticate)
-  }
-
-  private fun request(
-    method: Int,
-    path: String,
-    param: JSONObject? = null,
-    success: ((JSONObject) -> Unit)? = null,
-    failure: ((CryptchatServerError) -> Unit)? = null,
-    always: ((Boolean, JSONObject?, CryptchatServerError?) -> Unit)? = null,
-    authenticate: Boolean = true
-  ) {
-    val url = server.address + path
-    val headers = if (authenticate) HashMap<String, String>().also {
-      it[AUTH_TOKEN_HEADER] = server.authToken
-    } else null
-    val request = CryptchatJsonRequest(
-      method,
-      url,
-      param,
-      Response.Listener {
-        success?.invoke(it)
-        always?.invoke(true, it, null)
-      },
-      Response.ErrorListener {
-        defaultErrorHandler(
-          volleyError = it,
-          failure = failure,
-          always = always
-        )
-      },
-      headersHandler = {
-        defaultHeadersHandler(
-          headers = it,
-          authenticate = authenticate
-        )
-      },
-      extraHeaders = headers
-    )
-    QueueHandler.instance(context).queue.add(request)
-  }
-
-  private fun defaultHeadersHandler(
-    headers: Map<String, String>?,
-    authenticate: Boolean
-  ) {
-    if (headers == null) return
+  private fun updateAuthToken(headers: Map<String, String>) {
     val authToken = headers[AUTH_TOKEN_HEADER]
-    if (authenticate && authToken != null && authToken.isNotEmpty()) {
+    if (authToken != null && authToken.isNotEmpty()) {
       server.authToken = authToken
-      AsyncExec.run {
-        Cryptchat.db(context).servers().update(server)
-      }
+      Cryptchat.db(context).servers().update(server)
     }
   }
 
+  private fun authHeaders() : HashMap<String, String> {
+    return HashMap<String, String>().also {
+      it[AUTH_TOKEN_HEADER] = server.authToken
+    }
+  }
+
+  private fun buildQueryString(params: JSONObject) : String {
+    val builder = StringBuilder()
+    val iterator = params.keys().iterator()
+    while (iterator.hasNext()) {
+      val key = iterator.next()
+      builder.append(key)
+      builder.append('=')
+      builder.append(params[key].toString())
+      if (iterator.hasNext()) {
+        builder.append('&')
+      }
+    }
+    return builder.toString()
+  }
 }
