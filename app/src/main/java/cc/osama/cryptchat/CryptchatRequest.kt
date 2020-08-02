@@ -21,6 +21,7 @@ import kotlin.collections.HashMap
 class CryptchatRequest(
   val url: String,
   val method: Methods,
+  val async: Boolean = true,
   private val requestHeaders: HashMap<String, String>? = null
 ) {
   enum class Methods { GET, PUT, POST, DELETE }
@@ -101,7 +102,6 @@ class CryptchatRequest(
 
   private var initiated = false
   private var body: ByteArray? = null
-  private var queryString: String = ""
 
   private var successCallback: (OnUiThread.(JSONObject) -> Unit)? = null
   private var failureCallback: (OnUiThread.(ErrorMetadata) -> Unit)? = null
@@ -116,26 +116,16 @@ class CryptchatRequest(
   }
 
   fun perform(params: JSONObject) {
-    setParams(params)
+    this.body = params.toString().toByteArray(Charsets.UTF_8)
     perform()
   }
 
   fun perform() {
-    execute()
-  }
-
-  fun performAsync(body: ByteArray) {
-    this.body = body
-    performAsync()
-  }
-
-  fun performAsync(params: JSONObject) {
-    setParams(params)
-    performAsync()
-  }
-
-  fun performAsync() {
-    queue(this)
+    if (async) {
+      queue(this)
+    } else {
+      execute()
+    }
   }
 
   fun success(callback: OnUiThread.(JSONObject) -> Unit) {
@@ -271,12 +261,7 @@ class CryptchatRequest(
 
   private fun connect() : String? {
     initiated = true
-    var fullUrl = url
-    if (queryString.isNotEmpty()) {
-      fullUrl += if (url.indexOf('?') == -1) '?' else '&'
-      fullUrl += queryString
-    }
-    val urlObj = URL(fullUrl)
+    val urlObj = URL(url)
     val connection = urlObj.openConnection() as HttpURLConnection
     connection.requestMethod = method.name
     connection.setRequestProperty("Content-Type", "application/json; utf-8")
@@ -329,24 +314,5 @@ class CryptchatRequest(
 
   private fun processResponse(response: String?) : JSONObject {
     return JSONObject(response)
-  }
-
-  private fun setParams(params: JSONObject) {
-    if (method == Methods.GET) {
-      val queryStringBuilder = StringBuilder()
-      val iterator = params.keys().iterator()
-      while (iterator.hasNext()) {
-        val key = iterator.next()
-        queryStringBuilder.append(key)
-        queryStringBuilder.append('=')
-        queryStringBuilder.append(params[key].toString())
-        if (iterator.hasNext()) {
-          queryStringBuilder.append('&')
-        }
-      }
-      queryString = queryStringBuilder.toString()
-    } else {
-      body = params.toString().toByteArray(Charsets.UTF_8)
-    }
   }
 }
