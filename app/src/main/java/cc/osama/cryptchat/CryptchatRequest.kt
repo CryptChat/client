@@ -26,8 +26,8 @@ class CryptchatRequest(
   enum class Methods { GET, PUT, POST, DELETE }
   class TooLateCallbacksDeclarationException : Exception()
 
-  class CallbacksExecutor {
-    fun onMainThread(callback: CallbacksExecutor.() -> Unit) {
+  class OnUiThread {
+    fun onUiThread(callback: OnUiThread.() -> Unit) {
       if (Looper.myLooper() == Looper.getMainLooper()) {
         callback()
       } else {
@@ -103,12 +103,12 @@ class CryptchatRequest(
   private var body: ByteArray? = null
   private var queryString: String = ""
 
-  private var successCallback: (CallbacksExecutor.(JSONObject) -> Unit)? = null
-  private var failureCallback: (CallbacksExecutor.(ErrorMetadata) -> Unit)? = null
-  private var alwaysCallback: (CallbacksExecutor.(Boolean) -> Unit)? = null
-  private var headersCallback: (CallbacksExecutor.(Map<String, String>) -> Unit)? = null
+  private var successCallback: (OnUiThread.(JSONObject) -> Unit)? = null
+  private var failureCallback: (OnUiThread.(ErrorMetadata) -> Unit)? = null
+  private var alwaysCallback: (OnUiThread.(Boolean) -> Unit)? = null
+  private var headersCallback: (OnUiThread.(Map<String, String>) -> Unit)? = null
 
-  private val callbacksCaller = CallbacksExecutor()
+  private val uiThreadProvider = OnUiThread()
 
   fun perform(body: ByteArray) {
     this.body = body
@@ -138,44 +138,44 @@ class CryptchatRequest(
     queue(this)
   }
 
-  fun success(callback: CallbacksExecutor.(JSONObject) -> Unit) {
+  fun success(callback: OnUiThread.(JSONObject) -> Unit) {
     setCallback {
       successCallback = callback
     }
   }
 
-  fun failure(callback: CallbacksExecutor.(ErrorMetadata) -> Unit) {
+  fun failure(callback: OnUiThread.(ErrorMetadata) -> Unit) {
     setCallback {
       failureCallback = callback
     }
   }
 
-  fun always(callback: CallbacksExecutor.(Boolean) -> Unit) {
+  fun always(callback: OnUiThread.(Boolean) -> Unit) {
     setCallback {
       alwaysCallback = callback
     }
   }
 
-  fun headers(callback: CallbacksExecutor.(Map<String, String>) -> Unit) {
+  fun headers(callback: OnUiThread.(Map<String, String>) -> Unit) {
     setCallback {
       headersCallback = callback
     }
   }
 
   private fun success(json: JSONObject) {
-    successCallback?.invoke(callbacksCaller, json)
-    alwaysCallback?.invoke(callbacksCaller, true)
+    successCallback?.invoke(uiThreadProvider, json)
+    alwaysCallback?.invoke(uiThreadProvider, true)
   }
 
   private fun failure(errorData: ErrorMetadata) {
-    failureCallback?.invoke(callbacksCaller, errorData)
-    alwaysCallback?.invoke(callbacksCaller, false)
+    failureCallback?.invoke(uiThreadProvider, errorData)
+    alwaysCallback?.invoke(uiThreadProvider, false)
   }
 
   private fun headers() {
     val headers = responseHeaders
     if (headers != null) {
-      headersCallback?.invoke(callbacksCaller, headers)
+      headersCallback?.invoke(uiThreadProvider, headers)
     }
   }
 
