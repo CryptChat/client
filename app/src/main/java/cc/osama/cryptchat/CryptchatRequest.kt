@@ -44,7 +44,7 @@ class CryptchatRequest(
     private val handler = Handler(Looper.getMainLooper())
     private fun queue(request: CryptchatRequest) {
       executor.execute {
-        request.perform()
+        request.execute()
       }
     }
   }
@@ -85,17 +85,6 @@ class CryptchatRequest(
       ).joinToString("\n")
     }
   }
-
-  constructor(
-    server: Server,
-    path: String,
-    method: Methods,
-    requestHeaders: HashMap<String, String>? = null
-  ) : this(
-    url = server.urlForPath(path),
-    method = method,
-    requestHeaders = requestHeaders
-  )
 
   private var responseHeaders: Map<String, String>? = null
   private var statusCode = -1
