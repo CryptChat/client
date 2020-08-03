@@ -36,50 +36,47 @@ class SyncMessagesWorker(context: Context, params: WorkerParameters) : Worker(co
     val lastSeenId = db.messages().findNewestReceivedMessageFromServer(server.id) ?: 0
     val param = JSONObject()
     param.put("last_seen_id", lastSeenId)
-    CryptchatServer(applicationContext, server).post(
+    CryptchatServer(applicationContext, server).request(
+      method = CryptchatRequest.Methods.POST,
       path = "/sync/messages.json",
       param = param,
+      async = false,
       success = {
-        val messages = it["messages"] as? JSONArray ?: return@post
-        // Needs to run in a new thread because Volley executes
-        // listeners in UI thread even though we made the
-        // request in a worker thread :/
-        AsyncExec.run {
-          try {
-            for (m in 0 until messages.length()) {
-              val messageJson = messages[m] as? JSONObject ?: continue
-              val handler = InboundMessageHandler(
-                data = messageJson,
-                server = server,
-                context = applicationContext
-              )
-              val message = handler.process() ?: return@run
-              val user = db.users().find(message.userId) ?: return@run
-              ServerUsersList.refreshUsersList(applicationContext)
-              if (message.decrypted()) {
-                NotificationCompat.Builder(applicationContext, Cryptchat.MESSAGES_CHANNEL_ID).also { builder ->
-                  builder.setContentText(message.plaintext)
-                  builder.setContentTitle(
-                    applicationContext.resources.getString(
-                      R.string.message_notification_title, user.displayName(), server.displayName()
-                    )
-                  )
-                  builder.priority = NotificationCompat.PRIORITY_DEFAULT
-                  // TODO: Replace this with a proper icon
-                  builder.setSmallIcon(R.drawable.ic_check_black_24dp)
-                  with(NotificationManagerCompat.from(applicationContext)) {
-                    notify(SecureRandom().nextInt(), builder.build())
-                  }
+        val messages = it.optJSONArray("messages") ?: return@request
+        try {
+          for (m in 0 until messages.length()) {
+            val messageJson = messages[m] as? JSONObject ?: continue
+            val handler = InboundMessageHandler(
+              data = messageJson,
+              server = server,
+              context = applicationContext
+            )
+            val message = handler.process() ?: return@request
+            val user = db.users().find(message.userId) ?: return@request
+            ServerUsersList.refreshUsersList(applicationContext)
+            if (message.decrypted()) {
+              NotificationCompat.Builder(applicationContext, Cryptchat.MESSAGES_CHANNEL_ID).also { builder ->
+                builder.setContentText(message.plaintext)
+                builder.setContentTitle(
+                  applicationContext.resources.getString(
+                R.string.message_notification_title, user.displayName(), server.displayName()
+                )
+                )
+                builder.priority = NotificationCompat.PRIORITY_DEFAULT
+                // TODO: Replace this with a proper icon
+                builder.setSmallIcon(R.drawable.ic_check_black_24dp)
+                with(NotificationManagerCompat.from(applicationContext)) {
+                  notify(SecureRandom().nextInt(), builder.build())
                 }
               }
             }
-          } catch (ex: InboundMessageHandler.UserNotFound) {
-            SyncUsersWorker.enqueue(
-              serverId = server.id,
-              scheduleMessagesSync = true,
-              context = applicationContext
-            )
           }
+        } catch (ex: InboundMessageHandler.UserNotFound) {
+          SyncUsersWorker.enqueue(
+            serverId = server.id,
+            scheduleMessagesSync = true,
+            context = applicationContext
+          )
         }
       },
       failure = {

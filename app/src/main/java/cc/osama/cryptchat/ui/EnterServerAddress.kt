@@ -5,10 +5,7 @@ import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
-import cc.osama.cryptchat.AsyncExec
-import cc.osama.cryptchat.R
-import cc.osama.cryptchat.Cryptchat
-import cc.osama.cryptchat.CryptchatServer
+import cc.osama.cryptchat.*
 import com.android.volley.ClientError
 import com.android.volley.NoConnectionError
 import com.android.volley.ServerError
@@ -44,25 +41,21 @@ class EnterServerAddress : AppCompatActivity() {
       validateServer(address,
         onValid = {
           val db = Cryptchat.db(applicationContext)
-          AsyncExec.run<Unit>(
-            task = {
-              val serverDao = db.servers()
-              val server = serverDao.findByAddress(address)
-              if (server == null) {
-                val intent = Intent(this, EnterPhoneNumber::class.java)
-                intent.putExtra("address", address)
-                startActivity(intent)
-              } else {
-                errorMessage = resources.getString(R.string.server_already_added)
-              }
-            },
-            after = {
-              if (errorMessage != null) {
-                errorMessagePlaceholder.text = errorMessage
-                changeElementsEnabledStatus(true)
-              }
+          AsyncExec.run {
+            val serverDao = db.servers()
+            val server = serverDao.findByAddress(address)
+            if (server == null) {
+              val intent = Intent(this, EnterPhoneNumber::class.java)
+              intent.putExtra("address", address)
+              startActivity(intent)
+            } else {
+              errorMessage = resources.getString(R.string.server_already_added)
             }
-          )
+            it.execMainThread {
+              errorMessagePlaceholder.text = errorMessage
+              changeElementsEnabledStatus(true)
+            }
+          }
         },
         onInvalid = {
           errorMessagePlaceholder.text = it
@@ -79,37 +72,45 @@ class EnterServerAddress : AppCompatActivity() {
 
   private fun validateServer(address: String, onValid: () -> Unit, onInvalid: (message: String) -> Unit) {
     return onValid()
-    CryptchatServer.checkAddress(applicationContext, address, success = {
-      val isCryptchat = it["is_cryptchat"] as? Boolean ?: false
-      if (isCryptchat) {
-        onValid()
-      } else {
-        onInvalid(resources.getString(R.string.not_a_cryptchat_server))
-      }
-    }, failure = {
-      val errorMessage = if (it.volleyError is UnknownHostException) {
-        resources.getString(R.string.unknown_host)
-      } else if (it.volleyError is ClientError) {
-        val responseCode = it.volleyError.networkResponse?.statusCode ?: -1
-        if (responseCode == 404) {
-          resources.getString((R.string.not_a_cryptchat_server))
-        } else {
-          resources.getString(R.string.client_error_occurred, responseCode)
+    CryptchatServer.checkAddress(
+      address = address,
+      success = {
+        val isCryptchat = it.optBoolean("is_cryptchat", false)
+        onUiThread {
+          if (isCryptchat) {
+            onValid()
+          } else {
+            onInvalid(resources.getString(R.string.not_a_cryptchat_server))
+          }
         }
-      } else if (it.volleyError is NoConnectionError) {
-        resources.getString(R.string.not_pointing_to_server)
-      } else if (it.volleyError is ServerError) {
-        val responseCode = it.volleyError.networkResponse?.statusCode ?: -1
-        if (responseCode >= 500) {
-          resources.getString(R.string.server_down)
+      },
+      failure = {
+        val errorMessage = if (it.isUnknownHostError) {
+          resources.getString(R.string.unknown_host)
+        } else if (it.isClientError) {
+          val responseCode = it.statusCode
+          if (responseCode == 404) {
+            resources.getString((R.string.not_a_cryptchat_server))
+          } else {
+            resources.getString(R.string.client_error_occurred, responseCode)
+          }
+        } else if (it.isNoConnectionError) {
+          resources.getString(R.string.not_pointing_to_server)
+        } else if (it.isServerError) {
+          val responseCode = it.statusCode
+          if (responseCode >= 500) {
+            resources.getString(R.string.server_down)
+          } else {
+            resources.getString(R.string.server_error_occurred, responseCode)
+          }
         } else {
-          resources.getString(R.string.server_error_occurred, responseCode)
+          resources.getString(R.string.unknown_error_occurred, "${it.javaClass}")
         }
-      } else {
-        resources.getString(R.string.unknown_error_occurred, "${it.javaClass}")
+        onUiThread {
+          onInvalid(errorMessage)
+        }
       }
-      onInvalid(errorMessage)
-    })
+    )
   }
 
   private fun getCanonicalAddress(address: String): String {

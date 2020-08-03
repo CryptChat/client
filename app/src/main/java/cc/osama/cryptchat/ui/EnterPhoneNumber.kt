@@ -42,15 +42,14 @@ class EnterPhoneNumber : AppCompatActivity() {
       }
       toggleErrorMessage()
       CryptchatServer.registerAtServer(
-        applicationContext,
-        address,
-        params,
+        address = address,
+        params = params,
         success = {
           val id = it["id"] as? Int
           val senderId = it["sender_id"] as? String
           if (id != null && senderId != null) {
             toggleErrorMessage()
-            val intent = Intent(this, VerifyPhoneNumber::class.java)
+            val intent = Intent(this@EnterPhoneNumber, VerifyPhoneNumber::class.java)
             intent.putExtra("id", id)
             intent.putExtra("senderId", senderId)
             intent.putExtra("address", address)
@@ -60,6 +59,7 @@ class EnterPhoneNumber : AppCompatActivity() {
           }
         },
         failure = {
+          w("FAILURE", it.toString())
         }
       )
     }

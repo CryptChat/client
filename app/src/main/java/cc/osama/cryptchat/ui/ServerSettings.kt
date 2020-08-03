@@ -123,30 +123,40 @@ class ServerSettings : AppCompatActivity() {
         userNameInput.isEnabled = false
         server.userName = userNameInput.text.toString().trim()
         somethingChanged = true
-        CryptchatServer(applicationContext, server).put(
+        CryptchatServer(applicationContext, server).request(
+          method = CryptchatRequest.Methods.PUT,
           path = "/users.json",
           param = JSONObject().apply {
             put("name", server.userName)
           },
-          always = { isSuccessful, _, error ->
-            saveChangesButton.isEnabled = true
-            serverNameInput.isEnabled = true
-            userNameInput.isEnabled = true
-            val message = if (isSuccessful) {
-              resources.getString(R.string.server_settings_info_updated_successfully)
-            } else if (error != null) {
-              if (error.serverMessages.size > 0) {
-                error.serverMessages.joinToString("\n")
-              } else {
-                resources.getString(R.string.server_responded_with_error, error.statusCode ?: -1)
+          success = {
+            onUiThread {
+              AlertDialog.Builder(this@ServerSettings).apply {
+                setMessage(resources.getString(R.string.server_settings_info_updated_successfully))
+                setNegativeButton(R.string.dialog_ok) { _, _ ->  }
+                create().show()
               }
-            } else {
-              "Unexpected condition has occurred."
             }
-            AlertDialog.Builder(this).apply {
-              setMessage(message)
-              setNegativeButton(R.string.dialog_ok) { _, _ ->  }
-              create().show()
+          },
+          failure = {
+            onUiThread {
+              val message = if (it.serverMessages.isNotEmpty()) {
+                it.serverMessages.joinToString("\n")
+              } else {
+                it.toString()
+              }
+              AlertDialog.Builder(this@ServerSettings).apply {
+                setMessage(message)
+                setNegativeButton(R.string.dialog_ok) { _, _ ->  }
+                create().show()
+              }
+            }
+          },
+          always = {
+            onUiThread {
+              saveChangesButton.isEnabled = true
+              serverNameInput.isEnabled = true
+              userNameInput.isEnabled = true
             }
           }
         )
@@ -213,26 +223,32 @@ class ServerSettings : AppCompatActivity() {
       file = stream.toByteArray(),
       fileContentType = "image/jpeg",
       success = {
-        avatarHolder.setImageBitmap(smallBitmap)
-        uploadSuccessfulIcon.visibility = View.VISIBLE
-        handler.postDelayed({
-          uploadSuccessfulIcon.visibility = View.GONE
-        }, 1500)
-      },
-      failure = {
-        AlertDialog.Builder(this@ServerSettings).also { builder ->
-          builder.setNegativeButton(R.string.dialog_ok) { _, _ ->  }
-          if (it.serverMessages.size > 0) {
-            builder.setMessage(it.serverMessages.joinToString("\n"))
-          } else {
-            builder.setMessage(resources.getString(R.string.server_responded_with_error, it.statusCode ?: -1))
-          }
-          builder.create().show()
+        onUiThread {
+          avatarHolder.setImageBitmap(smallBitmap)
+          uploadSuccessfulIcon.visibility = View.VISIBLE
+          handler.postDelayed({
+            uploadSuccessfulIcon.visibility = View.GONE
+          }, 1500)
         }
       },
-      always = { _, _, _ ->
-        avatarUploadProgressBar.visibility = View.GONE
-        changeAvatarButton.visibility = View.VISIBLE
+      failure = {
+        onUiThread {
+          AlertDialog.Builder(this@ServerSettings).also { builder ->
+            builder.setNegativeButton(R.string.dialog_ok) { _, _ ->  }
+            if (it.serverMessages.isNotEmpty()) {
+              builder.setMessage(it.serverMessages.joinToString("\n"))
+            } else {
+              builder.setMessage(resources.getString(R.string.server_responded_with_error, it.statusCode ?: -1))
+            }
+            builder.create().show()
+          }
+        }
+      },
+      always = {
+        onUiThread {
+          avatarUploadProgressBar.visibility = View.GONE
+          changeAvatarButton.visibility = View.VISIBLE
+        }
       }
     )
   }

@@ -3,6 +3,7 @@ package cc.osama.cryptchat
 import android.content.res.Resources
 import android.graphics.BitmapFactory
 import android.util.TypedValue
+import org.json.JSONObject
 import java.lang.IllegalArgumentException
 import java.lang.StringBuilder
 import java.security.SecureRandom
@@ -47,6 +48,14 @@ class CryptchatUtils {
         builder.append(String.format("%02x", SecureRandom().nextInt(255)))
       }
       return builder.toString()
+    }
+
+    fun jsonOptString(json: JSONObject, key: String) : String? {
+      return if (json.isNull(key)) {
+        null
+      } else {
+        json.optString(key)
+      }
     }
   }
 }

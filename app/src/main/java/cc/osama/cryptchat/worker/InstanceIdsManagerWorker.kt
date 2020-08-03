@@ -5,6 +5,7 @@ import android.util.Log.e
 import androidx.work.*
 import cc.osama.cryptchat.AsyncExec
 import cc.osama.cryptchat.Cryptchat
+import cc.osama.cryptchat.CryptchatRequest
 import cc.osama.cryptchat.CryptchatServer
 import com.google.firebase.iid.FirebaseInstanceId
 import org.json.JSONObject
@@ -36,13 +37,13 @@ class InstanceIdsManagerWorker(context: Context, params: WorkerParameters) : Wor
               user.put("instance_id", instanceId)
             })
           }
-          CryptchatServer(applicationContext, server).put(
+          CryptchatServer(applicationContext, server).request(
+            method = CryptchatRequest.Methods.PUT,
             path = "/users.json",
             param = params,
+            async = false,
             success = {
-              AsyncExec.run {
-                db.servers().update(server)
-              }
+              db.servers().update(server)
             },
             failure = {
               e("INSTANCE ID", "FAILED TO UPDATE INSTANCE ID ON SERVER. $it")

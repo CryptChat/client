@@ -34,98 +34,100 @@ class SyncUsersWorker(context: Context, params: WorkerParameters) : Worker(conte
     // unit is ms since epoch
     val maxLastUpdatedAt = (db.users().findMaxLastUpdatedAtOnServer(server.id) ?: 0) - 10
 
-    CryptchatServer(applicationContext, server).post(
+    CryptchatServer(applicationContext, server).request(
+      method = CryptchatRequest.Methods.POST,
       path = "/sync/users.json",
       param = JSONObject().also { it.put("updated_at", maxLastUpdatedAt) },
+      async = false,
       success = {
-        val usersJsonArray = it["users"] as? JSONArray ?: return@post
-        AsyncExec.run {
-          for (i in 0 until usersJsonArray.length()) {
-            val userJson = usersJsonArray[i] as? JSONObject ?: continue
-            var publicKey: ECPublicKey?
-            try {
-              publicKey = if (userJson["identity_key"] as? String != null) ECPublicKey(userJson["identity_key"] as String) else null
-            } catch (ex: IllegalArgumentException) {
-              continue
-            }
-            val countryCode = userJson["country_code"] as? String
-            val phoneNumber = userJson["phone_number"] as? String
-            val idOnServer = CryptchatUtils.toLong(userJson["id"])
-            if (idOnServer == server.userId) continue
-            val lastUpdatedAt = CryptchatUtils.toLong(userJson["updated_at"])
-            val name = userJson["name"] as? String
-            val avatarUrl = userJson["avatar_url"] as? String
-            if (publicKey != null &&
-              countryCode != null &&
-              phoneNumber != null &&
-              idOnServer != null &&
-              lastUpdatedAt != null
-            ) {
-              val existingUser = db.users().findUserByServerIdAndIdOnServer(server.id, idOnServer)
-              if (existingUser == null) {
-                val id = db.users().add(
-                  User(
-                    serverId = server.id,
-                    publicKey = publicKey,
-                    lastUpdatedAt = lastUpdatedAt,
-                    phoneNumber = phoneNumber,
-                    countryCode = countryCode,
-                    idOnServer = idOnServer,
-                    name = name,
-                    avatarUrl = avatarUrl
-                  )
+        val usersJsonArray = it.optJSONArray("users") ?: return@request
+        for (i in 0 until usersJsonArray.length()) {
+          val userJson = usersJsonArray[i] as? JSONObject ?: continue
+          var publicKey: ECPublicKey?
+          try {
+            userJson.optString("identity_key")
+            val identityKey = CryptchatUtils.jsonOptString(userJson, "identity_key")
+            if (identityKey == null || identityKey.isEmpty()) continue
+            publicKey = ECPublicKey(identityKey)
+          } catch (ex: IllegalArgumentException) {
+            continue
+          }
+          val countryCode = CryptchatUtils.jsonOptString(userJson, "country_code")
+          val phoneNumber = CryptchatUtils.jsonOptString(userJson, "phone_number")
+          val idOnServer = CryptchatUtils.toLong(userJson["id"])
+          if (idOnServer == server.userId) continue
+          val lastUpdatedAt = CryptchatUtils.toLong(userJson["updated_at"])
+          val name = CryptchatUtils.jsonOptString(userJson,  "name")
+          val avatarUrl = CryptchatUtils.jsonOptString(userJson, "avatar_url")
+          if (countryCode != null &&
+            phoneNumber != null &&
+            idOnServer != null &&
+            lastUpdatedAt != null
+          ) {
+            val existingUser = db.users().findUserByServerIdAndIdOnServer(server.id, idOnServer)
+            if (existingUser == null) {
+              val id = db.users().add(
+                User(
+                  serverId = server.id,
+                  publicKey = publicKey,
+                  lastUpdatedAt = lastUpdatedAt,
+                  phoneNumber = phoneNumber,
+                  countryCode = countryCode,
+                  idOnServer = idOnServer,
+                  name = name,
+                  avatarUrl = avatarUrl
                 )
-                if (avatarUrl != null) {
-                  AvatarsStore(
-                    serverId = server.id,
-                    userId = id,
-                    context = applicationContext
-                  ).download(server.address + avatarUrl, applicationContext.resources)
-                }
+              )
+              if (avatarUrl != null) {
+                AvatarsStore(
+                  serverId = server.id,
+                  userId = id,
+                  context = applicationContext
+                ).download(server.address + avatarUrl, applicationContext.resources)
+              }
+            } else {
+              var changed = false
+              if (existingUser.countryCode != countryCode) {
+                existingUser.countryCode = countryCode
+                changed = true
+              }
+              if (existingUser.lastUpdatedAt != lastUpdatedAt) {
+                existingUser.lastUpdatedAt = lastUpdatedAt
+                changed = true
+              }
+              if (existingUser.phoneNumber != phoneNumber) {
+                existingUser.phoneNumber = phoneNumber
+                changed = true
+              }
+              if (existingUser.name != name) {
+                existingUser.name = name
+                changed = true
+              }
+              if (existingUser.avatarUrl != avatarUrl) {
+                existingUser.avatarUrl = avatarUrl
+                changed = true
+              }
+              if (changed) {
+                db.users().update(existingUser)
+              }
+              if (avatarUrl == null) {
+                AvatarsStore(server.id, existingUser.id, applicationContext).delete()
               } else {
-                var changed = false
-                if (existingUser.countryCode != countryCode) {
-                  existingUser.countryCode = countryCode
-                  changed = true
-                }
-                if (existingUser.lastUpdatedAt != lastUpdatedAt) {
-                  existingUser.lastUpdatedAt = lastUpdatedAt
-                  changed = true
-                }
-                if (existingUser.phoneNumber != phoneNumber) {
-                  existingUser.phoneNumber = phoneNumber
-                  changed = true
-                }
-                if (existingUser.name != name) {
-                  existingUser.name = name
-                  changed = true
-                }
-                if (existingUser.avatarUrl != avatarUrl) {
-                  existingUser.avatarUrl = avatarUrl
-                  changed = true
-                }
-                if (changed) {
-                  db.users().update(existingUser)
-                }
-                if (avatarUrl == null) {
-                  AvatarsStore(server.id, existingUser.id, applicationContext).delete()
-                } else {
-                  AvatarsStore(
-                    serverId = server.id,
-                    userId = existingUser.id,
-                    context = applicationContext
-                  ).download(server.address + avatarUrl, applicationContext.resources)
-                }
+                AvatarsStore(
+                  serverId = server.id,
+                  userId = existingUser.id,
+                  context = applicationContext
+                ).download(server.address + avatarUrl, applicationContext.resources)
               }
             }
           }
-          ServerUsersList.refreshUsersList(applicationContext)
-          if (scheduleMessagesSync) {
-            SyncMessagesWorker.enqueue(
-              serverId = server.id,
-              context = applicationContext
-            )
-          }
+        }
+        ServerUsersList.refreshUsersList(applicationContext)
+        if (scheduleMessagesSync) {
+          SyncMessagesWorker.enqueue(
+            serverId = server.id,
+            context = applicationContext
+          )
         }
       }
     )

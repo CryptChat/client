@@ -54,43 +54,39 @@ class VerifyPhoneNumber : AppCompatActivity() {
         params.put("verification_token", token)
       }
       CryptchatServer.registerAtServer(
-        applicationContext,
-        address,
-        params,
+        address = address,
+        params = params,
         success = {
           val userId = CryptchatUtils.toLong(it["id"])
           val authToken = it["auth_token"] as? String
           if (userId != null && authToken != null) {
-            addServerToDatabase(address, userId, keyPair, senderId, authToken, instanceId)
+            val server = addServerToDatabase(address, userId, keyPair, senderId, authToken, instanceId)
+            supplyEphemeralKeys(server)
+            SyncUsersWorker.enqueue(serverId = server.id, context = applicationContext)
+            onUiThread {
+              startActivity(ServerUsersList.createIntent(server, applicationContext))
+            }
           }
           w("USERID", userId.toString())
         },
         failure = {
-          w("FAILUUUURE", it.javaClass.toString())
+          w("FAILUUUURE", it.toString())
         }
       )
     }
   }
 
-  private fun addServerToDatabase(address: String, userId: Long, keyPair: ECKeyPair, senderId: String, authToken: String, instanceId: String?) {
-    val db = Cryptchat.db(applicationContext)
-    AsyncExec.run {
-      val server = db.servers().add(Server(
-        address = address,
-        name = "SErVeR!&#_X",
-        userId = userId,
-        keyPair = keyPair,
-        senderId = senderId,
-        authToken = authToken,
-        instanceId = instanceId,
-        userName = null
-      ))
-      supplyEphemeralKeys(server)
-      SyncUsersWorker.enqueue(serverId = server.id, context = applicationContext)
-      it.execMainThread {
-        startActivity(ServerUsersList.createIntent(server, applicationContext))
-      }
-    }
+  private fun addServerToDatabase(address: String, userId: Long, keyPair: ECKeyPair, senderId: String, authToken: String, instanceId: String?) : Server {
+    return Cryptchat.db(applicationContext).servers().add(Server(
+      address = address,
+      name = "SErVeR!&#_X", // TODO: FIX THIS!
+      userId = userId,
+      keyPair = keyPair,
+      senderId = senderId,
+      authToken = authToken,
+      instanceId = instanceId,
+      userName = null
+    ))
   }
 
   private fun supplyEphemeralKeys(server: Server) {
@@ -118,13 +114,12 @@ class VerifyPhoneNumber : AppCompatActivity() {
       }
       val params = JSONObject()
       params.put("keys", jsonArray)
-      CryptchatServer(applicationContext, server).post(
+      CryptchatServer(applicationContext, server).request(
+        method = CryptchatRequest.Methods.POST,
         path = "/ephemeral-keys.json",
         param = params,
         failure = {
-          AsyncExec.run {
-            db.ephemeralKeys().deleteMany(ephemeralKeysList)
-          }
+          db.ephemeralKeys().deleteMany(ephemeralKeysList)
         }
       )
     }

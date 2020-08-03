@@ -7,7 +7,6 @@ import cc.osama.cryptchat.db.Message
 import cc.osama.cryptchat.db.Server
 import cc.osama.cryptchat.db.User
 import cc.osama.cryptchat.ui.ChatView
-import com.android.volley.VolleyError
 import org.json.JSONObject
 import java.lang.Exception
 import java.lang.IllegalArgumentException
@@ -63,12 +62,10 @@ class OutboundMessageHandler(
 
   fun saveToDb(callback: () -> Unit) {
     Cryptchat.db(context).also { db ->
-      AsyncExec.run {
-        val message = db.messages().add(this.message)
-        this.message = message
-        it.execMainThread(callback)
-        ChatView.notifyNewMessage(context)
-      }
+      val message = db.messages().add(this.message)
+      this.message = message
+      callback()
+      ChatView.notifyNewMessage(context)
     }
   }
 
@@ -86,11 +83,9 @@ class OutboundMessageHandler(
 
   private fun updateMessageInDb(callback: (() -> Unit)? = null) {
     Cryptchat.db(context).also { db ->
-      AsyncExec.run {
-        db.messages().update(message)
-        if (callback != null) it.execMainThread(callback)
-        ChatView.notifyModifiedMessage(message.id, context)
-      }
+      db.messages().update(message)
+      if (callback != null) callback()
+      ChatView.notifyModifiedMessage(message.id, context)
     }
   }
 
@@ -105,16 +100,16 @@ class OutboundMessageHandler(
         msg.put("ephemeral_key_id_on_user_device", message.receiverEphemeralKeyPairId)
       })
     }
-    CryptchatServer(context, server).post(
+    CryptchatServer(context, server).request(
+      method = CryptchatRequest.Methods.POST,
       path = "/message.json",
       param = param,
+      async = false,
       success = { json ->
-        val idOnServer = CryptchatUtils.toLong((json["message"] as? JSONObject)?.get("id"))
-        AsyncExec.run {
-          message.status = Message.SENT
-          message.idOnServer = idOnServer
-          updateMessageInDb()
-        }
+        val idOnServer = CryptchatUtils.toLong((json.optJSONObject("message"))?.get("id"))
+        message.status = Message.SENT
+        message.idOnServer = idOnServer
+        updateMessageInDb()
       }, failure = {
         message.status = Message.NEEDS_RETRY
         updateMessageInDb()
@@ -134,12 +129,14 @@ class OutboundMessageHandler(
   private fun fetchReceiverEphemeralPublicKey(
     callback: (
       ECPublicKey.EphPubKeyFromServer?,
-      CryptchatServer.CryptchatServerError?
+      CryptchatRequest.ErrorMetadata?
     ) -> Unit
   ) {
-    CryptchatServer(context, server).post(
+    CryptchatServer(context, server).request(
+      method = CryptchatRequest.Methods.POST,
       path = "/ephemeral-keys/grab.json",
       param = JSONObject().also { it.put("user_id", user.idOnServer) },
+      async = false,
       success = {
         val ephemeralPublicKey = extractEphKeyFromJson(it)
         callback(ephemeralPublicKey, null)
@@ -148,7 +145,7 @@ class OutboundMessageHandler(
         if (it.statusCode == 404) {
           message.status = Message.RECEIVER_DELETED
           updateMessageInDb()
-          return@post
+          return@request
         }
         callback(null, it)
       }

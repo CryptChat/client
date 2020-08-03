@@ -103,16 +103,18 @@ class ChatView : RecyclerViewImplementer<ChatView.DisplayMessageStruct>() {
       }
     ))
     chatMessageSend.setOnClickListener {
-      if (chatMessageInput.text.trim().isNotEmpty()) {
-        val plaintext = chatMessageInput.text.trim().toString()
-        val handler = OutboundMessageHandler(
-          plaintext = plaintext,
-          server = server,
-          user = user,
-          context = applicationContext
-        )
-        handler.saveToDb {
-          handler.process()
+      val plaintext = chatMessageInput.text.toString().trim()
+      if (plaintext.isNotEmpty()) {
+        AsyncExec.run {
+          val handler = OutboundMessageHandler(
+            plaintext = plaintext,
+            server = server,
+            user = user,
+            context = applicationContext
+          )
+          handler.saveToDb {
+            handler.process()
+          }
         }
         chatMessageInput.text.clear()
       }
