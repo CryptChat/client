@@ -1,15 +1,14 @@
 package cc.osama.cryptchat.ui
 
-import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import android.text.Editable
-import android.text.TextWatcher
-import android.util.Log.w
+import android.util.Log.*
 import android.view.View
 import android.widget.ArrayAdapter
 import cc.osama.cryptchat.R
 import cc.osama.cryptchat.CryptchatServer
+import cc.osama.cryptchat.CryptchatTextWatcher
+import cc.osama.cryptchat.CryptchatUtils
 import kotlinx.android.synthetic.main.activity_enter_phone_number.*
 import org.json.JSONObject
 
@@ -25,13 +24,9 @@ class EnterPhoneNumber : AppCompatActivity() {
       countryCodeField.adapter = adapter
     }
     countryCodeField.setSelection(0)
-    phoneNumberField.addTextChangedListener(object : TextWatcher {
-      override fun afterTextChanged(s: Editable?) {}
-      override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
-      override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
-        goPhoneNumber.isEnabled = s != null && s.isNotEmpty()
-      }
-    })
+    phoneNumberField.addTextChangedListener(CryptchatTextWatcher(on = { charSequence, _, _, _ ->
+      goPhoneNumber.isEnabled = charSequence != null && charSequence.isNotEmpty()
+    }))
     goPhoneNumber.setOnClickListener {
       val address = intent.extras?.getString("address").toString()
       val code = countryCodeField.selectedItem.toString()
@@ -42,24 +37,33 @@ class EnterPhoneNumber : AppCompatActivity() {
       }
       toggleErrorMessage()
       CryptchatServer.registerAtServer(
+        async = true,
         address = address,
         params = params,
-        success = {
-          val id = it["id"] as? Int
-          val senderId = it["sender_id"] as? String
-          if (id != null && senderId != null) {
-            toggleErrorMessage()
-            val intent = Intent(this@EnterPhoneNumber, VerifyPhoneNumber::class.java)
-            intent.putExtra("id", id)
-            intent.putExtra("senderId", senderId)
-            intent.putExtra("address", address)
-            startActivity(intent)
+        success = { json ->
+          val id = json.optLong("id", -999_999)
+          val senderId = CryptchatUtils.jsonOptString(json, "sender_id")
+          if (id != (-999_999).toLong() && senderId != null) {
+            onUiThread {
+              toggleErrorMessage()
+              startActivity(
+                VerifyPhoneNumber.createIntent(
+                  id = id,
+                  address = address,
+                  senderId = senderId,
+                  context = applicationContext
+                )
+              )
+            }
           } else {
-            toggleErrorMessage(resources.getString(R.string.registration_id_missing,id?.toString() ?: "NULL"))
+            d("EnterPhoneNumber", "Unexpected condition in registerAtServer success. json=$json")
+            onUiThread {
+              toggleErrorMessage(resources.getString(R.string.registration_id_missing, id.toString()))
+            }
           }
         },
-        failure = {
-          w("FAILURE", it.toString())
+        failure = { error ->
+          e("EnterPhoneNumber", "registerAtServer failure. $error", error.originalError)
         }
       )
     }

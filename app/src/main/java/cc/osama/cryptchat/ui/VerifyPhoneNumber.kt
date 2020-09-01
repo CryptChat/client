@@ -1,13 +1,17 @@
 package cc.osama.cryptchat.ui
 
+import android.content.Context
+import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
-import android.util.Log.w
+import android.util.Log.*
 import cc.osama.cryptchat.*
 import cc.osama.cryptchat.db.EphemeralKey
 import cc.osama.cryptchat.db.Server
+import cc.osama.cryptchat.db.User
+import cc.osama.cryptchat.worker.SupplyEphemeralKeysWorker
 import cc.osama.cryptchat.worker.SyncUsersWorker
 import com.google.firebase.iid.FirebaseInstanceId
 import kotlinx.android.synthetic.main.activity_verify_phone_number.*
@@ -16,6 +20,15 @@ import org.json.JSONObject
 import java.io.IOException
 
 class VerifyPhoneNumber : AppCompatActivity() {
+  companion object {
+    fun createIntent(id: Long, address: String, senderId: String, context: Context) : Intent {
+      return Intent(context, VerifyPhoneNumber::class.java).also {
+        it.putExtra("id", id)
+        it.putExtra("address", address)
+        it.putExtra("senderId", senderId)
+      }
+    }
+  }
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
@@ -38,39 +51,46 @@ class VerifyPhoneNumber : AppCompatActivity() {
     val senderId = intent.extras?.getString("senderId")
     val token = verificationCodeField.text.toString()
     if (id == null || address == null || senderId == null) {
+      d("VerifyPhoneNumber", "weird condition. id=$id, address=$address, senderId=$senderId.")
       return
     }
     AsyncExec.run {
       val instanceId: String? = try {
         FirebaseInstanceId.getInstance().getToken(senderId, "FCM")
       } catch (ex: IOException) {
+        d("VerifyPhoneNumber", "FirebaseInstanceId exception", ex)
         null
       }
       val keyPair = CryptchatSecurity.genKeyPair()
-      val params = JSONObject().also { params ->
-        params.put("id", id)
-        params.put("instance_id", instanceId)
-        params.put("identity_key", keyPair.publicKey.toString())
-        params.put("verification_token", token)
+      val params = JSONObject().apply {
+        put("id", id)
+        put("instance_id", instanceId)
+        put("identity_key", keyPair.publicKey.toString())
+        put("verification_token", token)
       }
       CryptchatServer.registerAtServer(
+        async = false,
         address = address,
         params = params,
-        success = {
-          val userId = CryptchatUtils.toLong(it["id"])
-          val authToken = it["auth_token"] as? String
-          if (userId != null && authToken != null) {
+        success = { json ->
+          val userId = json.optLong("id", -1)
+          val authToken = CryptchatUtils.jsonOptString(json, "auth_token")
+          if (userId != (-1).toLong() && authToken != null) {
             val server = addServerToDatabase(address, userId, keyPair, senderId, authToken, instanceId)
-            supplyEphemeralKeys(server)
+            SupplyEphemeralKeysWorker.enqueue(serverId = server.id, batchSize = 500, context = applicationContext)
             SyncUsersWorker.enqueue(serverId = server.id, context = applicationContext)
             onUiThread {
               startActivity(ServerUsersList.createIntent(server, applicationContext))
             }
+          } else {
+            e(
+              "VerifyPhoneNumber",
+              "verification success callback weird condition. userId=$userId, authToken=$authToken, json=$json."
+            )
           }
-          w("USERID", userId.toString())
         },
-        failure = {
-          w("FAILUUUURE", it.toString())
+        failure = { error ->
+          e("VerifyPhoneNumber", "verification requests failed. $error", error.originalError)
         }
       )
     }
@@ -87,41 +107,5 @@ class VerifyPhoneNumber : AppCompatActivity() {
       instanceId = instanceId,
       userName = null
     ))
-  }
-
-  private fun supplyEphemeralKeys(server: Server) {
-    val ephemeralKeysList = mutableListOf<EphemeralKey>()
-    for (i in 1..500) {
-      val keyPair = CryptchatSecurity.genKeyPair()
-      ephemeralKeysList.add(
-        EphemeralKey(
-          serverId = server.id,
-          publicKey = keyPair.publicKey.toString(),
-          privateKey = keyPair.privateKey.toString()
-        )
-      )
-    }
-    val db = Cryptchat.db(applicationContext)
-    AsyncExec.run {
-      val ids = db.ephemeralKeys().addMany(ephemeralKeysList)
-      val keysList = db.ephemeralKeys().findByIds(ids)
-      val jsonArray = JSONArray()
-      keysList.forEach { key ->
-        val jsonKey = JSONObject()
-        jsonKey.put("id", key.id)
-        jsonKey.put("key", key.publicKey)
-        jsonArray.put(jsonKey)
-      }
-      val params = JSONObject()
-      params.put("keys", jsonArray)
-      CryptchatServer(applicationContext, server).request(
-        method = CryptchatRequest.Methods.POST,
-        path = "/ephemeral-keys.json",
-        param = params,
-        failure = {
-          db.ephemeralKeys().deleteMany(ephemeralKeysList)
-        }
-      )
-    }
   }
 }

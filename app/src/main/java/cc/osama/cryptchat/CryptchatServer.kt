@@ -32,9 +32,11 @@ class CryptchatServer(private val context: Context, private val server: Server) 
       address: String,
       params: JSONObject,
       success: CryptchatRequest.OnUiThread.(JSONObject) -> Unit,
-      failure: CryptchatRequest.OnUiThread.(CryptchatRequest.ErrorMetadata) -> Unit
+      failure: CryptchatRequest.OnUiThread.(CryptchatRequest.ErrorMetadata) -> Unit,
+      async: Boolean
     ) {
       CryptchatRequest(
+        async = async,
         url = "$address/register.json",
         method = CryptchatRequest.Methods.POST
       ).apply {
