@@ -16,9 +16,11 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.AppCompat.Light.NoActionBar"
         android:usesCleartextTraffic="${usesCleartextTraffic}">
-        <activity android:name=".ui.ServerSettings"
-            android:theme="@style/Theme.AppCompat.Light.NoActionBar"></activity>
-        <activity android:name=".ui.ChatView"></activity>
+        <activity android:name=".ui.VerifyIdentity"></activity>
+        <activity
+            android:name=".ui.ServerSettings"
+            android:theme="@style/Theme.AppCompat.Light.NoActionBar" />
+        <activity android:name=".ui.ChatView" />
         <activity
             android:name=".ui.AppEntry"
             android:launchMode="singleInstance"

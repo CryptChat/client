@@ -4,6 +4,7 @@ import android.util.Base64
 import org.whispersystems.curve25519.Curve25519
 import java.io.ByteArrayOutputStream
 import java.lang.Exception
+import java.lang.StringBuilder
 import java.security.MessageDigest
 import java.security.SecureRandom
 import javax.crypto.Cipher
@@ -38,6 +39,24 @@ class CryptchatSecurity {
       val public = ECPublicKey(keyPair.publicKey)
       val private = ECPrivateKey(keyPair.privateKey)
       return ECKeyPair(public, private)
+    }
+
+    fun genVerificationCode(firstParty: ByteArray, secondParty: ByteArray) : Array<String> {
+      val sha = MessageDigest.getInstance("SHA-512")
+      var digest = sha.digest(firstParty + secondParty)
+      for (i in 2..4096) {
+        digest = sha.digest(digest)
+      }
+      // we have a 64-bytes digest, take the first 32 bytes and
+      // split the them into 16 chunks of hexadecimal strings of
+      // equal size (2 hexes = 2x2 characters)
+      return Array(16) { i ->
+        val builder = StringBuilder()
+        for (j in 0..1) {
+          builder.append(String.format("%02x", digest[i * 2 + j]))
+        }
+        builder.toString()
+      }
     }
   }
 

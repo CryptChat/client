@@ -63,7 +63,8 @@ dependencies {
     implementation "androidx.work:work-runtime-ktx:$work_version"
 
     def lifecycle_version = "2.2.0"
-    implementation "androidx.lifecycle:lifecycle-livedata-ktx:$lifecycle_version" // TODO: Review if it's still needed
+    implementation "androidx.lifecycle:lifecycle-livedata-ktx:$lifecycle_version"
+    // TODO: Review if it's still needed
 
     implementation 'com.github.bumptech.glide:glide:4.11.0'
     annotationProcessor 'com.github.bumptech.glide:compiler:4.11.0'

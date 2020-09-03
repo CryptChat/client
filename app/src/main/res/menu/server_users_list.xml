@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
- <item android:id="@+id/go_to_server_settings" android:title="@string/server_users_list_menue_go_to_server_settings"></item>
+ <item android:id="@+id/go_to_server_settings" android:title="@string/server_users_list_menu_go_to_server_settings"></item>
 </menu>

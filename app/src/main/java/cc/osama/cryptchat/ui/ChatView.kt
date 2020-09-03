@@ -5,7 +5,8 @@ import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.os.Bundle
-import android.util.Log.w
+import android.view.Menu
+import android.view.MenuItem
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import androidx.recyclerview.widget.LinearLayoutManager
 import cc.osama.cryptchat.*
@@ -88,14 +89,15 @@ class ChatView : RecyclerViewImplementer<ChatView.DisplayMessageStruct>() {
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
+    setContentView(R.layout.activity_chat_view)
     user = intent?.extras?.get("user") as User
     server = intent?.extras?.get("server") as Server
-    setContentView(R.layout.activity_chat_view)
     chatBody.apply {
       setHasFixedSize(true)
       layoutManager = viewManager
       adapter = viewAdapter
     }
+    setSupportActionBar(chatViewToolbar)
     refreshMessagesStream()
     chatMessageSend.addTextChangedListener(CryptchatTextWatcher(
       on = { s, _, _, _ ->
@@ -186,5 +188,19 @@ class ChatView : RecyclerViewImplementer<ChatView.DisplayMessageStruct>() {
     } else {
       R.layout.chat_message_second_party
     }
+  }
+
+  override fun onCreateOptionsMenu(menu: Menu?): Boolean {
+    menuInflater.inflate(R.menu.chat_view, menu)
+    return true
+  }
+
+  override fun onOptionsItemSelected(item: MenuItem): Boolean {
+    if (item.itemId == R.id.verify_contact_identity_key) {
+      startActivity(VerifyIdentity.createIntent(user, server, applicationContext))
+    } else {
+      return super.onOptionsItemSelected(item)
+    }
+    return true
   }
 }
