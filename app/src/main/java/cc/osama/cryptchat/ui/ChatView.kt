@@ -41,7 +41,7 @@ class ChatView : RecyclerViewImplementer<ChatView.DisplayMessageStruct>() {
   override val viewManager = LinearLayoutManager(this)
   private lateinit var server: Server
   private lateinit var user: User
-  private var maxId: Long = 0
+  private var lastId: Long = 0
 
   private val receiver = object : BroadcastReceiver() {
     override fun onReceive(context: Context?, intent: Intent?) {
@@ -98,7 +98,6 @@ class ChatView : RecyclerViewImplementer<ChatView.DisplayMessageStruct>() {
       adapter = viewAdapter
     }
     setSupportActionBar(chatViewToolbar)
-    refreshMessagesStream()
     chatMessageSend.addTextChangedListener(CryptchatTextWatcher(
       on = { s, _, _, _ ->
         chatMessageSend.isEnabled = s != null && s.trim().isNotEmpty()
@@ -130,48 +129,42 @@ class ChatView : RecyclerViewImplementer<ChatView.DisplayMessageStruct>() {
 
   override fun onStart() {
     super.onStart()
+    refreshMessagesStream()
     LocalBroadcastManager.getInstance(this).registerReceiver(receiver, IntentFilter(BROADCAST_INTENT))
   }
 
   private fun refreshMessagesStream() {
-    updateMaxId()
-    Cryptchat.db(applicationContext).also { db ->
-      AsyncExec.run {
-        val messages = db.messages().findConversationMessages(
+    AsyncExec.run {
+      synchronized(dataset) {
+        val messages = db().messages().findConversationMessages(
           serverId = server.id,
           userId = user.id,
-          lastId = maxId
+          lastId = lastId
         )
         if (messages.isEmpty()) return@run
-        it.execMainThread {
-          dataset.addAll(messages.map { m -> DisplayMessageStruct(m) })
-          viewAdapter.notifyDataSetChanged()
-          chatBody.scrollToPosition(dataset.size - 1)
-        }
-        db.messages().setMessagesReadByServerAndUser(serverId = server.id, userId = user.id)
+        dataset.addAll(messages.map { m -> DisplayMessageStruct(m) })
+        lastId = dataset.maxBy { m -> m.id }?.id ?: 0
+        db().messages().setMessagesReadByServerAndUser(serverId = server.id, userId = user.id)
+      }
+      it.execMainThread {
+        viewAdapter.notifyDataSetChanged()
+        chatBody.scrollToPosition(dataset.size - 1)
       }
     }
   }
 
   private fun refreshMessage(messageId: Long) {
-    Cryptchat.db(applicationContext).also { db ->
-      AsyncExec.run {
-        val message = db.messages().findById(messageId)
-        it.execMainThread {
+    AsyncExec.run {
+      val message = db().messages().findById(messageId) ?: return@run
+      it.execMainThread {
+        synchronized(dataset) {
           val index = dataset.indexOfFirst { m -> m.id == messageId }
-          if (message != null && index != -1) {
+          if (index != -1) {
             dataset[index] = DisplayMessageStruct(message)
             viewAdapter.notifyItemChanged(index)
           }
         }
       }
-    }
-  }
-
-  @Synchronized private fun updateMaxId() {
-    val newMax = dataset.maxBy { it.id }?.id ?: 0
-    if (newMax > maxId) {
-      maxId = newMax
     }
   }
 
@@ -203,4 +196,6 @@ class ChatView : RecyclerViewImplementer<ChatView.DisplayMessageStruct>() {
     }
     return true
   }
+
+  private fun db() = Cryptchat.db(applicationContext)
 }
