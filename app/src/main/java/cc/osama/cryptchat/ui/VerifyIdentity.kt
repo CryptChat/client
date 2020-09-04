@@ -3,6 +3,7 @@ package cc.osama.cryptchat.ui
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
+import android.view.MenuItem
 import androidx.appcompat.app.AppCompatActivity
 import cc.osama.cryptchat.CryptchatSecurity
 import cc.osama.cryptchat.R
@@ -44,5 +45,17 @@ class VerifyIdentity: AppCompatActivity() {
       if (i != 3) builder.append("\n")
     }
     verificationCodeHolder.text = builder.toString()
+    setSupportActionBar(verifyIdentityToolbar)
+    supportActionBar?.setDisplayShowTitleEnabled(false)
+    supportActionBar?.setDisplayHomeAsUpEnabled(true)
+  }
+
+  override fun onOptionsItemSelected(item: MenuItem): Boolean {
+    if (item.itemId == android.R.id.home) {
+      onBackPressed()
+    } else {
+      return super.onOptionsItemSelected(item)
+    }
+    return true
   }
 }

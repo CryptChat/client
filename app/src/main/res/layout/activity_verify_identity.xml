@@ -35,4 +35,15 @@
         app:layout_constraintVertical_chainStyle="packed"
         android:textSize="18sp"/>
 
+    <androidx.appcompat.widget.Toolbar
+        android:id="@+id/verifyIdentityToolbar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="?attr/colorPrimary"
+        android:minHeight="?attr/actionBarSize"
+        android:theme="?attr/actionBarTheme"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
 </androidx.constraintlayout.widget.ConstraintLayout>
