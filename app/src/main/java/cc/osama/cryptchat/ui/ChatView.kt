@@ -41,7 +41,6 @@ class ChatView : RecyclerViewImplementer<ChatView.DisplayMessageStruct>() {
   override val viewManager = LinearLayoutManager(this)
   private lateinit var server: Server
   private lateinit var user: User
-  private var lastId: Long = 0
 
   private val receiver = object : BroadcastReceiver() {
     override fun onReceive(context: Context?, intent: Intent?) {
@@ -136,6 +135,7 @@ class ChatView : RecyclerViewImplementer<ChatView.DisplayMessageStruct>() {
   private fun refreshMessagesStream() {
     AsyncExec.run {
       synchronized(dataset) {
+        val lastId = dataset.maxBy { m -> m.id }?.id ?: 0
         val messages = db().messages().findConversationMessages(
           serverId = server.id,
           userId = user.id,
@@ -143,7 +143,6 @@ class ChatView : RecyclerViewImplementer<ChatView.DisplayMessageStruct>() {
         )
         if (messages.isEmpty()) return@run
         dataset.addAll(messages.map { m -> DisplayMessageStruct(m) })
-        lastId = dataset.maxBy { m -> m.id }?.id ?: 0
         db().messages().setMessagesReadByServerAndUser(serverId = server.id, userId = user.id)
       }
       it.execMainThread {
