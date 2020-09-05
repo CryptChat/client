@@ -2,6 +2,7 @@ package cc.osama.cryptchat
 
 import android.content.Context
 import android.content.Intent
+import android.util.Log.d
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import cc.osama.cryptchat.db.EphemeralKey
 import cc.osama.cryptchat.db.Message
@@ -21,17 +22,28 @@ class InboundMessageHandler(
 
   fun process() : Message? {
     val db = Cryptchat.db(context)
-    val messageIdOnServer = CryptchatUtils.toLong(data["id"]) ?: return null
-    if (db.messages().checkMessageExists(serverId = server.id, idOnServer = messageIdOnServer)) {
+    val messageIdOnServer = data.optLong("id", -1)
+    if (messageIdOnServer == (-1).toLong()) {
+      d("InboundMessageHandler", "returned cuz message id on server is missing. serverId=${server.id}, data=$data")
       return null
     }
-    val body = data["body"] as? String ?: return null
-    val iv = data["iv"] as? String ?: return null
-    val mac = data["mac"] as? String ?: return null
-    val senderIdOnServer = CryptchatUtils.toLong(data["sender_user_id"]) ?: return null
-    val createdAt = CryptchatUtils.toLong(data["created_at"]) ?: return null
-    val senderEphPubKeyString = data["sender_ephemeral_public_key"] as? String
-    val receiverEphKeyPairId = CryptchatUtils.toLong(data["ephemeral_key_id_on_user_device"])
+    if (db.messages().checkMessageExists(serverId = server.id, idOnServer = messageIdOnServer)) {
+      d("InboundMessageHandler", "returned cuz message already exists. serverId=${server.id}, data=$data")
+      return null
+    }
+    val body = CryptchatUtils.jsonOptString(data, "body") ?: return null
+    val iv = CryptchatUtils.jsonOptString(data, "iv") ?: return null
+    val mac = CryptchatUtils.jsonOptString(data, "mac") ?: return null
+    val senderIdOnServer = data.optLong("sender_user_id", -1)
+    val createdAt = data.optLong("created_at", -1)
+    if (createdAt == (-1).toLong() || senderIdOnServer == (-1).toLong()) {
+      d("InboundMessageHandler", "returned cuz createdAt or senderIdOnServer is -1. data=$data")
+      return null
+    }
+    val senderEphPubKeyString = CryptchatUtils.jsonOptString(data,"sender_ephemeral_public_key")
+    val receiverEphKeyPairId = data.optLong("ephemeral_key_id_on_user_device", -1).let {
+      if (it != (-1).toLong()) it else null
+    }
     val senderUser = db.users().findUserByServerIdAndIdOnServer(serverId = server.id, idOnServer = senderIdOnServer)
       ?: throw UserNotFound() // TODO: add safety guards to ensure we remember not found IDs and not fail for them again
 

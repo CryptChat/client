@@ -10,10 +10,6 @@ import java.security.SecureRandom
 
 class CryptchatUtils {
   companion object {
-    fun toLong(value: Any?): Long? {
-      return (value as? Int)?.toLong() ?: (value as? Long)
-    }
-
     fun dp2px(dp: Int, r: Resources) : Float {
       return TypedValue.applyDimension(
         TypedValue.COMPLEX_UNIT_DIP,

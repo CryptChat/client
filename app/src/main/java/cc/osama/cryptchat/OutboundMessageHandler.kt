@@ -106,7 +106,10 @@ class OutboundMessageHandler(
       param = param,
       async = false,
       success = { json ->
-        val idOnServer = CryptchatUtils.toLong((json.optJSONObject("message"))?.get("id"))
+        val messageJson = json.optJSONObject("message")
+        val idOnServer = messageJson?.optLong("id", -1)?.let {
+          if (it != (-1).toLong()) it else null
+        }
         message.status = Message.SENT
         message.idOnServer = idOnServer
         updateMessageInDb()
@@ -154,9 +157,9 @@ class OutboundMessageHandler(
 
   private fun extractEphKeyFromJson(json: JSONObject) : ECPublicKey.EphPubKeyFromServer? {
     val keyJson = json["ephemeral_key"] as? JSONObject ?: return null
-    val stringKey = keyJson["key"] as? String
-    val idOnUserDevice = CryptchatUtils.toLong(keyJson["id_on_user_device"])
-    return if (stringKey != null && idOnUserDevice != null) {
+    val stringKey = CryptchatUtils.jsonOptString(keyJson,"key")
+    val idOnUserDevice = keyJson.optLong("id_on_user_device", -1)
+    return if (stringKey != null && idOnUserDevice != (-1).toLong()) {
       try {
         ECPublicKey.EphPubKeyFromServer(
           stringKey = stringKey,

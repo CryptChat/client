@@ -45,7 +45,6 @@ class SyncUsersWorker(context: Context, params: WorkerParameters) : Worker(conte
           val userJson = usersJsonArray[i] as? JSONObject ?: continue
           var publicKey: ECPublicKey?
           try {
-            userJson.optString("identity_key")
             val identityKey = CryptchatUtils.jsonOptString(userJson, "identity_key")
             if (identityKey == null || identityKey.isEmpty()) continue
             publicKey = ECPublicKey(identityKey)
@@ -54,9 +53,13 @@ class SyncUsersWorker(context: Context, params: WorkerParameters) : Worker(conte
           }
           val countryCode = CryptchatUtils.jsonOptString(userJson, "country_code")
           val phoneNumber = CryptchatUtils.jsonOptString(userJson, "phone_number")
-          val idOnServer = CryptchatUtils.toLong(userJson["id"])
+          val idOnServer = userJson.optLong("id", -1).let { id ->
+            if (id != (-1).toLong()) id else null
+          }
           if (idOnServer == server.userId) continue
-          val lastUpdatedAt = CryptchatUtils.toLong(userJson["updated_at"])
+          val lastUpdatedAt = userJson.optLong("updated_at", -1).let { u ->
+            if (u != (-1).toLong()) u else null
+          }
           val name = CryptchatUtils.jsonOptString(userJson,  "name")
           val avatarUrl = CryptchatUtils.jsonOptString(userJson, "avatar_url")
           if (countryCode != null &&
