@@ -201,9 +201,21 @@ class ServerSettings : AppCompatActivity() {
         }
       }
     }
-    saveChangesButton.isEnabled = true
-    serverNameInput.isEnabled = true
-    userNameInput.isEnabled = true
+    if (Cryptchat.isReadonly(applicationContext)) {
+      saveChangesButton.isEnabled = false
+      serverNameInput.isEnabled = false
+      userNameInput.isEnabled = false
+      changeAvatarButton.isEnabled = false
+      disabledSettingsNotice.visibility = View.VISIBLE
+      saveChangesButton.visibility = View.INVISIBLE
+    } else {
+      saveChangesButton.isEnabled = true
+      serverNameInput.isEnabled = true
+      userNameInput.isEnabled = true
+      changeAvatarButton.isEnabled = true
+      disabledSettingsNotice.visibility = View.INVISIBLE
+      saveChangesButton.visibility = View.VISIBLE
+    }
   }
 
   override fun onOptionsItemSelected(item: MenuItem): Boolean {

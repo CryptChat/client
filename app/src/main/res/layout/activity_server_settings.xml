@@ -155,4 +155,16 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
+    <TextView
+        android:id="@+id/disabledSettingsNotice"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:gravity="start"
+        android:text="@string/server_settings_disabled_because_readonly"
+        android:visibility="invisible"
+        app:layout_constraintEnd_toEndOf="@+id/userNameInput"
+        app:layout_constraintStart_toStartOf="@+id/userNameInput"
+        app:layout_constraintTop_toBottomOf="@+id/userNameInput" />
+
 </androidx.constraintlayout.widget.ConstraintLayout>

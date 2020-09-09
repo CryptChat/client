@@ -46,7 +46,7 @@ class VerifyPhoneNumber : AppCompatActivity() {
   }
 
   private fun submitButtonHandler() {
-    val id = intent.extras?.getInt("id")
+    val id = intent.extras?.getLong("id")
     val address = intent.extras?.getString("address")
     val senderId = intent.extras?.getString("senderId")
     val token = verificationCodeField.text.toString()

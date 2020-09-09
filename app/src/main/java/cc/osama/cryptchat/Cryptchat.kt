@@ -1,32 +1,60 @@
 package cc.osama.cryptchat
 
-import android.app.Activity
 import android.app.Application
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.content.Context
+import android.content.SharedPreferences
 import android.os.Build
-import android.os.Bundle
-import android.util.Log
-import android.util.Log.w
+import androidx.core.content.edit
 import androidx.room.Room
-import cc.osama.cryptchat.ui.ChatView
-import cc.osama.cryptchat.ui.MainActivity
-import cc.osama.cryptchat.worker.InstanceIdsManagerWorker
-import cc.osama.cryptchat.worker.SyncMessagesWorker
+import java.lang.Exception
 
 class Cryptchat : Application() {
+  class DatabaseReadonly : Exception()
   companion object {
     const val MESSAGES_CHANNEL_ID = "CRYPTCHAT_MESSAGES_CHANNEL"
     private var DB_INSTANCE: Database? = null
-    fun db(context: Context) =
-      DB_INSTANCE ?: synchronized(this) {
+    private lateinit var sharedPrefs: SharedPreferences
+    fun db(context: Context): Database {
+      return DB_INSTANCE ?: synchronized(this) {
         DB_INSTANCE ?: Room.databaseBuilder(
           context,
           Database::class.java,
-          "cryptchat-database"
+          Database.Name
         ).build().also { DB_INSTANCE = it }
       }
+    }
+
+    fun isReadonly(context: Context) : Boolean {
+      return sharedPreferences(context).getBoolean("readonly-mode", false)
+    }
+
+    fun enableReadonly(context: Context) {
+      sharedPreferences(context).edit {
+        putBoolean("readonly-mode", true)
+        apply()
+      }
+    }
+
+    fun disableReadonly(context: Context) {
+      sharedPreferences(context).edit {
+        remove("readonly-mode")
+        apply()
+      }
+      DB_INSTANCE = null
+    }
+
+    fun sharedPreferences(context: Context) : SharedPreferences {
+      return if (this::sharedPrefs.isInitialized) {
+        sharedPrefs
+      } else {
+        val name = context.packageName + "-shared-preferences"
+        val pref = context.getSharedPreferences(name, Context.MODE_PRIVATE)
+        sharedPrefs = pref
+        sharedPrefs
+      }
+    }
   }
 
   override fun onCreate() {

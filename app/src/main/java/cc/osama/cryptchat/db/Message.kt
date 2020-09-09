@@ -47,10 +47,6 @@ data class Message(
     return status < UNDECRYPTED
   }
 
-  fun byOthers() : Boolean {
-    return !byMe()
-  }
-
   @Dao
   interface DataAccessObject {
     @Query("SELECT * FROM messages WHERE id = :id LIMIT 1")

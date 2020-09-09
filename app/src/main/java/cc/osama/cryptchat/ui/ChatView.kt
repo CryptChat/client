@@ -7,6 +7,7 @@ import android.content.IntentFilter
 import android.os.Bundle
 import android.view.Menu
 import android.view.MenuItem
+import android.view.View
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import androidx.recyclerview.widget.LinearLayoutManager
 import cc.osama.cryptchat.*
@@ -128,6 +129,15 @@ class ChatView : RecyclerViewImplementer<ChatView.DisplayMessageStruct>() {
 
   override fun onStart() {
     super.onStart()
+    if (Cryptchat.isReadonly(applicationContext)) {
+      chatMessageSend.isEnabled = false
+      chatMessageInput.visibility = View.INVISIBLE
+      disabledChatNotice.visibility = View.VISIBLE
+    } else {
+      chatMessageSend.isEnabled = true
+      chatMessageInput.visibility = View.VISIBLE
+      disabledChatNotice.visibility = View.INVISIBLE
+    }
     refreshMessagesStream()
     LocalBroadcastManager.getInstance(this).registerReceiver(receiver, IntentFilter(BROADCAST_INTENT))
   }
@@ -143,7 +153,9 @@ class ChatView : RecyclerViewImplementer<ChatView.DisplayMessageStruct>() {
         )
         if (messages.isEmpty()) return@run
         dataset.addAll(messages.map { m -> DisplayMessageStruct(m) })
-        db().messages().setMessagesReadByServerAndUser(serverId = server.id, userId = user.id)
+        if (!Cryptchat.isReadonly(applicationContext)) {
+          db().messages().setMessagesReadByServerAndUser(serverId = server.id, userId = user.id)
+        }
       }
       it.execMainThread {
         viewAdapter.notifyDataSetChanged()

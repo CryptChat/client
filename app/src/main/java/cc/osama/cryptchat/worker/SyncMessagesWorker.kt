@@ -72,11 +72,13 @@ class SyncMessagesWorker(context: Context, params: WorkerParameters) : Worker(co
             }
           }
         } catch (ex: InboundMessageHandler.UserNotFound) {
-          SyncUsersWorker.enqueue(
-            serverId = server.id,
-            scheduleMessagesSync = true,
-            context = applicationContext
-          )
+          if (!Cryptchat.isReadonly(applicationContext)) {
+            SyncUsersWorker.enqueue(
+              serverId = server.id,
+              scheduleMessagesSync = true,
+              context = applicationContext
+            )
+          }
         }
       },
       failure = {

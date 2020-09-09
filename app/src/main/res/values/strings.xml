@@ -23,6 +23,7 @@
     <string name="dialog_save">"Save"</string>
     <string name="dialog_cancel">"Cancel"</string>
     <string name="dialog_ok">"OK"</string>
+    <string name="dialog_yes">"Yes"</string>
     <string name="server_settings_server_name_label">"Server Name"</string>
     <string name="server_settings_user_name_label">"Your Name"</string>
     <string name="server_settings_profile_avatar">"Profile avatar"</string>
@@ -38,6 +39,11 @@
     <string name="server">"Server"</string>
     <string name="chat_view_menu_verify_contact">"Verify Contact"</string>
     <string name="verification_code_message">"If your contact sees on their device the same code as the one shown on this screen, you can be 100% sure that your messages are truly end-to-end encrypted &#128522;"</string>
+    <string name="servers_list_menu_backups">"Data backup"</string>
+    <string name="take_backup_button">"Take Backup"</string>
+    <string name="chat_disabled_because_readonly">"Chat is disabled because the app is in read-only mode."</string>
+    <string name="server_settings_disabled_because_readonly">"Server settings are currently disabled because the app is in read-only mode."</string>
+    <string name="backup_process_confirmation_message">"The application will enter read-only mode which means many capabilities will be disabled such as sending and receiving messages. Continue?"</string>
     <string-array name="countries_codes">
         <item>+965</item>
         <item>+966</item>

@@ -92,14 +92,14 @@ class AppEntry : AppCompatActivity() {
     Cryptchat.db(applicationContext).also { db ->
       AsyncExec.run {
         val servers = db.servers().getAll()
-        val intent: Intent
-        if (servers.isEmpty()) {
-          intent = Intent(this, EnterServerAddress::class.java)
+        val intent = if (servers.isEmpty()) {
+          Intent(this, EnterServerAddress::class.java)
         } else {
-          intent = ServerUsersList.createIntent(
-            servers[0],
-            this
-          )
+          // ServerUsersList.createIntent(
+          //   servers[0],
+          //   this
+          // )
+          ServersList.createIntent(applicationContext)
         }
         it.execMainThread {
           startActivity(intent)

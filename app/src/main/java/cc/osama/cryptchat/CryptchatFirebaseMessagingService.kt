@@ -10,7 +10,11 @@ import com.google.firebase.messaging.RemoteMessage
 class CryptchatFirebaseMessagingService : FirebaseMessagingService() {
   override fun onMessageReceived(message: RemoteMessage) {
     super.onMessageReceived(message)
-    d("TOKEN", "MESSAGE RECEIVED ${message.from} dsadasd")
+    if (Cryptchat.isReadonly(applicationContext)) {
+      d("FirebaseMessagingSrv", "returning from onMessageReceived early cuz readonly mode is on.")
+      return
+    }
+    d("FirebaseMessagingSrv", "received firebase message. data=${message.data}")
     val command = message.data["command"] ?: return
     val from = message.from ?: return
     val server = Cryptchat.db(applicationContext).servers().findBySenderId(from) ?: return
@@ -29,6 +33,10 @@ class CryptchatFirebaseMessagingService : FirebaseMessagingService() {
 
   override fun onNewToken(p0: String) {
     super.onNewToken(p0)
+    if (Cryptchat.isReadonly(applicationContext)) {
+      d("FirebaseMessagingSrv", "returning from onNewToken early cuz readonly mode is on.")
+      return
+    }
     InstanceIdsManagerWorker.enqueue(applicationContext)
   }
 }

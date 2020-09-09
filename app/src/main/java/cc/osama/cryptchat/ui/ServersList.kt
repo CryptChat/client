@@ -1,29 +1,18 @@
 package cc.osama.cryptchat.ui
 
+import android.content.Context
+import android.content.Intent
 import android.os.Bundle
-import android.util.Base64
-import android.util.Log.w
-import android.view.LayoutInflater
-import android.view.View
-import android.view.ViewGroup
+import android.view.*
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import cc.osama.cryptchat.AsyncExec
 import cc.osama.cryptchat.Cryptchat
-import cc.osama.cryptchat.CryptchatSecurity
 import cc.osama.cryptchat.R
 import cc.osama.cryptchat.db.Server
 import kotlinx.android.synthetic.main.activity_servers_list.*
 import kotlinx.android.synthetic.main.servers_list_item.view.*
-import org.whispersystems.curve25519.Curve25519
-import java.io.ByteArrayOutputStream
-import java.security.MessageDigest
-import javax.crypto.Cipher
-import javax.crypto.Mac
-import javax.crypto.spec.IvParameterSpec
-import javax.crypto.spec.SecretKeySpec
-import kotlin.math.ceil
 
 
 interface OnServerClick {
@@ -31,6 +20,12 @@ interface OnServerClick {
 }
 
 class ServersList : AppCompatActivity(), OnServerClick {
+  companion object {
+    fun createIntent(context: Context) : Intent {
+      return Intent(context, ServersList::class.java)
+    }
+  }
+
   private val servers = ArrayList<Server>()
   private val viewAdapter = ServersAdapter(servers, this)
   private val viewManager = LinearLayoutManager(this)
@@ -55,9 +50,10 @@ class ServersList : AppCompatActivity(), OnServerClick {
       holder.view.serverName.text = dataset[position].name
     }
   }
+
   override fun onServerClick(position: Int) {
     val server = servers[position]
-    w("SERVER CLICK", "SERVER INFO: name: ${server.name}, address: ${server.address}, id: ${server.id}, userId: ${server.userId}")
+    startActivity(ServerUsersList.createIntent(server = server, context = applicationContext))
   }
 
   override fun onCreate(savedInstanceState: Bundle?) {
@@ -69,14 +65,32 @@ class ServersList : AppCompatActivity(), OnServerClick {
       layoutManager = viewManager
       adapter = viewAdapter
     }
+    setSupportActionBar(serversListToolbar)
+  }
+
+  override fun onStart() {
+    super.onStart()
     val db = Cryptchat.db(applicationContext)
     AsyncExec.run { runner ->
-      db.servers().getAll().forEach {
-        servers.add(it)
-      }
+      servers.clear()
+      servers.addAll(db.servers().getAll())
       runner.execMainThread {
         viewAdapter.notifyDataSetChanged()
       }
     }
+  }
+
+  override fun onCreateOptionsMenu(menu: Menu?): Boolean {
+    menuInflater.inflate(R.menu.servers_list, menu)
+    return super.onCreateOptionsMenu(menu)
+  }
+
+  override fun onOptionsItemSelected(item: MenuItem): Boolean {
+    if (item.itemId == R.id.go_to_backup) {
+      startActivity(BackupsView.createIntent(applicationContext))
+    } else {
+      return super.onOptionsItemSelected(item)
+    }
+    return true
   }
 }
