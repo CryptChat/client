@@ -80,7 +80,7 @@ class VerifyPhoneNumber : AppCompatActivity() {
             SupplyEphemeralKeysWorker.enqueue(serverId = server.id, batchSize = 500, context = applicationContext)
             SyncUsersWorker.enqueue(serverId = server.id, context = applicationContext)
             onUiThread {
-              startActivity(ServerUsersList.createIntent(server, applicationContext))
+              startActivity(ServerUsersList.createIntent(server, this@VerifyPhoneNumber))
             }
           } else {
             e(

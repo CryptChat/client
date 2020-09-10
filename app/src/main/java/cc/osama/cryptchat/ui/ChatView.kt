@@ -201,7 +201,7 @@ class ChatView : RecyclerViewImplementer<ChatView.DisplayMessageStruct>() {
 
   override fun onOptionsItemSelected(item: MenuItem): Boolean {
     if (item.itemId == R.id.verify_contact_identity_key) {
-      startActivity(VerifyIdentity.createIntent(user, server, applicationContext))
+      startActivity(VerifyIdentity.createIntent(user, server, this))
     } else {
       return super.onOptionsItemSelected(item)
     }

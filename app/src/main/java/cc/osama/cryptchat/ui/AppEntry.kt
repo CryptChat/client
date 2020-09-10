@@ -99,7 +99,7 @@ class AppEntry : AppCompatActivity() {
           //   servers[0],
           //   this
           // )
-          ServersList.createIntent(applicationContext)
+          ServersList.createIntent(this)
         }
         it.execMainThread {
           startActivity(intent)

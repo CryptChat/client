@@ -3,6 +3,7 @@ package cc.osama.cryptchat.ui
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
+import android.util.Log.d
 import android.view.*
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -53,7 +54,7 @@ class ServersList : AppCompatActivity(), OnServerClick {
 
   override fun onServerClick(position: Int) {
     val server = servers[position]
-    startActivity(ServerUsersList.createIntent(server = server, context = applicationContext))
+    startActivity(ServerUsersList.createIntent(server = server, context = this))
   }
 
   override fun onCreate(savedInstanceState: Bundle?) {
@@ -82,14 +83,24 @@ class ServersList : AppCompatActivity(), OnServerClick {
 
   override fun onCreateOptionsMenu(menu: Menu?): Boolean {
     menuInflater.inflate(R.menu.servers_list, menu)
+    val addServerItem = menu?.findItem(R.id.go_to_add_server_screen)
+    if (addServerItem != null && Cryptchat.isReadonly(applicationContext)) {
+      addServerItem.isVisible = false
+    }
     return super.onCreateOptionsMenu(menu)
   }
 
   override fun onOptionsItemSelected(item: MenuItem): Boolean {
-    if (item.itemId == R.id.go_to_backup) {
-      startActivity(BackupsView.createIntent(applicationContext))
-    } else {
-      return super.onOptionsItemSelected(item)
+    when (item.itemId) {
+      R.id.go_to_backup -> {
+        startActivity(BackupsView.createIntent(this))
+      }
+      R.id.go_to_add_server_screen -> {
+        startActivity(EnterServerAddress.createIntent(this))
+      }
+      else -> {
+        return super.onOptionsItemSelected(item)
+      }
     }
     return true
   }

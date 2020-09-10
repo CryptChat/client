@@ -1,5 +1,6 @@
 package cc.osama.cryptchat.ui
 
+import android.content.Context
 import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
@@ -15,6 +16,12 @@ import java.net.URL
 import java.net.UnknownHostException
 
 class EnterServerAddress : AppCompatActivity() {
+  companion object {
+    fun createIntent(context: Context) : Intent {
+      return Intent(context, EnterServerAddress::class.java)
+    }
+  }
+
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
     setContentView(R.layout.activity_enter_server_address)
