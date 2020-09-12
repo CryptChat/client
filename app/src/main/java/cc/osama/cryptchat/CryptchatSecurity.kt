@@ -1,17 +1,18 @@
 package cc.osama.cryptchat
 
 import android.util.Base64
+import android.util.Log.d
 import org.whispersystems.curve25519.Curve25519
 import java.io.ByteArrayOutputStream
 import java.lang.Exception
-import java.lang.StringBuilder
 import java.security.MessageDigest
 import java.security.SecureRandom
 import javax.crypto.Cipher
 import javax.crypto.Mac
 import javax.crypto.spec.IvParameterSpec
 import javax.crypto.spec.SecretKeySpec
-import kotlin.math.ceil
+import kotlin.collections.ArrayList
+import kotlin.math.*
 
 class CryptchatSecurity {
   class BadMac(message: String) : Exception(message)
@@ -42,21 +43,50 @@ class CryptchatSecurity {
     }
 
     fun genVerificationCode(firstParty: ByteArray, secondParty: ByteArray) : Array<String> {
-      val sha = MessageDigest.getInstance("SHA-512")
+      val sha = MessageDigest.getInstance("SHA-256")
       var digest = sha.digest(firstParty + secondParty)
       for (i in 2..4096) {
         digest = sha.digest(digest)
       }
-      // we have a 64-bytes digest, take the first 32 bytes and
-      // split the them into 16 chunks of hexadecimal strings of
-      // equal size (2 hexes = 2x2 characters)
-      return Array(16) { i ->
-        val builder = StringBuilder()
-        for (j in 0..1) {
-          builder.append(String.format("%02x", digest[i * 2 + j]))
+      digest = digest.copyOfRange(0, 16)
+      val bitsPerWord = floor(log(Dictionary.words.size.toDouble(), 2.0)).toInt()
+      val totalBits = (ceil((digest.size * 8.0) / bitsPerWord) * bitsPerWord).toInt()
+      val parityLength = (totalBits - digest.size * 8).coerceAtLeast(0)
+      val bits = IntArray(totalBits)
+      for (i in digest.indices) {
+        val unsignedByte = digest[i].toInt() and 0xff
+        var j = 128
+        while (j >= 1) {
+          bits[i * 8 + (8 - log2(j.toDouble()).toInt())] = if ((unsignedByte and j) == j) 1 else 0
+          j /= 2
         }
-        builder.toString()
       }
+      var parity = 0
+      for (i in 0 until totalBits - parityLength step parityLength) {
+        val subset = bits.copyOfRange(i, i + parityLength)
+        for (j in subset.indices) {
+          val bit = subset[j]
+          parity += bit * 2.0.pow(subset.size - j).toInt()
+        }
+      }
+      var j = 2.0.pow(floor(log2(parity.toDouble()))).toInt()
+      for (i in totalBits - parityLength until totalBits) {
+        bits[i] = if ((parity and j) == j) 1 else 0
+        j /= 2
+      }
+      val words = ArrayList<String>()
+      for (i in bits.indices step bitsPerWord) {
+        val subset = bits.copyOfRange(i, i + bitsPerWord)
+        var index = 0
+        var k = 2.0.pow(bitsPerWord - 1).toInt()
+        subset.forEach { bit ->
+          index += bit * k
+          k /= 2
+        }
+        words.add(Dictionary.words[index])
+      }
+      d("TEST", words.size.toString())
+      return words.toTypedArray()
     }
   }
 
