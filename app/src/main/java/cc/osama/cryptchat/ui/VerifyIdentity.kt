@@ -34,20 +34,22 @@ class VerifyIdentity: AppCompatActivity() {
     } else {
       arrayOf(server.keyPair.publicKey.toByteArray(), user.publicKey.toByteArray())
     }
-    val codes = CryptchatSecurity.genVerificationCode(first, second) // contains 16 strings
-    val builder = StringBuilder()
-    for (i in 0..3) {
-      for (j in 0..3) {
-        if (j == 0) builder.append(" | ")
-        builder.append(codes[i * 4 + j])
-        builder.append(" | ")
-      }
-      if (i != 3) builder.append("\n")
-    }
-    verificationCodeHolder.text = builder.toString()
+    val words = CryptchatSecurity.generateMnemonicSentence(first, second)
+    mnemonicWord1.text = words[0]
+    mnemonicWord2.text = words[1]
+    mnemonicWord3.text = words[2]
+    mnemonicWord4.text = words[3]
+    mnemonicWord5.text = words[4]
+    mnemonicWord6.text = words[5]
+    mnemonicWord7.text = words[6]
+    mnemonicWord8.text = words[7]
+    mnemonicWord9.text = words[8]
+    mnemonicWord10.text = words[9]
+    mnemonicWord11.text = words[10]
+    mnemonicWord12.text = words[11]
     setSupportActionBar(verifyIdentityToolbar)
-    supportActionBar?.setDisplayShowTitleEnabled(false)
     supportActionBar?.setDisplayHomeAsUpEnabled(true)
+    supportActionBar?.title = resources.getString(R.string.chat_view_menu_verify_identity)
   }
 
   override fun onOptionsItemSelected(item: MenuItem): Boolean {

@@ -7,6 +7,7 @@ import org.json.JSONObject
 import java.lang.IllegalArgumentException
 import java.lang.StringBuilder
 import java.security.SecureRandom
+import kotlin.experimental.and
 
 class CryptchatUtils {
   companion object {
@@ -52,6 +53,17 @@ class CryptchatUtils {
       } else {
         json.optString(key)
       }
+    }
+
+    fun bytesToBits(bytes: ByteArray) : BooleanArray {
+      val bits = BooleanArray(bytes.size * 8)
+      for (i in bytes.indices) {
+        val byte = bytes[i].toInt()
+        for (j in 0 until 8) {
+          bits[i * 8 + j] = (byte and (1 shl (7 - j))) != 0
+        }
+      }
+      return bits
     }
   }
 }

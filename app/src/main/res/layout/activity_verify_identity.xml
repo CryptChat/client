@@ -8,32 +8,20 @@
     tools:layout_editor_absoluteY="25dp">
 
     <TextView
-        android:id="@+id/verificationCodeMessageHolder"
+        android:id="@+id/mnemonicWordsExplanationMessage"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginStart="8dp"
-        android:layout_marginTop="24dp"
-        android:layout_marginEnd="8dp"
+        android:layout_marginStart="30dp"
+        android:layout_marginTop="15dp"
+        android:layout_marginEnd="30dp"
         android:gravity="center"
         android:text="@string/verification_code_message"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.5"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/verificationCodeHolder" />
-
-    <TextView
-        tools:ignore="HardcodedText"
-        android:id="@+id/verificationCodeHolder"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="  | d421 | 5e8a | 86d2 | 4c1e |\n  | 274a | 4f8f | 6b1b | 4815 |\n  | 0d4d | d259 | e080 | 8c4b |\n  | d516 | 45ba | 6005 | 120f |"
-        app:fontFamily="monospace"
-        app:layout_constraintBottom_toTopOf="@+id/verificationCodeMessageHolder"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_chainStyle="packed"
-        android:textSize="18sp"/>
+        app:layout_constraintTop_toBottomOf="@+id/mnemonicWordsTable"
+        app:layout_constraintVertical_chainStyle="packed" />
 
     <androidx.appcompat.widget.Toolbar
         android:id="@+id/verifyIdentityToolbar"
@@ -45,5 +33,165 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
+
+    <TableLayout
+        android:id="@+id/mnemonicWordsTable"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:layout_constraintBottom_toTopOf="@+id/mnemonicWordsExplanationMessage"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/verifyIdentityToolbar"
+        app:layout_constraintVertical_chainStyle="packed">
+
+        <TableRow
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_marginBottom="10dp">
+
+            <TextView
+                android:id="@+id/mnemonicWord1"
+                android:layout_width="110dp"
+                android:layout_height="30dp"
+                android:gravity="center"
+                android:paddingStart="15dp"
+                android:paddingEnd="15dp"
+                android:text="TextView"
+                tools:ignore="HardcodedText" />
+
+            <TextView
+                android:id="@+id/mnemonicWord2"
+                android:layout_width="110dp"
+                android:layout_height="30dp"
+                android:gravity="center"
+                android:paddingStart="15dp"
+                android:paddingEnd="15dp"
+                android:text="TextView"
+                tools:ignore="HardcodedText" />
+
+            <TextView
+                android:id="@+id/mnemonicWord3"
+                android:layout_width="110dp"
+                android:layout_height="30dp"
+                android:gravity="center"
+                android:paddingStart="15dp"
+                android:paddingEnd="15dp"
+                android:text="TextView"
+                tools:ignore="HardcodedText" />
+
+        </TableRow>
+
+        <TableRow
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_marginBottom="10dp">
+
+            <TextView
+                android:id="@+id/mnemonicWord4"
+                android:layout_width="110dp"
+                android:layout_height="30dp"
+                android:gravity="center"
+                android:paddingStart="15dp"
+                android:paddingEnd="15dp"
+                android:text="TextView"
+                tools:ignore="HardcodedText" />
+
+            <TextView
+                android:id="@+id/mnemonicWord5"
+                android:layout_width="110dp"
+                android:layout_height="30dp"
+                android:gravity="center"
+                android:paddingStart="15dp"
+                android:paddingEnd="15dp"
+                android:text="TextView"
+                tools:ignore="HardcodedText" />
+
+            <TextView
+                android:id="@+id/mnemonicWord6"
+                android:layout_width="110dp"
+                android:layout_height="30dp"
+                android:gravity="center"
+                android:paddingStart="15dp"
+                android:paddingEnd="15dp"
+                android:text="TextView"
+                tools:ignore="HardcodedText" />
+
+        </TableRow>
+
+        <TableRow
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_marginBottom="10dp">
+
+            <TextView
+                android:id="@+id/mnemonicWord8"
+                android:layout_width="110dp"
+                android:layout_height="30dp"
+                android:gravity="center"
+                android:paddingStart="15dp"
+                android:paddingEnd="15dp"
+                android:text="TextView"
+                tools:ignore="HardcodedText" />
+
+            <TextView
+                android:id="@+id/mnemonicWord7"
+                android:layout_width="110dp"
+                android:layout_height="30dp"
+                android:gravity="center"
+                android:paddingStart="15dp"
+                android:paddingEnd="15dp"
+                android:text="TextView"
+                tools:ignore="HardcodedText" />
+
+            <TextView
+                android:id="@+id/mnemonicWord9"
+                android:layout_width="110dp"
+                android:layout_height="30dp"
+                android:gravity="center"
+                android:paddingStart="15dp"
+                android:paddingEnd="15dp"
+                android:text="TextView"
+                tools:ignore="HardcodedText" />
+
+        </TableRow>
+
+        <TableRow
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_marginBottom="10dp">
+
+            <TextView
+                android:id="@+id/mnemonicWord11"
+                android:layout_width="110dp"
+                android:layout_height="30dp"
+                android:gravity="center"
+                android:paddingStart="15dp"
+                android:paddingEnd="15dp"
+                android:text="TextView"
+                tools:ignore="HardcodedText" />
+
+            <TextView
+                android:id="@+id/mnemonicWord12"
+                android:layout_width="110dp"
+                android:layout_height="30dp"
+                android:gravity="center"
+                android:paddingStart="15dp"
+                android:paddingEnd="15dp"
+                android:text="TextView"
+                tools:ignore="HardcodedText" />
+
+            <TextView
+                android:id="@+id/mnemonicWord10"
+                android:layout_width="110dp"
+                android:layout_height="30dp"
+                android:gravity="center"
+                android:paddingStart="15dp"
+                android:paddingEnd="15dp"
+                android:text="TextView"
+                tools:ignore="HardcodedText" />
+        </TableRow>
+
+    </TableLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

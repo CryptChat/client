@@ -37,8 +37,8 @@
     <string name="notification_channel_messages_desc">"Notifications for received messages."</string>
     <string name="message_notification_title">"%1$s@%2$s"</string>
     <string name="server">"Server"</string>
-    <string name="chat_view_menu_verify_contact">"Verify Contact"</string>
-    <string name="verification_code_message">"If your contact sees on their device the same code as the one shown on this screen, you can be 100% sure that your messages are truly end-to-end encrypted &#128522;"</string>
+    <string name="chat_view_menu_verify_identity">"Verify Identity"</string>
+    <string name="verification_code_message">"If your contact sees on their device the same words as the ones shown on this screen and in the same order, you can be 100% sure that your messages are truly end-to-end encrypted &#128274;"</string>
     <string name="servers_list_menu_backups">"Data backup"</string>
     <string name="servers_list_menu_add_server">"Add server"</string>
     <string name="take_backup_button">"Take Backup"</string>

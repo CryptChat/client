@@ -1,7 +1,6 @@
 package cc.osama.cryptchat
 
 import android.util.Base64
-import android.util.Log.d
 import org.whispersystems.curve25519.Curve25519
 import java.io.ByteArrayOutputStream
 import java.lang.Exception
@@ -11,7 +10,6 @@ import javax.crypto.Cipher
 import javax.crypto.Mac
 import javax.crypto.spec.IvParameterSpec
 import javax.crypto.spec.SecretKeySpec
-import kotlin.collections.ArrayList
 import kotlin.math.*
 
 class CryptchatSecurity {
@@ -42,51 +40,31 @@ class CryptchatSecurity {
       return ECKeyPair(public, private)
     }
 
-    fun genVerificationCode(firstParty: ByteArray, secondParty: ByteArray) : Array<String> {
+    // implementation heavily inspired from
+    // https://github.com/bitcoinj/bitcoinj/blob/master/core/src/main/java/org/bitcoinj/crypto/MnemonicCode.java#L196
+    fun generateMnemonicSentence(firstParty: ByteArray, secondParty: ByteArray) : Array<String> {
       val sha = MessageDigest.getInstance("SHA-256")
-      var digest = sha.digest(firstParty + secondParty)
-      for (i in 2..4096) {
-        digest = sha.digest(digest)
-      }
-      digest = digest.copyOfRange(0, 16)
-      val bitsPerWord = floor(log(Dictionary.words.size.toDouble(), 2.0)).toInt()
-      val totalBits = (ceil((digest.size * 8.0) / bitsPerWord) * bitsPerWord).toInt()
-      val parityLength = (totalBits - digest.size * 8).coerceAtLeast(0)
-      val bits = IntArray(totalBits)
-      for (i in digest.indices) {
-        val unsignedByte = digest[i].toInt() and 0xff
-        var j = 128
-        while (j >= 1) {
-          bits[i * 8 + (8 - log2(j.toDouble()).toInt())] = if ((unsignedByte and j) == j) 1 else 0
-          j /= 2
-        }
-      }
-      var parity = 0
-      for (i in 0 until totalBits - parityLength step parityLength) {
-        val subset = bits.copyOfRange(i, i + parityLength)
-        for (j in subset.indices) {
-          val bit = subset[j]
-          parity += bit * 2.0.pow(subset.size - j).toInt()
-        }
-      }
-      var j = 2.0.pow(floor(log2(parity.toDouble()))).toInt()
-      for (i in totalBits - parityLength until totalBits) {
-        bits[i] = if ((parity and j) == j) 1 else 0
-        j /= 2
-      }
-      val words = ArrayList<String>()
-      for (i in bits.indices step bitsPerWord) {
-        val subset = bits.copyOfRange(i, i + bitsPerWord)
+
+      val entropy = sha.digest(firstParty + secondParty).copyOfRange(0, 16)
+      val entropyBits = CryptchatUtils.bytesToBits(entropy)
+
+      val hash = sha.digest(entropy)
+      val hashBits = CryptchatUtils.bytesToBits(hash)
+
+      val extraChecksumBitsLength = entropyBits.size / 32
+      val allBits = BooleanArray(entropyBits.size + extraChecksumBitsLength)
+      System.arraycopy(entropyBits, 0, allBits, 0, entropyBits.size)
+      System.arraycopy(hashBits, 0, allBits, entropyBits.size, extraChecksumBitsLength)
+      return Array(allBits.size / 11) { i ->
         var index = 0
-        var k = 2.0.pow(bitsPerWord - 1).toInt()
-        subset.forEach { bit ->
-          index += bit * k
-          k /= 2
+        for (j in 0 until 11) {
+          index = index shl 1
+          if (allBits[i * 11 + j]) {
+            index = index or 1
+          }
         }
-        words.add(Dictionary.words[index])
+        Dictionary.words[index]
       }
-      d("TEST", words.size.toString())
-      return words.toTypedArray()
     }
   }
 
