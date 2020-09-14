@@ -42,6 +42,15 @@
     <string name="servers_list_menu_backups">"Data backup"</string>
     <string name="servers_list_menu_add_server">"Add server"</string>
     <string name="take_backup_button">"Take Backup"</string>
+    <string name="backup_creator_failed_unexpected_condition">"Backup failed due to an unexpected condition."</string>
+    <string name="backup_creator_failed_with_exception">"Backup failed due to the following error: %1$s"</string>
+    <string name="backup_settings_view_backups_location">"Backups location"</string>
+    <string name="backup_settings_view_backups_location_unset">"<i>Unset</i>"</string>
+    <string name="backup_settings_view_readonly_mode">"Readonly mode"</string>
+    <string name="backup_settings_view_readonly_mode_summary">"Readonly mode is enabled when a backup process is started."</string>
+    <string name="backup_settings_view_backup_progress">"%1$.2f%% done…"</string>
+    <string name="backup_settings_view_backup_starting_backup_process">"Starting backup process…"</string>
+    <string name="backup_settings_view_backup_successful_backup">"Backup has been created successfully!"</string>
     <string name="chat_disabled_because_readonly">"Chat is disabled because the app is in read-only mode."</string>
     <string name="server_settings_disabled_because_readonly">"Server settings are currently disabled because the app is in read-only mode."</string>
     <string name="backup_process_confirmation_message">"The application will enter read-only mode which means many capabilities will be disabled such as sending and receiving messages. Continue?"</string>
