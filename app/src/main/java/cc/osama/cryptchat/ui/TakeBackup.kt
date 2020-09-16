@@ -1,16 +1,20 @@
 package cc.osama.cryptchat.ui
 
 import android.app.Activity
+import android.app.AlertDialog
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import android.util.Log
+import android.util.Log.d
+import android.util.Log.e
 import android.view.MenuItem
 import android.view.View
+import android.widget.EditText
 import cc.osama.cryptchat.BackupCreator
 import cc.osama.cryptchat.Cryptchat
+import cc.osama.cryptchat.CryptchatTextWatcher
 import cc.osama.cryptchat.R
 import kotlinx.android.synthetic.main.activity_take_backup.*
 import kotlin.math.roundToInt
@@ -23,6 +27,7 @@ class TakeBackup : AppCompatActivity() {
     fun isBackupInProgress() = backupInProgress != null
   }
 
+  private var carriedPassword: String? = null
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
     setContentView(R.layout.activity_take_backup)
@@ -30,12 +35,34 @@ class TakeBackup : AppCompatActivity() {
     supportActionBar?.setDisplayHomeAsUpEnabled(true)
     supportActionBar?.title = resources.getString(R.string.take_backup_view_toolbar_title)
     backupStartButton.setOnClickListener {
-      val treeUri = Cryptchat.backupsTreeUri(applicationContext)
-      if (treeUri != null) {
-        startBackup(treeUri)
-      } else {
-        val intent = Intent(Intent.ACTION_OPEN_DOCUMENT_TREE)
-        startActivityForResult(intent, BACKUP_TREE_REQUEST_CODE)
+      AlertDialog.Builder(this).apply {
+        val view = layoutInflater.inflate(R.layout.backup_password_dialog, null)
+        val input = view.findViewById<EditText>(R.id.backups_dialog_password)
+        setView(view)
+        setTitle(R.string.take_backup_view_password_dialog_title)
+        setMessage(R.string.take_backup_view_password_dialog_password_tip)
+        setNegativeButton(android.R.string.cancel) { _, _ -> }
+        setPositiveButton(android.R.string.ok) { _, _ ->
+          val password = input.text.toString().trim()
+          val treeUri = Cryptchat.backupsTreeUri(applicationContext)
+          if (treeUri != null) {
+            startBackup(treeUri, password)
+          } else {
+            carriedPassword = password
+            val intent = Intent(Intent.ACTION_OPEN_DOCUMENT_TREE)
+            startActivityForResult(intent, BACKUP_TREE_REQUEST_CODE)
+          }
+        }
+
+        val dialog = create()
+        dialog.show()
+        val positiveButton = dialog.getButton(AlertDialog.BUTTON_POSITIVE)
+        positiveButton?.isEnabled = false
+        input?.addTextChangedListener(CryptchatTextWatcher(
+          on = { sequence, _, _, _ ->
+            positiveButton?.isEnabled = sequence != null && sequence.trim().length >= 10
+          }
+        ))
       }
     }
   }
@@ -62,17 +89,25 @@ class TakeBackup : AppCompatActivity() {
           when (requestCode) {
             BACKUP_TREE_REQUEST_CODE -> {
               Cryptchat.setBackupsDir(applicationContext, uri)
-              startBackup(uri)
+              val password = carriedPassword
+              carriedPassword = null
+              if (password != null) {
+                startBackup(uri, password)
+              } else {
+                backupStatusTextView.text =
+                  resources.getString(R.string.take_backup_view_backup_failed_missing_password)
+                e("TakeBackup", "backup password missing.")
+              }
             }
           }
         } else {
-          Log.d("TakeBackup", "onActivityResult returned because uri is null.")
+          d("TakeBackup", "onActivityResult returned because uri is null.")
         }
       } else {
-        Log.d("TakeBackup", "onActivityResult returned because data is null.")
+        d("TakeBackup", "onActivityResult returned because data is null.")
       }
     } else {
-      Log.d("TakeBackup", "onActivityResult returned result code was not OK. resultCode=$resultCode")
+      d("TakeBackup", "onActivityResult returned result code was not OK. resultCode=$resultCode")
     }
   }
 
@@ -108,9 +143,9 @@ class TakeBackup : AppCompatActivity() {
     backupInProgress = null
   }
 
-  private fun startBackup(treeUri: Uri) {
+  private fun startBackup(treeUri: Uri, password: String) {
     val bc = BackupCreator(applicationContext, treeUri)
-    bc.start()
+    bc.start(password)
     backupInProgress = bc
     applyBackupInProgressState(bc)
   }

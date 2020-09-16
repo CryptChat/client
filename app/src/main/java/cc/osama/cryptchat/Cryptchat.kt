@@ -9,6 +9,7 @@ import android.content.SharedPreferences
 import android.net.Uri
 import android.os.Build
 import androidx.core.content.edit
+import androidx.documentfile.provider.DocumentFile
 import androidx.room.Room
 
 class Cryptchat : Application() {
@@ -59,7 +60,17 @@ class Cryptchat : Application() {
     fun backupsTreeUri(context: Context) : Uri? {
       val permissions = context.contentResolver.persistedUriPermissions
       return if (permissions.size > 0) {
-        permissions[0].uri
+        val uri = permissions[0].uri
+        val documentTree = DocumentFile.fromTreeUri(context, uri)
+        if (documentTree != null && documentTree.exists()) {
+          uri
+        } else {
+          context.contentResolver.releasePersistableUriPermission(
+            uri,
+            Intent.FLAG_GRANT_WRITE_URI_PERMISSION
+          )
+          null
+        }
       } else {
         null
       }

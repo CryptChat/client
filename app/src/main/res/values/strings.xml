@@ -59,6 +59,10 @@
     <string name="take_backup_view_backup_definition">"Save an <b>encrypted</b> backup of all your conversations and servers, and restore it on another device."</string>
     <string name="take_backup_view_readonly_mode_explanation">"Taking a backup will enable readonly mode which will prevent this device from receiving and sending any new messages. This is done to ensure that no new messages arrive after you've taken the backup.\n\nYou can disable readonly mode, but it's not recommended to do that if you intend to restore the backup on another device."</string>
     <string name="take_backup_view_start_backup">"Start"</string>
+    <string name="take_backup_view_password_dialog_hint">"Password"</string>
+    <string name="take_backup_view_password_dialog_title">"Enter Backup Password"</string>
+    <string name="take_backup_view_password_dialog_password_tip">"Choose a strong and unpredictable password. Must be at least 10 characters."</string>
+    <string name="take_backup_view_backup_failed_missing_password">"Backup couldn't be created because password was missing."</string>
     <string-array name="countries_codes">
         <item>+965</item>
         <item>+966</item>

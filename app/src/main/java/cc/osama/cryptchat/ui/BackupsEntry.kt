@@ -8,13 +8,11 @@ import android.os.Bundle
 import android.util.Log.d
 import android.util.Log.e
 import android.view.MenuItem
-import android.view.View
-import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.preference.*
 import cc.osama.cryptchat.*
 import cc.osama.cryptchat.R
-import kotlinx.android.synthetic.main.activity_backups_view.*
+import kotlinx.android.synthetic.main.activity_backups_entry.*
 import java.io.FileOutputStream
 import java.security.SecureRandom
 import javax.crypto.Cipher
@@ -51,8 +49,8 @@ class BackupsEntry: AppCompatActivity() {
         Cryptchat.backupsTreeUri(it.applicationContext)?.also { uri ->
           updateBackupsLocation(uri)
         }
-        readonlyModeSettings.isEnabled = Cryptchat.isReadonly(it.applicationContext)
-        readonlyModeSettings.isChecked = readonlyModeSettings.isEnabled
+        readonlyModeSettings.isChecked = Cryptchat.isReadonly(it.applicationContext)
+        readonlyModeSettings.isEnabled = readonlyModeSettings.isChecked && !TakeBackup.isBackupInProgress()
       }
       backupsLocationSetting.setOnPreferenceClickListener {
         val intent = Intent(Intent.ACTION_OPEN_DOCUMENT_TREE)
@@ -97,14 +95,10 @@ class BackupsEntry: AppCompatActivity() {
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
-    setContentView(R.layout.activity_backups_view)
-    setSupportActionBar(backupsViewToolbar)
+    setContentView(R.layout.activity_backups_entry)
+    setSupportActionBar(backupsEntryToolbar)
     supportActionBar?.setDisplayHomeAsUpEnabled(true)
     supportActionBar?.title = resources.getString(R.string.servers_list_menu_backups)
-    supportFragmentManager
-      .beginTransaction()
-      .add(R.id.backupsViewFragHolder, SettingsFragment())
-      .commit()
     // restoreBackupButton.setOnClickListener {
     //   Intent(Intent.ACTION_OPEN_DOCUMENT).apply {
     //     addCategory(Intent.CATEGORY_OPENABLE)
@@ -113,6 +107,14 @@ class BackupsEntry: AppCompatActivity() {
     //     startActivityForResult(this, BACKUPS_RESTORE_REQUEST_CODE)
     //   }
     // }
+  }
+
+  override fun onStart() {
+    super.onStart()
+    supportFragmentManager
+      .beginTransaction()
+      .replace(R.id.backupsViewFragHolder, SettingsFragment())
+      .commit()
   }
 
   override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
