@@ -3,6 +3,7 @@ package cc.osama.cryptchat.ui
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
+import android.util.Log.d
 import android.view.*
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -80,13 +81,18 @@ class ServersList : AppCompatActivity(), OnServerClick {
     }
   }
 
-  override fun onCreateOptionsMenu(menu: Menu?): Boolean {
-    menuInflater.inflate(R.menu.servers_list, menu)
-    val addServerItem = menu?.findItem(R.id.go_to_add_server_screen)
-    if (addServerItem != null && Cryptchat.isReadonly(applicationContext)) {
-      addServerItem.isVisible = false
+  override fun onPrepareOptionsMenu(menu: Menu?): Boolean {
+    if (menu != null && menu.size() == 0) {
+      // inflate only when menu has never been inflated
+      // inflating every time would result in duplicate
+      // items every time the menu is opened
+      menuInflater.inflate(R.menu.servers_list, menu)
     }
-    return super.onCreateOptionsMenu(menu)
+    val addServerItem = menu?.findItem(R.id.go_to_add_server_screen)
+    if (addServerItem != null) {
+      addServerItem.isVisible = !Cryptchat.isReadonly(applicationContext)
+    }
+    return super.onPrepareOptionsMenu(menu)
   }
 
   override fun onOptionsItemSelected(item: MenuItem): Boolean {
