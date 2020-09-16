@@ -46,7 +46,7 @@ class BackupsEntry: AppCompatActivity() {
       }
       readonlyModeSettings.summary = resources.getString(R.string.backups_entry_view_readonly_mode_summary)
       (activity as? BackupsEntry)?.let {
-        Cryptchat.backupsTreeUri(it.applicationContext)?.also { uri ->
+        Cryptchat.backupsTreeUri(it.applicationContext).also { uri ->
           updateBackupsLocation(uri)
         }
         readonlyModeSettings.isChecked = Cryptchat.isReadonly(it.applicationContext)
@@ -75,19 +75,23 @@ class BackupsEntry: AppCompatActivity() {
       }
     }
 
-    fun updateBackupsLocation(uri: Uri) {
+    fun updateBackupsLocation(uri: Uri?) {
       val backupsLocationSetting = findPreference<Preference>("backups_location_setting")
       if (backupsLocationSetting == null) {
         d("BackupsView\$Fragment", "updateBackupsLocation returned because backupsLocationSetting is null")
         return
       }
       (activity as? BackupsEntry)?.let {
-        val parts = uri.path?.split(":")
-        val name = if (parts?.size == 2) parts[1] else uri.path
-        if (name != null) {
-          backupsLocationSetting.summary = "/$name"
-        } else {
+        if (uri == null) {
           backupsLocationSetting.summary = resources.getText(R.string.backups_entry_view_backups_location_unset)
+        } else {
+          val parts = uri.path?.split(":")
+          val name = if (parts?.size == 2) parts[1] else uri.path
+          if (name != null) {
+            backupsLocationSetting.summary = "/$name"
+          } else {
+            backupsLocationSetting.summary = resources.getText(R.string.backups_entry_view_backups_location_unset)
+          }
         }
       }
     }
