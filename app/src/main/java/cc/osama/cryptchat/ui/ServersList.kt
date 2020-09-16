@@ -3,7 +3,6 @@ package cc.osama.cryptchat.ui
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
-import android.util.Log.d
 import android.view.*
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -93,7 +92,7 @@ class ServersList : AppCompatActivity(), OnServerClick {
   override fun onOptionsItemSelected(item: MenuItem): Boolean {
     when (item.itemId) {
       R.id.go_to_backup -> {
-        startActivity(BackupsView.createIntent(this))
+        startActivity(BackupsEntry.createIntent(this))
       }
       R.id.go_to_add_server_screen -> {
         startActivity(EnterServerAddress.createIntent(this))

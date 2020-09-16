@@ -3,18 +3,20 @@
     xmlns:android="http://schemas.android.com/apk/res/android">
 
     <Preference
+        android:key="take_backup_action"
+        android:selectAllOnFocus="true"
+        android:singleLine="true"
+        android:title="@string/backups_entry_view_take_new_backup"
+        app:iconSpaceReserved="false" />
+    <Preference
         android:key="backups_location_setting"
         android:selectAllOnFocus="true"
         android:singleLine="true"
-        android:title="@string/backup_settings_view_backups_location"
-        app:allowDividerAbove="false"
-        app:allowDividerBelow="false"
+        android:title="@string/backups_entry_view_backups_location"
         app:iconSpaceReserved="false" />
     <SwitchPreference
         android:defaultValue="false"
         android:key="readonly_mode_setting"
-        android:title="@string/backup_settings_view_readonly_mode"
-        app:allowDividerAbove="false"
-        app:allowDividerBelow="false"
+        android:title="@string/backups_entry_view_readonly_mode"
         app:iconSpaceReserved="false" />
 </PreferenceScreen>

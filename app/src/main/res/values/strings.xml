@@ -44,16 +44,21 @@
     <string name="take_backup_button">"Take Backup"</string>
     <string name="backup_creator_failed_unexpected_condition">"Backup failed due to an unexpected condition."</string>
     <string name="backup_creator_failed_with_exception">"Backup failed due to the following error: %1$s"</string>
-    <string name="backup_settings_view_backups_location">"Backups location"</string>
-    <string name="backup_settings_view_backups_location_unset">"<i>Unset</i>"</string>
-    <string name="backup_settings_view_readonly_mode">"Readonly mode"</string>
-    <string name="backup_settings_view_readonly_mode_summary">"Readonly mode is enabled when a backup process is started."</string>
-    <string name="backup_settings_view_backup_progress">"%1$.2f%% done…"</string>
-    <string name="backup_settings_view_backup_starting_backup_process">"Starting backup process…"</string>
-    <string name="backup_settings_view_backup_successful_backup">"Backup has been created successfully!"</string>
+    <string name="backups_entry_view_take_new_backup">"Take new backup"</string>
+    <string name="backups_entry_view_backups_location">"Backups location"</string>
+    <string name="backups_entry_view_backups_location_unset">"<i>Unset</i>"</string>
+    <string name="backups_entry_view_readonly_mode">"Readonly mode"</string>
+    <string name="backups_entry_view_readonly_mode_summary">"Readonly mode is enabled when a backup process is started."</string>
+    <string name="take_backup_view_backup_progress">"%1$.1f%% done…"</string>
+    <string name="take_backup_view_backup_starting_backup_process">"Starting backup process…"</string>
+    <string name="take_backup_view_backup_successful">"Backup has been created successfully!"</string>
     <string name="chat_disabled_because_readonly">"Chat is disabled because the app is in read-only mode."</string>
     <string name="server_settings_disabled_because_readonly">"Server settings are currently disabled because the app is in read-only mode."</string>
     <string name="backup_process_confirmation_message">"The application will enter read-only mode which means many capabilities will be disabled such as sending and receiving messages. Continue?"</string>
+    <string name="take_backup_view_toolbar_title">"Take new backup"</string>
+    <string name="take_backup_view_backup_definition">"Save an <b>encrypted</b> backup of all your conversations and servers, and restore it on another device."</string>
+    <string name="take_backup_view_readonly_mode_explanation">"Taking a backup will enable readonly mode which will prevent this device from receiving and sending any new messages. This is done to ensure that no new messages arrive after you've taken the backup.\n\nYou can disable readonly mode, but it's not recommended to do that if you intend to restore the backup on another device."</string>
+    <string name="take_backup_view_start_backup">"Start"</string>
     <string-array name="countries_codes">
         <item>+965</item>
         <item>+966</item>

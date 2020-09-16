@@ -11,29 +11,21 @@ import android.view.MenuItem
 import android.view.View
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
-import androidx.documentfile.provider.DocumentFile
-import androidx.preference.Preference
-import androidx.preference.PreferenceFragmentCompat
-import androidx.preference.SwitchPreference
+import androidx.preference.*
 import cc.osama.cryptchat.*
+import cc.osama.cryptchat.R
 import kotlinx.android.synthetic.main.activity_backups_view.*
-import java.io.FileInputStream
 import java.io.FileOutputStream
-import java.io.OutputStream
 import java.security.SecureRandom
 import javax.crypto.Cipher
 import javax.crypto.CipherInputStream
-import javax.crypto.CipherOutputStream
 import javax.crypto.spec.IvParameterSpec
 import javax.crypto.spec.SecretKeySpec
 
-class BackupsView: AppCompatActivity() {
+class BackupsEntry: AppCompatActivity() {
   companion object {
-    private const val BACKUPS_TREE_REQUEST_AND_BACKUP_CODE = 362
     private const val BACKUPS_TREE_REQUEST_CODE = 382
-    private const val BACKUPS_RESTORE_REQUEST_CODE = 369
-    fun createIntent(context: Context) = Intent(context, BackupsView::class.java)
-    private var currentBackupCreator: BackupCreator? = null
+    fun createIntent(context: Context) = Intent(context, BackupsEntry::class.java)
   }
 
   class SettingsFragment : PreferenceFragmentCompat() {
@@ -41,6 +33,7 @@ class BackupsView: AppCompatActivity() {
       addPreferencesFromResource(R.xml.backup_settings)
       val backupsLocationSetting = findPreference<Preference>("backups_location_setting")
       val readonlyModeSettings = findPreference<SwitchPreference>("readonly_mode_setting")
+      val takeBackup = findPreference<Preference>("take_backup_action")
       if (backupsLocationSetting == null) {
         d("BackupsView\$Fragment", "onCreatePreferences returned because backupsLocationSetting is null")
         return
@@ -49,9 +42,13 @@ class BackupsView: AppCompatActivity() {
         d("BackupsView\$Fragment", "onCreatePreferences returned because readonlyModeSettings is null")
         return
       }
-      readonlyModeSettings.summary = resources.getString(R.string.backup_settings_view_readonly_mode_summary)
-      (activity as? BackupsView)?.let {
-        it.currentBackupsDirectory()?.let { uri ->
+      if (takeBackup == null) {
+        d("BackupsView\$Fragment", "onCreatePreferences returned because takeBackup is null")
+        return
+      }
+      readonlyModeSettings.summary = resources.getString(R.string.backups_entry_view_readonly_mode_summary)
+      (activity as? BackupsEntry)?.let {
+        Cryptchat.backupsTreeUri(it.applicationContext)?.also { uri ->
           updateBackupsLocation(uri)
         }
         readonlyModeSettings.isEnabled = Cryptchat.isReadonly(it.applicationContext)
@@ -72,6 +69,12 @@ class BackupsView: AppCompatActivity() {
         }
         true
       }
+      takeBackup.setOnPreferenceClickListener {
+        activity?.let {
+          it.startActivity(TakeBackup.createIntent(it))
+        }
+        true
+      }
     }
 
     fun updateBackupsLocation(uri: Uri) {
@@ -80,13 +83,13 @@ class BackupsView: AppCompatActivity() {
         d("BackupsView\$Fragment", "updateBackupsLocation returned because backupsLocationSetting is null")
         return
       }
-      (activity as? BackupsView)?.let {
+      (activity as? BackupsEntry)?.let {
         val parts = uri.path?.split(":")
         val name = if (parts?.size == 2) parts[1] else uri.path
         if (name != null) {
           backupsLocationSetting.summary = "/$name"
         } else {
-          backupsLocationSetting.summary = resources.getText(R.string.backup_settings_view_backups_location_unset)
+          backupsLocationSetting.summary = resources.getText(R.string.backups_entry_view_backups_location_unset)
         }
       }
     }
@@ -110,36 +113,6 @@ class BackupsView: AppCompatActivity() {
     //     startActivityForResult(this, BACKUPS_RESTORE_REQUEST_CODE)
     //   }
     // }
-    takeBackupButton.setOnClickListener {
-      AlertDialog.Builder(this).apply {
-        setNegativeButton(R.string.dialog_cancel) { _, _ -> }
-        setPositiveButton(R.string.dialog_yes) { _, _ ->
-          val allowedTreeUri = currentBackupsDirectory()
-          if (allowedTreeUri != null) {
-            createBackup(allowedTreeUri)
-          } else {
-            val intent = Intent(Intent.ACTION_OPEN_DOCUMENT_TREE)
-            startActivityForResult(intent, BACKUPS_TREE_REQUEST_AND_BACKUP_CODE)
-          }
-        }
-        setMessage(R.string.backup_process_confirmation_message)
-        create().show()
-      }
-    }
-  }
-
-  override fun onStart() {
-    super.onStart()
-    currentBackupCreator?.let {
-      it.activity = this
-      applyBackupInProgressState()
-      if (it.progress > 0.0) onBackupProgress()
-    }
-  }
-
-  override fun onPause() {
-    super.onPause()
-    currentBackupCreator?.activity = null
   }
 
   override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
@@ -149,21 +122,8 @@ class BackupsView: AppCompatActivity() {
         val uri = data.data
         if (uri != null) {
           when (requestCode) {
-            BACKUPS_TREE_REQUEST_AND_BACKUP_CODE -> {
-              contentResolver.takePersistableUriPermission(uri, Intent.FLAG_GRANT_WRITE_URI_PERMISSION)
-              settingsFrag {
-                updateBackupsLocation(uri)
-              }
-              createBackup(uri)
-            }
-            BACKUPS_RESTORE_REQUEST_CODE -> {
-              restoreBackup(uri)
-            }
             BACKUPS_TREE_REQUEST_CODE -> {
-              currentBackupsDirectory()?.also {
-                contentResolver.releasePersistableUriPermission(it, Intent.FLAG_GRANT_WRITE_URI_PERMISSION)
-              }
-              contentResolver.takePersistableUriPermission(uri, Intent.FLAG_GRANT_WRITE_URI_PERMISSION)
+              Cryptchat.setBackupsDir(applicationContext, uri)
               settingsFrag {
                 updateBackupsLocation(uri)
               }
@@ -187,79 +147,6 @@ class BackupsView: AppCompatActivity() {
       return super.onOptionsItemSelected(item)
     }
     return true
-  }
-
-  fun onBackupSuccess() {
-    settingsFrag {
-      findPreference<SwitchPreference>("readonly_mode_setting")?.also {
-        it.isEnabled = true
-        it.isChecked = true
-      }
-    }
-    backupStatusIndicator.visibility = View.GONE
-    backupProgressBar.visibility = View.GONE
-    takeBackupButton.isEnabled = true
-    AlertDialog.Builder(this).apply {
-      setMessage(R.string.backup_settings_view_backup_successful_backup)
-      setPositiveButton(R.string.dialog_ok) { _, _ ->  }
-      create().show()
-    }
-    currentBackupCreator = null
-  }
-
-  fun onBackupProgress() {
-    applyBackupInProgressState()
-    currentBackupCreator?.also {
-      backupStatusIndicator.text = resources.getString(
-        R.string.backup_settings_view_backup_progress,
-        it.progress
-      )
-    }
-  }
-
-  fun onBackupFailure(message: String) {
-    settingsFrag {
-      findPreference<SwitchPreference>("readonly_mode_setting")?.also {
-        it.isEnabled = false
-        it.isChecked = false
-      }
-    }
-    backupStatusIndicator.visibility = View.GONE
-    backupProgressBar.visibility = View.GONE
-    takeBackupButton.isEnabled = true
-    AlertDialog.Builder(this).apply {
-      setMessage(message)
-      setNegativeButton(R.string.dialog_ok) { _, _ ->  }
-      create().show()
-    }
-    currentBackupCreator = null
-  }
-
-  private fun createBackup(treeUri: Uri) {
-    applyBackupInProgressState()
-    BackupCreator(applicationContext, treeUri).let {
-      currentBackupCreator = it
-      it.activity = this
-      it.start()
-    }
-  }
-
-  private fun applyBackupInProgressState() {
-    takeBackupButton.isEnabled = false
-    settingsFrag {
-      findPreference<SwitchPreference>("readonly_mode_setting")?.also {
-        it.isEnabled = false
-        it.isChecked = true
-      }
-    }
-    backupStatusIndicator.visibility = View.VISIBLE
-    backupProgressBar.visibility = View.VISIBLE
-    backupStatusIndicator.text = resources.getString(R.string.backup_settings_view_backup_starting_backup_process)
-    settingsFrag {
-      findPreference<SwitchPreference>("readonly_mode_setting")?.also { switchPreference ->
-        switchPreference.isChecked = true
-      }
-    }
   }
 
   private fun restoreBackup(backupUri: Uri) {
@@ -295,15 +182,6 @@ class BackupsView: AppCompatActivity() {
       if (!Cryptchat.db(applicationContext).openHelper.writableDatabase.isDatabaseIntegrityOk) {
         e("BackupsView", "DATABASE INTEGRITY CHECK FAILED")
       }
-    }
-  }
-
-  private fun currentBackupsDirectory() : Uri? {
-    val permissions = contentResolver.persistedUriPermissions
-    return if (permissions.size > 0) {
-      permissions[0].uri
-    } else {
-      null
     }
   }
 

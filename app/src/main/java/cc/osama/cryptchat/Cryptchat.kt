@@ -4,14 +4,14 @@ import android.app.Application
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.content.Context
+import android.content.Intent
 import android.content.SharedPreferences
+import android.net.Uri
 import android.os.Build
 import androidx.core.content.edit
 import androidx.room.Room
-import java.lang.Exception
 
 class Cryptchat : Application() {
-  class DatabaseReadonly : Exception()
   companion object {
     const val MESSAGES_CHANNEL_ID = "CRYPTCHAT_MESSAGES_CHANNEL"
     private var DB_INSTANCE: Database? = null
@@ -54,6 +54,28 @@ class Cryptchat : Application() {
         sharedPrefs = pref
         sharedPrefs
       }
+    }
+
+    fun backupsTreeUri(context: Context) : Uri? {
+      val permissions = context.contentResolver.persistedUriPermissions
+      return if (permissions.size > 0) {
+        permissions[0].uri
+      } else {
+        null
+      }
+    }
+
+    fun setBackupsDir(context: Context, newUri: Uri) {
+      backupsTreeUri(context)?.also {
+        context.contentResolver.releasePersistableUriPermission(
+          it,
+          Intent.FLAG_GRANT_WRITE_URI_PERMISSION
+        )
+      }
+      context.contentResolver.takePersistableUriPermission(
+        newUri,
+        Intent.FLAG_GRANT_WRITE_URI_PERMISSION
+      )
     }
   }
 

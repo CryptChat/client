@@ -4,7 +4,7 @@ import android.content.Context
 import android.net.Uri
 import android.util.Log
 import androidx.documentfile.provider.DocumentFile
-import cc.osama.cryptchat.ui.BackupsView
+import cc.osama.cryptchat.ui.TakeBackup
 import java.io.FileInputStream
 import java.io.OutputStream
 import java.security.SecureRandom
@@ -16,9 +16,13 @@ import javax.crypto.spec.SecretKeySpec
 class BackupCreator(
   private val applicationContext: Context,
   private val uri: Uri,
-  var activity: BackupsView? = null
+  var activity: TakeBackup? = null
 ) {
-  var progress: Double = 0.0
+  private var progress: Double = 0.0
+  private var error: String? = null
+
+  fun getProgress() = progress
+  fun getError() = error
 
   fun start() {
     Cryptchat.enableReadonly(applicationContext)
@@ -39,44 +43,34 @@ class BackupCreator(
             writeBackup(stream) { complete, total ->
               progress = (complete.toDouble() / total) * 100
               it.execMainThread {
-                activity?.onBackupProgress()
+                activity?.notifyBackupProgress(this)
               }
             }
             it.execMainThread {
-              activity?.onBackupSuccess()
+              activity?.notifyBackupComplete(this)
             }
-          } else {
-            file.delete()
-            Log.d("BackupCreator", "start returned because stream is null.")
-            Cryptchat.disableReadonly(applicationContext)
-            it.execMainThread {
-              activity?.onBackupFailure(
-                applicationContext.resources.getString(R.string.backup_creator_failed_unexpected_condition)
-              )
-            }
+            return@run
           }
         } catch (ex: Exception) {
           file.delete()
           Log.e("BackupCreator", "Backup failed", ex)
           Cryptchat.disableReadonly(applicationContext)
-          it.execMainThread {
-            activity?.onBackupFailure(
-              applicationContext.resources.getString(
-                R.string.backup_creator_failed_with_exception,
-                ex.toString()
-              )
-            )
-          }
-        }
-      } else {
-        file?.delete()
-        Log.d("BackupCreator", "start returned because fileUri is null.")
-        Cryptchat.disableReadonly(applicationContext)
-        it.execMainThread {
-          activity?.onBackupFailure(
-            applicationContext.resources.getString(R.string.backup_creator_failed_unexpected_condition)
+          error = applicationContext.resources.getString(
+            R.string.backup_creator_failed_with_exception,
+            ex.toString()
           )
+          it.execMainThread {
+            activity?.notifyBackupComplete(this)
+          }
+          return@run
         }
+      }
+      file?.delete()
+      Log.d("BackupCreator", "start returned because fileUri or stream are null.")
+      Cryptchat.disableReadonly(applicationContext)
+      error = applicationContext.resources.getString(R.string.backup_creator_failed_unexpected_condition)
+      it.execMainThread {
+        activity?.notifyBackupComplete(this)
       }
     }
   }
