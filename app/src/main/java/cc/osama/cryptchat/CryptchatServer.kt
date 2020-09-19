@@ -12,6 +12,7 @@ import kotlin.collections.HashMap
 class CryptchatServer(private val context: Context, private val server: Server) {
   companion object {
     private const val AUTH_TOKEN_HEADER = "Cryptchat-Auth-Token"
+    private const val AUTH_USER_ID_HEADER = "Cryptchat-Auth-User-Id"
 
     fun checkAddress(
       address: String,
@@ -148,6 +149,7 @@ class CryptchatServer(private val context: Context, private val server: Server) 
   private fun authHeaders() : HashMap<String, String> {
     return HashMap<String, String>().also {
       it[AUTH_TOKEN_HEADER] = server.authToken
+      it[AUTH_USER_ID_HEADER] = server.userId.toString()
     }
   }
 
