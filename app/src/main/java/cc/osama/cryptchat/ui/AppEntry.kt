@@ -3,11 +3,7 @@ package cc.osama.cryptchat.ui
 import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import android.os.Looper
-import android.util.Log.d
-import android.util.Log.w
 import cc.osama.cryptchat.*
-import org.json.JSONObject
 
 class AppEntry : AppCompatActivity() {
 
@@ -16,7 +12,7 @@ class AppEntry : AppCompatActivity() {
     Cryptchat.db(applicationContext).also { db ->
       AsyncExec.run {
         val servers = db.servers().getAll()
-        val intent = if (servers.isEmpty()) {
+        val intent = if (servers.isEmpty() && false) {
           Intent(this, EnterServerAddress::class.java)
         } else {
           // ServerUsersList.createIntent(

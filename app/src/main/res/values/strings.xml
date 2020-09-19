@@ -2,6 +2,7 @@
     <string name="app_name">"Cryptchat"</string>
     <string name="send_button">"Send"</string>
     <string name="enter_server_address">"https://example.com"</string>
+    <string name="enter_server_address_toolbar_title">"Add new server"</string>
     <string name="enter_phone_number">"Phone number"</string>
     <string name="registration_id_missing">"Expected to receive a registration id, but received \"%1$s\""</string>
     <string name="country_code">"Country code"</string>
@@ -63,6 +64,17 @@
     <string name="take_backup_view_password_dialog_title">"Enter Backup Password"</string>
     <string name="take_backup_view_password_dialog_password_tip">"Choose a strong and unpredictable password. Must be at least 10 characters."</string>
     <string name="take_backup_view_backup_failed_missing_password">"Backup couldn't be created because password was missing."</string>
+    <string name="servers_list_menu_go_to_restore_backup">"Restore backup"</string>
+    <string name="restore_backup_start_button">"Start"</string>
+    <string name="restore_backup_process_explanation">"Restore a backup you took previously and you will be able to pick up your conversations where you left off."</string>
+    <string name="restore_backup_process_how_it_works">"Clicking on the \"Start\" button will prompt to select your backup file from your files. Once you've selected your file, you'll be asked to enter the password that you used for the backup encryption.\n\nYou can only restore backups if you've not registered in any servers."</string>
+    <string name="restore_backup_restore_succeeded">"Restore completed successfully!"</string>
+    <string name="restore_backup_restore_failed">"Restore failed with the following error: %1$s."</string>
+    <string name="restore_backup_restore_progress">"%1$.1f%% done…"</string>
+    <string name="backup_restorer_failed_unexpected_condition">"Restore failed due to an unexpected condition."</string>
+    <string name="backup_restorer_failed_short_iv">"Restore failed due to short Initialization Vector."</string>
+    <string name="backup_restorer_failed_bad_db_integrity">"Restore failed because the restored database is corrupt."</string>
+    <string name="backup_restorer_failed_decryption_failed">"Restore failed because the backup file is corrupt or decryption key is wrong."</string>
     <string-array name="countries_codes">
         <item>+965</item>
         <item>+966</item>

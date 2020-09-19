@@ -81,16 +81,26 @@ class ServersList : AppCompatActivity(), OnServerClick {
     }
   }
 
+  override fun onCreateOptionsMenu(menu: Menu?): Boolean {
+    menuInflater.inflate(R.menu.servers_list, menu)
+    return super.onCreateOptionsMenu(menu)
+  }
+
   override fun onPrepareOptionsMenu(menu: Menu?): Boolean {
-    if (menu != null && menu.size() == 0) {
-      // inflate only when menu has never been inflated
-      // inflating every time would result in duplicate
-      // items every time the menu is opened
-      menuInflater.inflate(R.menu.servers_list, menu)
-    }
     val addServerItem = menu?.findItem(R.id.go_to_add_server_screen)
     if (addServerItem != null) {
       addServerItem.isVisible = !Cryptchat.isReadonly(applicationContext)
+    }
+    val restoreBackupItem = menu?.findItem(R.id.go_to_restore_backup)
+    if (restoreBackupItem != null) {
+      AsyncExec.run {
+        val serversCount = Cryptchat.db(applicationContext).servers().getAll().size
+        if (serversCount > 0 && false) {
+          it.execMainThread {
+            restoreBackupItem.isVisible = false
+          }
+        }
+      }
     }
     return super.onPrepareOptionsMenu(menu)
   }
@@ -102,6 +112,9 @@ class ServersList : AppCompatActivity(), OnServerClick {
       }
       R.id.go_to_add_server_screen -> {
         startActivity(EnterServerAddress.createIntent(this))
+      }
+      R.id.go_to_restore_backup -> {
+        startActivity(RestoreBackup.createIntent(this))
       }
       else -> {
         return super.onOptionsItemSelected(item)

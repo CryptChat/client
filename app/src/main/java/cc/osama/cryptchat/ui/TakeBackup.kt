@@ -22,9 +22,9 @@ import kotlin.math.roundToInt
 class TakeBackup : AppCompatActivity() {
   companion object {
     private const val BACKUP_TREE_REQUEST_CODE = 395
-    private var backupInProgress: BackupCreator? = null
+    private var runningBackupCreator: BackupCreator? = null
     fun createIntent(context: Context) = Intent(context, TakeBackup::class.java)
-    fun isBackupInProgress() = backupInProgress != null
+    fun isBackupInProgress() = runningBackupCreator != null
   }
 
   private var carriedPassword: String? = null
@@ -69,7 +69,7 @@ class TakeBackup : AppCompatActivity() {
 
   override fun onStart() {
     super.onStart()
-    val bc = backupInProgress
+    val bc = runningBackupCreator
     if (bc != null) {
       applyBackupInProgressState(bc)
     }
@@ -77,7 +77,7 @@ class TakeBackup : AppCompatActivity() {
 
   override fun onPause() {
     super.onPause()
-    backupInProgress?.activity = null
+    runningBackupCreator?.activity = null
   }
 
   override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
@@ -140,13 +140,13 @@ class TakeBackup : AppCompatActivity() {
       backupStatusTextView.text = resources.getString(R.string.take_backup_view_backup_successful)
     }
     backupStartButton.isEnabled = true
-    backupInProgress = null
+    runningBackupCreator = null
   }
 
   private fun startBackup(treeUri: Uri, password: String) {
     val bc = BackupCreator(applicationContext, treeUri)
     bc.start(password)
-    backupInProgress = bc
+    runningBackupCreator = bc
     applyBackupInProgressState(bc)
   }
 
@@ -158,7 +158,7 @@ class TakeBackup : AppCompatActivity() {
     if (bc.getProgress() == 100.0 && bc.getError() == null) {
       backupStatusTextView.text = resources.getString(R.string.take_backup_view_backup_successful)
       backupProgressIndicator.visibility = View.INVISIBLE
-      backupInProgress = null
+      runningBackupCreator = null
       backupStartButton.isEnabled = true
     } else if (bc.getProgress() > 0 && bc.getError() == null) {
       backupStatusTextView.text = resources.getString(
@@ -169,7 +169,7 @@ class TakeBackup : AppCompatActivity() {
     } else if (bc.getError() != null) {
       backupStatusTextView.text = bc.getError()
       backupProgressIndicator.visibility = View.INVISIBLE
-      backupInProgress = null
+      runningBackupCreator = null
       backupStartButton.isEnabled = true
     } else {
       backupStatusTextView.text = resources.getString(

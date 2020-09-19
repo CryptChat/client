@@ -9,6 +9,7 @@ import cc.osama.cryptchat.ui.TakeBackup
 import java.io.FileInputStream
 import java.io.OutputStream
 import java.security.MessageDigest
+import java.security.SecureRandom
 import javax.crypto.Cipher
 import javax.crypto.CipherOutputStream
 import javax.crypto.spec.IvParameterSpec
@@ -19,6 +20,11 @@ class BackupCreator(
   private val uri: Uri,
   var activity: TakeBackup? = null
 ) {
+  companion object {
+    const val IV_SIZE = 16
+    const val MIME_TYPE = "application/octet-stream"
+  }
+
   private var progress: Double = 0.0
   private var error: String? = null
 
@@ -35,7 +41,7 @@ class BackupCreator(
       var file: DocumentFile? = null
       try {
         file = documentTree?.createFile(
-          "application/octet-stream",
+          MIME_TYPE,
           "${System.currentTimeMillis()}-cryptchat-backup.enc"
         )
         val fileUri = file?.uri
@@ -88,14 +94,19 @@ class BackupCreator(
     repeat(100_000) {
       key = sha.digest(key)
     }
+    val ivBytes = ByteArray(IV_SIZE).also {
+      SecureRandom().nextBytes(it)
+    }
+    val iv = IvParameterSpec(ivBytes)
     cipher.init(
       Cipher.ENCRYPT_MODE,
       SecretKeySpec(key, "AES"),
-      IvParameterSpec(ByteArray(16))
+      iv
     )
     Cryptchat.db(applicationContext).checkpoint()
     val dbFile = applicationContext.getDatabasePath(Database.Name)
     val size = dbFile.length()
+    outputStream.write(ivBytes, 0, ivBytes.size)
     FileInputStream(dbFile).use { inputStream ->
       CipherOutputStream(outputStream, cipher).use { cipherOutputStream ->
         val buffer = ByteArray(16384)

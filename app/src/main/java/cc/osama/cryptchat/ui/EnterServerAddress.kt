@@ -6,6 +6,8 @@ import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
+import android.view.Menu
+import android.view.MenuItem
 import cc.osama.cryptchat.*
 import com.android.volley.ClientError
 import com.android.volley.NoConnectionError
@@ -25,6 +27,8 @@ class EnterServerAddress : AppCompatActivity() {
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
     setContentView(R.layout.activity_enter_server_address)
+    setSupportActionBar(enterServerAddressToolbar)
+    supportActionBar?.setDisplayHomeAsUpEnabled(true)
     serverAddressInput.addTextChangedListener(object : TextWatcher {
       override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
       override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
@@ -70,6 +74,18 @@ class EnterServerAddress : AppCompatActivity() {
         }
       )
     }
+  }
+
+  override fun onOptionsItemSelected(item: MenuItem): Boolean {
+    when (item.itemId) {
+      android.R.id.home -> {
+        onBackPressed()
+      }
+      else -> {
+        return super.onOptionsItemSelected(item)
+      }
+    }
+    return true
   }
 
   private fun changeElementsEnabledStatus(status: Boolean) {
