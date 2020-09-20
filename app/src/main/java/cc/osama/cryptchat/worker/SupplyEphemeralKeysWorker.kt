@@ -16,7 +16,7 @@ class SupplyEphemeralKeysWorker(context: Context, params: WorkerParameters) : Wo
         putLong("serverId", serverId)
         putInt("batchSize", batchSize)
       }.build()
-      val request = OneTimeWorkRequestBuilder<InstanceIdsManagerWorker>()
+      val request = OneTimeWorkRequestBuilder<SupplyEphemeralKeysWorker>()
         .setInputData(workerArgs)
         .build()
       WorkManager.getInstance(context).enqueue(request)

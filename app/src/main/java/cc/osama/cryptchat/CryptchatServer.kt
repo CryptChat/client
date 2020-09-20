@@ -1,11 +1,12 @@
 package cc.osama.cryptchat
 
 import android.content.Context
+import android.util.Log.d
 import cc.osama.cryptchat.db.Server
-import com.android.volley.*
-import com.android.volley.toolbox.JsonObjectRequest
+import cc.osama.cryptchat.worker.SupplyEphemeralKeysWorker
 import org.json.JSONObject
 import java.io.ByteArrayOutputStream
+import java.lang.NumberFormatException
 import java.lang.StringBuilder
 import kotlin.collections.HashMap
 
@@ -13,6 +14,7 @@ class CryptchatServer(private val context: Context, private val server: Server) 
   companion object {
     private const val AUTH_TOKEN_HEADER = "Cryptchat-Auth-Token"
     private const val AUTH_USER_ID_HEADER = "Cryptchat-Auth-User-Id"
+    private const val REMAINING_KEYS_COUNT = "Cryptchat-Remaining-Keys-Count"
 
     fun checkAddress(
       address: String,
@@ -91,7 +93,10 @@ class CryptchatServer(private val context: Context, private val server: Server) 
       if (failure != null) failure(failure)
       if (always != null) always(always)
       headers {
-        if (authenticate) updateAuthToken(it)
+        if (authenticate) {
+          updateAuthToken(it)
+          topUpEphemeralKeys(it)
+        }
       }
       perform(body)
     }
@@ -132,7 +137,10 @@ class CryptchatServer(private val context: Context, private val server: Server) 
       if (failure != null) failure(failure)
       if (always != null) always(always)
       headers {
-        if (authenticate) updateAuthToken(it)
+        if (authenticate) {
+          updateAuthToken(it)
+          topUpEphemeralKeys(it)
+        }
       }
       if (param != null) perform(param) else perform()
     }
@@ -166,5 +174,18 @@ class CryptchatServer(private val context: Context, private val server: Server) 
       }
     }
     return builder.toString()
+  }
+
+  private fun topUpEphemeralKeys(headers: Map<String, String>) {
+    val keysCount = headers[REMAINING_KEYS_COUNT].let {
+      try {
+        it?.toInt()
+      } catch (ex: NumberFormatException) {
+        null
+      }
+    }
+    if (keysCount != null && keysCount < 500) {
+      SupplyEphemeralKeysWorker.enqueue(server.id, 500, context)
+    }
   }
 }

@@ -86,7 +86,7 @@ class CryptchatRequest(
     }
   }
 
-  private var responseHeaders: Map<String, String>? = null
+  private var responseHeaders: HttpHeaders? = null
   private var statusCode = -1
 
   private var initiated = false
@@ -95,7 +95,7 @@ class CryptchatRequest(
   private var successCallback: (OnUiThread.(JSONObject) -> Unit)? = null
   private var failureCallback: (OnUiThread.(ErrorMetadata) -> Unit)? = null
   private var alwaysCallback: (OnUiThread.(Boolean) -> Unit)? = null
-  private var headersCallback: (OnUiThread.(Map<String, String>) -> Unit)? = null
+  private var headersCallback: (OnUiThread.(HttpHeaders) -> Unit)? = null
 
   private val uiThreadProvider = OnUiThread()
 
@@ -135,7 +135,7 @@ class CryptchatRequest(
     }
   }
 
-  fun headers(callback: OnUiThread.(Map<String, String>) -> Unit) {
+  fun headers(callback: OnUiThread.(HttpHeaders) -> Unit) {
     setCallback {
       headersCallback = callback
     }
@@ -268,14 +268,13 @@ class CryptchatRequest(
       connection.outputStream.write(body, 0, body.size)
     }
     statusCode = connection.responseCode
-    responseHeaders = HashMap<String, String>().let {
+    responseHeaders = HttpHeaders().also {
       for (i in connection.headerFields ?: HashMap<String, List<String>>()) {
         if (i.key == null) continue
         // this is probably not perfect for all headers
         // but should be good enough for us
-        it[i.key.toLowerCase(Locale.ROOT)] = i.value?.joinToString(", ") ?: ""
+        it[i.key] = i.value?.joinToString(", ") ?: ""
       }
-      it.toMap()
     }
     var stream: InputStream? = null
     try {
