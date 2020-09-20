@@ -2,11 +2,11 @@ package cc.osama.cryptchat
 
 import android.content.Context
 import android.util.Log.e
-import android.util.Log.w
 import cc.osama.cryptchat.db.Message
 import cc.osama.cryptchat.db.Server
 import cc.osama.cryptchat.db.User
 import cc.osama.cryptchat.ui.ChatView
+import cc.osama.cryptchat.worker.RetrySendingMessagesWorker
 import org.json.JSONObject
 import java.lang.Exception
 import java.lang.IllegalArgumentException
@@ -52,8 +52,16 @@ class OutboundMessageHandler(
           message.receiverEphemeralKeyPairId = ephPubKey?.idOnUserDevice
           message.receiverEphemeralPublicKey = ephPubKey?.key?.toString()
           encryptAndSend(ephPubKey)
-        } else {
+        } else if (serverError.isServerError ||
+          serverError.isNoConnectionError ||
+          serverError.isTimeoutError ||
+          serverError.isUnknownHostError
+        ) {
           message.status = Message.NEEDS_RETRY
+          updateMessageInDb()
+          RetrySendingMessagesWorker.enqueue(context)
+        } else {
+          message.status = Message.SENDING_FAILED
           updateMessageInDb()
         }
       }
@@ -114,8 +122,18 @@ class OutboundMessageHandler(
         message.idOnServer = idOnServer
         updateMessageInDb()
       }, failure = {
-        message.status = Message.NEEDS_RETRY
-        updateMessageInDb()
+        if (it.isUnknownHostError ||
+          it.isTimeoutError ||
+          it.isNoConnectionError ||
+          it.isServerError
+        ) {
+          message.status = Message.NEEDS_RETRY
+          updateMessageInDb()
+          RetrySendingMessagesWorker.enqueue(context)
+        } else {
+          message.status = Message.SENDING_FAILED
+          updateMessageInDb()
+        }
       }
     )
   }
@@ -156,7 +174,7 @@ class OutboundMessageHandler(
   }
 
   private fun extractEphKeyFromJson(json: JSONObject) : ECPublicKey.EphPubKeyFromServer? {
-    val keyJson = json["ephemeral_key"] as? JSONObject ?: return null
+    val keyJson = json.optJSONObject("ephemeral_key") ?: return null
     val stringKey = CryptchatUtils.jsonOptString(keyJson,"key")
     val idOnUserDevice = keyJson.optLong("id_on_user_device", -1)
     return if (stringKey != null && idOnUserDevice != (-1).toLong()) {

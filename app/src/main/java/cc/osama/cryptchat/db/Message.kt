@@ -25,6 +25,7 @@ data class Message(
     const val SENT = 3
     const val RECEIVER_DELETED = 4
     const val ENCRYPTION_FAILED = 5
+    const val SENDING_FAILED = 6
 
     const val UNDECRYPTED = 100
     const val DECRYPTED = 101
@@ -75,5 +76,8 @@ data class Message(
 
     @Query("UPDATE messages SET read = 1 WHERE serverId = :serverId AND userId = :userId")
     fun setMessagesReadByServerAndUser(serverId: Long, userId: Long)
+
+    @Query("SELECT * FROM messages WHERE status = $NEEDS_RETRY")
+    fun unsentMessages() : List<Message>
   }
 }
