@@ -103,14 +103,6 @@ class BackupsEntry: AppCompatActivity() {
     setSupportActionBar(backupsEntryToolbar)
     supportActionBar?.setDisplayHomeAsUpEnabled(true)
     supportActionBar?.title = resources.getString(R.string.servers_list_menu_backups)
-    // restoreBackupButton.setOnClickListener {
-    //   Intent(Intent.ACTION_OPEN_DOCUMENT).apply {
-    //     addCategory(Intent.CATEGORY_OPENABLE)
-    //     flags = Intent.FLAG_GRANT_READ_URI_PERMISSION
-    //     type = "application/octet-stream"
-    //     startActivityForResult(this, BACKUPS_RESTORE_REQUEST_CODE)
-    //   }
-    // }
   }
 
   override fun onStart() {
@@ -153,42 +145,6 @@ class BackupsEntry: AppCompatActivity() {
       return super.onOptionsItemSelected(item)
     }
     return true
-  }
-
-  private fun restoreBackup(backupUri: Uri) {
-    AsyncExec.run {
-      Cryptchat.db(applicationContext).checkpoint()
-      Cryptchat.enableReadonly(applicationContext)
-      val file = getDatabasePath(Database.Name)
-      file.parentFile?.listFiles()?.forEach {
-        if (it.name == "${Database.Name}-wal" || it.name == "${Database.Name}-shm") {
-          it.delete()
-        }
-      }
-      file.delete()
-      val cipher = Cipher.getInstance("AES/CBC/PKCS5Padding")
-      val key = ByteArray(32)
-      SecureRandom().nextBytes(key)
-      cipher.init(
-        Cipher.DECRYPT_MODE,
-        SecretKeySpec(key, "AES"),
-        IvParameterSpec(ByteArray(16))
-      )
-      CipherInputStream(contentResolver.openInputStream(backupUri), cipher).use { cipherStream ->
-        FileOutputStream(file).use { outputStream ->
-          val buffer = ByteArray(1024)
-          var bytesRead = cipherStream.read(buffer)
-          while (bytesRead != -1) {
-            outputStream.write(buffer, 0, bytesRead)
-            bytesRead = cipherStream.read(buffer)
-          }
-        }
-      }
-      Cryptchat.disableReadonly(applicationContext)
-      if (!Cryptchat.db(applicationContext).openHelper.writableDatabase.isDatabaseIntegrityOk) {
-        e("BackupsView", "DATABASE INTEGRITY CHECK FAILED")
-      }
-    }
   }
 
   private fun settingsFrag(callback: SettingsFragment.() -> Unit) {
