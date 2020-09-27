@@ -1,6 +1,7 @@
 package cc.osama.cryptchat.worker
 
 import android.content.Context
+import android.util.Log.d
 import android.util.Log.e
 import androidx.work.*
 import cc.osama.cryptchat.AsyncExec
@@ -49,6 +50,8 @@ class InstanceIdsManagerWorker(context: Context, params: WorkerParameters) : Wor
               e("INSTANCE ID", "FAILED TO UPDATE INSTANCE ID ON SERVER. $it")
             }
           )
+        } else {
+          d("InstanceIdsManager", "Skipped pushing key to server. instanceId=$instanceId, server.instanceId=${server.instanceId}")
         }
       }
     }

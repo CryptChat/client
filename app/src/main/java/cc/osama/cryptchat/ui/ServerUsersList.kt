@@ -68,10 +68,16 @@ class ServerUsersList : RecyclerViewImplementer<User.Conversation>() {
   }
 
   override fun onOptionsItemSelected(item: MenuItem): Boolean {
-    if (item.itemId == R.id.go_to_server_settings) {
-      startActivity(ServerSettings.createIntent(server.id, this))
-    } else {
-      return super.onOptionsItemSelected(item)
+    when (item.itemId) {
+      R.id.go_to_server_settings -> {
+        startActivity(ServerSettings.createIntent(server.id, this))
+      }
+      R.id.go_to_admin_interface -> {
+        startActivity(AdminWebView.createIntent(server, this))
+      }
+      else -> {
+        return super.onOptionsItemSelected(item)
+      }
     }
     return true
   }

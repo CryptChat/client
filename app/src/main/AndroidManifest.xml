@@ -16,7 +16,8 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.AppCompat.Light.NoActionBar"
         android:usesCleartextTraffic="${usesCleartextTraffic}">
-        <activity android:name=".ui.RestoreBackup"></activity>
+        <activity android:name=".ui.AdminWebView"></activity>
+        <activity android:name=".ui.RestoreBackup" />
         <activity android:name=".ui.TakeBackup" />
         <activity android:name=".ui.BackupsEntry" />
         <activity android:name=".ui.VerifyIdentity" />

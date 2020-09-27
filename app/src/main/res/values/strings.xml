@@ -34,6 +34,7 @@
     <string name="settings_activity_title_without_server_name">"Server Settings"</string>
     <string name="server_settings_info_updated_successfully">"Your settings have been saved successfully!"</string>
     <string name="server_users_list_menu_go_to_server_settings">"Settings"</string>
+    <string name="server_users_list_menu_go_to_admin_interface">"Admin interface"</string>
     <string name="notification_channel_messages">"Messages"</string>
     <string name="notification_channel_messages_desc">"Notifications for received messages."</string>
     <string name="message_notification_title">"%1$s@%2$s"</string>

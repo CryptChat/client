@@ -15,6 +15,7 @@ class CryptchatServer(private val context: Context, private val server: Server) 
     private const val AUTH_TOKEN_HEADER = "Cryptchat-Auth-Token"
     private const val AUTH_USER_ID_HEADER = "Cryptchat-Auth-User-Id"
     private const val REMAINING_KEYS_COUNT = "Cryptchat-Remaining-Keys-Count"
+    private const val IS_ADMIN_HEADER = "Cryptchat-Admin"
 
     fun checkAddress(
       address: String,
@@ -140,6 +141,7 @@ class CryptchatServer(private val context: Context, private val server: Server) 
         if (authenticate) {
           updateAuthToken(it)
           topUpEphemeralKeys(it)
+          updateAdminStatus(it)
         }
       }
       if (param != null) perform(param) else perform()
@@ -186,6 +188,14 @@ class CryptchatServer(private val context: Context, private val server: Server) 
     }
     if (keysCount != null && keysCount < 500) {
       SupplyEphemeralKeysWorker.enqueue(server.id, 500, context)
+    }
+  }
+
+  private fun updateAdminStatus(headers: Map<String, String>) {
+    val isAdmin = headers[IS_ADMIN_HEADER]?.toLowerCase() == "true"
+    if (isAdmin != server.isAdmin) {
+      server.isAdmin = isAdmin
+      Cryptchat.db(context).servers().update(server)
     }
   }
 }

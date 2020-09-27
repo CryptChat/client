@@ -12,6 +12,8 @@ class AppEntry : AppCompatActivity() {
     Cryptchat.db(applicationContext).also { db ->
       AsyncExec.run {
         val servers = db.servers().getAll()
+        // startActivity(AdminWebView.createIntent(servers[0], this))
+        // return@run
         val intent = if (servers.isEmpty() && false) {
           Intent(this, EnterServerAddress::class.java)
         } else {

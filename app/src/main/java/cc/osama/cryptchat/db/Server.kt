@@ -17,6 +17,7 @@ data class Server (
   @NonNull val privateKey: String,
   @NonNull val senderId: String,
   @NonNull var authToken: String,
+  @NonNull var isAdmin: Boolean = false,
   var name: String?,
   var instanceId: String?,
   var userName: String?
@@ -33,7 +34,8 @@ data class Server (
     authToken: String,
     senderId: String,
     instanceId: String?,
-    userName: String?
+    userName: String?,
+    isAdmin: Boolean = false
   ) : this(
     id = id,
     name = name,
@@ -44,7 +46,8 @@ data class Server (
     senderId = senderId,
     authToken = authToken,
     instanceId = instanceId,
-    userName = userName
+    userName = userName,
+    isAdmin = isAdmin
   )
 
   fun displayName() : String {
@@ -63,6 +66,7 @@ data class Server (
       name = newCopy.name
       instanceId = newCopy.instanceId
       userName = newCopy.userName
+      isAdmin = newCopy.isAdmin
       lastReloadedAt = System.currentTimeMillis()
     }
   }
@@ -72,7 +76,11 @@ data class Server (
   }
 
   fun urlForPath(path: String) : String {
-    return address + path
+    return if (address.endsWith("/") || path.startsWith("/")) {
+      address + path
+    } else {
+      "$address/$path"
+    }
   }
 
   @Dao
