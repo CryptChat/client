@@ -15,7 +15,7 @@ import cc.osama.cryptchat.db.Message
 import cc.osama.cryptchat.db.Server
 import cc.osama.cryptchat.db.User
 import kotlinx.android.synthetic.main.activity_chat_view.*
-import kotlinx.android.synthetic.main.chat_message_first_party.view.*
+import kotlinx.android.synthetic.main.sent_chat_message.view.*
 import java.text.SimpleDateFormat
 import java.util.*
 import kotlin.collections.ArrayList
@@ -37,7 +37,7 @@ class ChatView : RecyclerViewImplementer<ChatView.DisplayMessageStruct>() {
     )
   }
   override val dataset = ArrayList<DisplayMessageStruct>()
-  override val defaultLayout = R.layout.chat_message_first_party
+  override val defaultLayout = R.layout.sent_chat_message
   override val viewAdapter = Adapter(dataset, defaultLayout, this)
   override val viewManager = LinearLayoutManager(this)
   private lateinit var server: Server
@@ -106,7 +106,7 @@ class ChatView : RecyclerViewImplementer<ChatView.DisplayMessageStruct>() {
     chatMessageSend.setOnClickListener {
       val plaintext = chatMessageInput.text.toString().trim()
       if (plaintext.isNotEmpty()) {
-        AsyncExec.run {
+        AsyncExec.run(AsyncExec.Companion.Threads.Db) {
           val handler = OutboundMessageHandler(
             plaintext = plaintext,
             server = server,
@@ -114,7 +114,9 @@ class ChatView : RecyclerViewImplementer<ChatView.DisplayMessageStruct>() {
             context = applicationContext
           )
           handler.saveToDb {
-            handler.process()
+            AsyncExec.run(AsyncExec.Companion.Threads.Network) {
+              handler.process()
+            }
           }
         }
         chatMessageInput.text.clear()
@@ -143,7 +145,7 @@ class ChatView : RecyclerViewImplementer<ChatView.DisplayMessageStruct>() {
   }
 
   private fun refreshMessagesStream() {
-    AsyncExec.run {
+    AsyncExec.run(AsyncExec.Companion.Threads.Db) {
       synchronized(dataset) {
         val lastId = dataset.maxBy { m -> m.id }?.id ?: 0
         val messages = db().messages().findConversationMessages(
@@ -157,7 +159,7 @@ class ChatView : RecyclerViewImplementer<ChatView.DisplayMessageStruct>() {
           db().messages().setMessagesReadByServerAndUser(serverId = server.id, userId = user.id)
         }
       }
-      it.execMainThread {
+      AsyncExec.onUiThread {
         viewAdapter.notifyDataSetChanged()
         chatBody.scrollToPosition(dataset.size - 1)
       }
@@ -165,9 +167,9 @@ class ChatView : RecyclerViewImplementer<ChatView.DisplayMessageStruct>() {
   }
 
   private fun refreshMessage(messageId: Long) {
-    AsyncExec.run {
+    AsyncExec.run(AsyncExec.Companion.Threads.Db) {
       val message = db().messages().findById(messageId) ?: return@run
-      it.execMainThread {
+      AsyncExec.onUiThread {
         synchronized(dataset) {
           val index = dataset.indexOfFirst { m -> m.id == messageId }
           if (index != -1) {
@@ -180,9 +182,27 @@ class ChatView : RecyclerViewImplementer<ChatView.DisplayMessageStruct>() {
   }
 
   override fun onBindViewHolder(holder: Adapter.ListItemHolder, position: Int) {
-    holder.view.messageTextHolder.text = dataset[position].plaintext
+    val item = dataset[position]
+    holder.view.messageTextHolder.text = item.plaintext
     SimpleDateFormat("HH:mm", Locale.getDefault()).also { formatter ->
-      holder.view.messageDateHolder.text = formatter.format(Date(dataset[position].createdAt))
+      holder.view.messageDateHolder.text = formatter.format(Date(item.createdAt))
+    }
+    if (item.byMe) {
+      val icon = when (item.status) {
+        Message.INITIAL_STATE -> {
+          R.drawable.ic_hourglass_empty_black_24dp
+        }
+        Message.NEEDS_RETRY -> {
+          R.drawable.ic_hourglass_empty_black_24dp
+        }
+        Message.SENT -> {
+          R.drawable.ic_check_black_24dp
+        }
+        else -> {
+          R.drawable.ic_error_outline_black_24dp
+        }
+      }
+      holder.view.messageStatusIcon.setImageResource(icon)
     }
   }
 
@@ -190,7 +210,7 @@ class ChatView : RecyclerViewImplementer<ChatView.DisplayMessageStruct>() {
     return if (dataset[position].byMe) {
       super.getItemViewType(position)
     } else {
-      R.layout.chat_message_second_party
+      R.layout.received_chat_message
     }
   }
 

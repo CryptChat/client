@@ -36,7 +36,7 @@
             android:id="@+id/messageDateHolder"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:paddingStart="5dp"
+            android:paddingStart="3dp"
             android:paddingEnd="5dp"
             android:paddingBottom="2dp"
             android:text="16:04"
@@ -45,6 +45,15 @@
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/messageTextHolder" />
+
+        <ImageView
+            android:id="@+id/messageStatusIcon"
+            android:layout_width="10dp"
+            android:layout_height="10dp"
+            app:layout_constraintBottom_toBottomOf="@+id/messageDateHolder"
+            app:layout_constraintEnd_toStartOf="@+id/messageDateHolder"
+            app:layout_constraintTop_toTopOf="@+id/messageDateHolder"
+            app:srcCompat="@drawable/ic_hourglass_empty_black_24dp" />
     </androidx.constraintlayout.widget.ConstraintLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

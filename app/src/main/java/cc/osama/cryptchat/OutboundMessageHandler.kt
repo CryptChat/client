@@ -72,8 +72,8 @@ class OutboundMessageHandler(
     Cryptchat.db(context).also { db ->
       val message = db.messages().add(this.message)
       this.message = message
-      callback()
       ChatView.notifyNewMessage(context)
+      callback()
     }
   }
 
