@@ -5,6 +5,8 @@ import android.content.Intent
 import android.graphics.Bitmap
 import android.os.Bundle
 import android.util.Log.d
+import android.util.TypedValue
+import android.view.MenuItem
 import android.view.View
 import android.webkit.WebChromeClient
 import android.webkit.WebResourceRequest
@@ -25,11 +27,19 @@ class AdminWebView: AppCompatActivity() {
       }
     }
   }
+
   private lateinit var server: Server
+
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
     setContentView(R.layout.activity_admin_web_view)
     server = intent.extras?.get("server") as Server
+    TypedValue().also {
+      theme.resolveAttribute(R.attr.colorSecondary, it, true)
+      adminWebViewToolbar.navigationIcon?.setTint(it.data)
+    }
+    setSupportActionBar(adminWebViewToolbar)
+    supportActionBar?.setDisplayHomeAsUpEnabled(true)
     adminWebview.webChromeClient = object : WebChromeClient() {
       override fun onProgressChanged(view: WebView?, newProgress: Int) {
         super.onProgressChanged(view, newProgress)
@@ -47,6 +57,7 @@ class AdminWebView: AppCompatActivity() {
       }
       override fun onPageStarted(view: WebView?, url: String?, favicon: Bitmap?) {
         super.onPageStarted(view, url, favicon)
+        adminWebViewToolbar.subtitle = url
         webViewProgressBar.visibility = View.VISIBLE
       }
       override fun onPageFinished(view: WebView?, url: String?) {
@@ -54,7 +65,7 @@ class AdminWebView: AppCompatActivity() {
         webViewProgressBar.visibility = View.GONE
       }
     }
-    AsyncExec.run {
+    AsyncExec.run(AsyncExec.Companion.Threads.Network) {
       server.reload(applicationContext)
       CryptchatServer(applicationContext, server).request(
         CryptchatRequest.Methods.POST,
@@ -63,7 +74,7 @@ class AdminWebView: AppCompatActivity() {
         success = { json ->
           val key = CryptchatUtils.jsonOptString(json, "key")
           if (key != null) {
-            it.execMainThread {
+            AsyncExec.onUiThread {
               adminWebview.loadUrl(
                 server.urlForPath("/admin"),
                 mapOf(
@@ -81,5 +92,22 @@ class AdminWebView: AppCompatActivity() {
         }
       )
     }
+  }
+
+  override fun onBackPressed() {
+    if (adminWebview.canGoBack()) {
+      adminWebview.goBack()
+    } else {
+      super.onBackPressed()
+    }
+  }
+
+  override fun onOptionsItemSelected(item: MenuItem): Boolean {
+    if (item.itemId == android.R.id.home) {
+      finish()
+    } else {
+      return super.onOptionsItemSelected(item)
+    }
+    return true
   }
 }

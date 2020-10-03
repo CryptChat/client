@@ -60,6 +60,7 @@ class ServerUsersList : RecyclerViewImplementer<User.Conversation>() {
     }
     setSupportActionBar(serverUsersListToolbar)
     supportActionBar?.title = server.name ?: resources.getString(R.string.server)
+    supportActionBar?.setDisplayHomeAsUpEnabled(true)
   }
 
   override fun onCreateOptionsMenu(menu: Menu?): Boolean {
@@ -74,6 +75,9 @@ class ServerUsersList : RecyclerViewImplementer<User.Conversation>() {
       }
       R.id.go_to_admin_interface -> {
         startActivity(AdminWebView.createIntent(server, this))
+      }
+      android.R.id.home -> {
+        onBackPressed()
       }
       else -> {
         return super.onOptionsItemSelected(item)

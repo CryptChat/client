@@ -6,11 +6,24 @@
     android:layout_height="match_parent"
     tools:context=".ui.ChatView">
 
+    <androidx.appcompat.widget.Toolbar
+        android:id="@+id/chatViewToolbar"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:background="?attr/colorPrimary"
+        android:minHeight="?attr/actionBarSize"
+        android:theme="@style/AppTheme.ToolbarTheme"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:titleTextColor="?attr/colorSecondary"
+        tools:title="User name" />
+
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/chatBody"
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:background="#DCDCDD"
+        android:layout_marginBottom="4dp"
         android:scrollbars="vertical"
         app:layout_constraintBottom_toTopOf="@+id/chatMessageInput"
         app:layout_constraintEnd_toEndOf="parent"
@@ -19,48 +32,41 @@
         app:layout_constraintTop_toBottomOf="@+id/chatViewToolbar"
         tools:listitem="@layout/sent_chat_message" />
 
-    <Button
-        android:id="@+id/chatMessageSend"
-        android:layout_width="wrap_content"
-        android:layout_height="0dp"
-        android:text="@string/send_button"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/chatBody" />
-
     <EditText
         android:id="@+id/chatMessageInput"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
+        android:layout_marginEnd="8dp"
+        android:layout_marginBottom="8dp"
         android:ems="10"
         android:gravity="start|top"
+        android:hint="Hello"
         android:inputType="textMultiLine"
         android:minHeight="40dp"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toStartOf="@+id/chatMessageSend"
+        app:layout_constraintEnd_toStartOf="@id/sendButtonContainer"
         app:layout_constraintStart_toStartOf="parent" />
 
-    <androidx.appcompat.widget.Toolbar
-        android:id="@+id/chatViewToolbar"
-        android:layout_width="match_parent"
+    <androidx.cardview.widget.CardView
+        android:id="@+id/sendButtonContainer"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:background="?attr/colorPrimary"
-        android:minHeight="?attr/actionBarSize"
-        android:theme="?attr/actionBarTheme"
+        android:layout_marginEnd="8dp"
+        android:background="@color/brandTertiary"
+        android:elevation="2dp"
+        app:cardCornerRadius="50dp"
+        app:layout_constraintBottom_toBottomOf="@+id/chatMessageInput"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toTopOf="@+id/chatMessageInput">
 
-    <TextView
-        android:id="@+id/disabledChatNotice"
-        android:layout_width="0dp"
-        android:layout_height="0dp"
-        android:gravity="center"
-        android:minHeight="40dp"
-        android:text="@string/chat_disabled_because_readonly"
-        android:visibility="invisible"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toStartOf="@+id/chatMessageSend"
-        app:layout_constraintStart_toStartOf="@+id/chatMessageInput"
-        app:layout_constraintTop_toBottomOf="@+id/chatBody" />
+        <ImageButton
+            android:id="@+id/chatMessageSend"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:background="@color/brandTertiary"
+            android:tint="@color/brandSecondary"
+            app:srcCompat="@drawable/ic_arrow_forward_black_24dp" />
+    </androidx.cardview.widget.CardView>
+
 </androidx.constraintlayout.widget.ConstraintLayout>

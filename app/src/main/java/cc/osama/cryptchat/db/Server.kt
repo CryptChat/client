@@ -50,6 +50,14 @@ data class Server (
     isAdmin = isAdmin
   )
 
+  data class ServerListItem(
+    val unreadMessagesCount: Int = 0,
+    val lastActivity: Long?,
+    val lastMessage: String?,
+    val usersCount: Int = 0,
+    @Embedded val server: Server
+  )
+
   fun displayName() : String {
     val serverName = name?.trim()
     return if (serverName != null && serverName.isNotEmpty()) {
@@ -87,6 +95,9 @@ data class Server (
   interface DataAccessObject {
     @Query("SELECT * FROM servers")
     fun getAll(): List<Server>
+
+    @Query("SELECT s.*, count.unreadMessagesCount, lastMessage.lastActivity, usersCount.usersCount FROM servers s LEFT JOIN (SELECT COUNT(*) unreadMessagesCount, serverId FROM messages WHERE NOT read AND (status < ${Message.UNDECRYPTED} OR status = ${Message.DECRYPTED}) GROUP BY serverId) count ON s.id = count.serverId LEFT JOIN (SELECT MAX(createdAt) lastActivity, serverId FROM messages WHERE (status < ${Message.UNDECRYPTED} OR status = ${Message.DECRYPTED}) GROUP BY serverId) lastMessage ON lastMessage.serverId = s.id LEFT JOIN (SELECT COUNT(*) usersCount, serverId FROM users GROUP BY serverId) usersCount ON usersCount.serverId = s.id ORDER BY lastMessage.lastActivity DESC")
+    fun serversList() : List<ServerListItem>
 
     @Query("SELECT * FROM servers WHERE address = :address LIMIT 1")
     fun findByAddress(address: String): Server?

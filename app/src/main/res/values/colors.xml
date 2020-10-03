@@ -1,21 +1,22 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="colorPrimary">#008577</color>
-    <color name="colorPrimaryDark">#00574B</color>
-    <color name="colorAccent">#D81B60</color>
-    <color name="colorBlack">#000000</color>
-    <color name="colorDarkBlue">#14213D</color>
-    <color name="colorOrange">#FCA311</color>
-    <color name="colorGrey">#E5E5E5</color>
-    <color name="colorWhite">#FFFFFF</color>
-    <!--color name="cryptchatPrimary">#293241</color>
-    <color name="cryptchatSecondary">#E0FBFC</color>
-    <color name="cryptchatTertiary">#EE6C4D</color>
-    <color name="cryptchatQuaternary">#98C1D9</color>
-    <color name="cryptchatHeader">#3D5A80</color-->
-    <color name="cryptchatPrimary">#00B4D8</color>
-    <color name="cryptchatSecondary">#E0FBFC</color>
-    <color name="cryptchatTertiary">#EE6C4D</color>
-    <color name="cryptchatQuaternary">#98C1D9</color>
-    <color name="cryptchatHeader">#3D5A80</color>
+    <color name="brandPrimary">#2C3E50</color>
+    <color name="brandPrimaryVeryHigh">#415B75</color>
+    <color name="brandPrimaryHigh">#55789B</color>
+    <color name="brandPrimaryMedium">#829FBB</color>
+    <color name="brandPrimaryLowMid">#B4C5D6</color>
+    <color name="brandPrimaryLow">#E6ECF1</color>
+    <color name="brandPrimaryVeryLow">#F8F9FB</color>
+
+    <color name="brandSecondary">#FFFFFF</color>
+    <color name="brandSecondaryVeryHigh">#EDEDED</color>
+    <color name="brandSecondaryHigh">#A6A6A6</color>
+    <color name="brandSecondaryMedium">#808080</color>
+    <color name="brandSecondaryLow">#4D4D4D</color>
+
+    <color name="brandTertiary">#3E7DF7</color>
+    <color name="brandTertiaryHover">#0952DF</color>
+    <color name="brandTertiaryHigh">#6597F9</color>
+    <color name="brandTertiaryMedium">#9FBEFB</color>
+    <color name="brandTertiaryLow">#E2ECFE</color>
 </resources>

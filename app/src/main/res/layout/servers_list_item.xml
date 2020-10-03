@@ -12,25 +12,85 @@
         android:id="@+id/serverName"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginStart="15dp"
-        android:layout_marginEnd="15dp"
-        android:textSize="28sp"
-        app:layout_constraintBottom_toTopOf="@+id/serverAddress"
-        app:layout_constraintEnd_toEndOf="parent"
+        android:layout_marginStart="16dp"
+        android:textAppearance="@style/TextAppearance.MaterialComponents.Headline5"
+        app:layout_constraintBottom_toTopOf="@+id/usersCountTextView"
+        app:layout_constraintEnd_toStartOf="@+id/lastActivityTextView"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_chainStyle="packed" />
+        app:layout_constraintVertical_chainStyle="packed"
+        tools:text="Work Server" />
 
     <TextView
         android:id="@+id/serverAddress"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginStart="15dp"
-        android:layout_marginEnd="15dp"
-        android:textSize="12sp"
-        app:layout_constraintBottom_toBottomOf="parent"
+        android:layout_marginStart="4dp"
+        android:textAppearance="@style/TextAppearance.MaterialComponents.Caption"
+        app:layout_constraintBottom_toBottomOf="@+id/usersCountTextView"
+        app:layout_constraintStart_toEndOf="@+id/dotSeparatorView"
+        app:layout_constraintTop_toTopOf="@+id/usersCountTextView"
+        app:layout_constraintVertical_bias="1.0"
+        tools:text="https://example.com" />
+
+    <androidx.cardview.widget.CardView
+        android:id="@+id/cardView2"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="4dp"
+        android:layout_marginEnd="16dp"
+        app:cardBackgroundColor="@android:color/transparent"
+        app:cardCornerRadius="3dp"
+        app:cardElevation="0dp"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/serverName"
-        app:layout_constraintVertical_chainStyle="packed" />
+        app:layout_constraintTop_toBottomOf="@+id/lastActivityTextView"
+        app:layout_constraintVertical_chainStyle="packed">
+
+        <TextView
+            android:id="@+id/unreadMessagesCountTextView"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="#d3e3a3"
+            android:paddingStart="3dp"
+            android:paddingTop="1dp"
+            android:paddingEnd="3dp"
+            android:paddingBottom="1dp"
+            android:textAppearance="@style/TextAppearance.MaterialComponents.Subtitle2"
+            tools:text="10" />
+    </androidx.cardview.widget.CardView>
+
+    <TextView
+        android:id="@+id/usersCountTextView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        tools:text="3 users"
+        android:textAppearance="@style/TextAppearance.MaterialComponents.Caption"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="@+id/serverName"
+        app:layout_constraintTop_toBottomOf="@+id/serverName" />
+
+    <TextView
+        android:id="@+id/dotSeparatorView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="4dp"
+        android:text="\u00B7"
+        android:textAppearance="@style/TextAppearance.MaterialComponents.Caption"
+        android:textStyle="bold"
+        app:layout_constraintBottom_toBottomOf="@+id/usersCountTextView"
+        app:layout_constraintStart_toEndOf="@+id/usersCountTextView"
+        app:layout_constraintTop_toTopOf="@+id/usersCountTextView"
+        tools:ignore="HardcodedText" />
+
+    <TextView
+        android:id="@+id/lastActivityTextView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="16dp"
+        android:textAppearance="@style/TextAppearance.MaterialComponents.Caption"
+        app:layout_constraintBottom_toBottomOf="@+id/serverName"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="@+id/serverName"
+        app:layout_constraintVertical_chainStyle="packed"
+        tools:text="13:12" />
 </androidx.constraintlayout.widget.ConstraintLayout>

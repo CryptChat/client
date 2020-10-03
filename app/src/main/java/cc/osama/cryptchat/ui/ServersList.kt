@@ -3,6 +3,7 @@ package cc.osama.cryptchat.ui
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
+import android.text.format.DateUtils
 import android.util.Log.d
 import android.view.*
 import androidx.appcompat.app.AppCompatActivity
@@ -14,6 +15,9 @@ import cc.osama.cryptchat.R
 import cc.osama.cryptchat.db.Server
 import kotlinx.android.synthetic.main.activity_servers_list.*
 import kotlinx.android.synthetic.main.servers_list_item.view.*
+import java.text.SimpleDateFormat
+import java.util.*
+import kotlin.collections.ArrayList
 
 
 interface OnServerClick {
@@ -27,11 +31,15 @@ class ServersList : AppCompatActivity(), OnServerClick {
     }
   }
 
-  private val servers = ArrayList<Server>()
-  private val viewAdapter = ServersAdapter(servers, this)
+  private val servers = ArrayList<Server.ServerListItem>()
+  private val viewAdapter = ServersAdapter(servers, this, this)
   private val viewManager = LinearLayoutManager(this)
 
-  class ServersAdapter(private val dataset: ArrayList<Server>, private val listener: OnServerClick) : RecyclerView.Adapter<ServersAdapter.ServersListItemHolder>() {
+  class ServersAdapter(
+    private val dataset: ArrayList<Server.ServerListItem>,
+    private val listener: OnServerClick,
+    private val context: Context
+  ) : RecyclerView.Adapter<ServersAdapter.ServersListItemHolder>() {
     class ServersListItemHolder(val view: View, private val listener: OnServerClick) : RecyclerView.ViewHolder(view) {
       init {
         view.setOnClickListener {
@@ -45,15 +53,38 @@ class ServersList : AppCompatActivity(), OnServerClick {
       return ServersListItemHolder(view, listener)
     }
 
-    override fun getItemCount(): Int = dataset.size
+    override fun getItemCount() = dataset.size
     override fun onBindViewHolder(holder: ServersListItemHolder, position: Int) {
-      holder.view.serverAddress.text = dataset[position].address
-      holder.view.serverName.text = dataset[position].name
+      val serverItem = dataset[position]
+      holder.view.serverAddress.text = serverItem.server.address
+      holder.view.serverName.text = serverItem.server.name
+      if (serverItem.lastActivity != null) {
+        val formatter = if (DateUtils.isToday(serverItem.lastActivity)) {
+          SimpleDateFormat("HH:mm", Locale.getDefault())
+        } else {
+          SimpleDateFormat("dd/MM/yy", Locale.getDefault())
+        }
+        holder.view.lastActivityTextView.visibility = View.VISIBLE
+        holder.view.lastActivityTextView.text = formatter.format(Date(serverItem.lastActivity))
+      } else {
+        holder.view.lastActivityTextView.visibility = View.INVISIBLE
+      }
+      if (serverItem.unreadMessagesCount > 0) {
+        holder.view.unreadMessagesCountTextView.visibility = View.VISIBLE
+        holder.view.unreadMessagesCountTextView.text = if (serverItem.unreadMessagesCount > 99)
+          "+99" else serverItem.unreadMessagesCount.toString()
+      } else {
+        holder.view.unreadMessagesCountTextView.visibility = View.INVISIBLE
+      }
+      holder.view.usersCountTextView.text = context.resources.getString(
+        R.string.servers_list_users_count,
+        serverItem.usersCount + 1 // add 1 to account for current user
+      )
     }
   }
 
   override fun onServerClick(position: Int) {
-    val server = servers[position]
+    val server = servers[position].server
     startActivity(ServerUsersList.createIntent(server = server, context = this))
   }
 
@@ -74,7 +105,7 @@ class ServersList : AppCompatActivity(), OnServerClick {
     val db = Cryptchat.db(applicationContext)
     AsyncExec.run { runner ->
       servers.clear()
-      servers.addAll(db.servers().getAll())
+      servers.addAll(db.servers().serversList())
       runner.execMainThread {
         viewAdapter.notifyDataSetChanged()
       }

@@ -98,7 +98,9 @@ class ChatView : RecyclerViewImplementer<ChatView.DisplayMessageStruct>() {
       adapter = viewAdapter
     }
     setSupportActionBar(chatViewToolbar)
-    chatMessageSend.addTextChangedListener(CryptchatTextWatcher(
+    supportActionBar?.title = user.displayName()
+    supportActionBar?.setDisplayHomeAsUpEnabled(true)
+    chatMessageInput.addTextChangedListener(CryptchatTextWatcher(
       on = { s, _, _, _ ->
         chatMessageSend.isEnabled = s != null && s.trim().isNotEmpty()
       }
@@ -133,12 +135,8 @@ class ChatView : RecyclerViewImplementer<ChatView.DisplayMessageStruct>() {
     super.onStart()
     if (Cryptchat.isReadonly(applicationContext)) {
       chatMessageSend.isEnabled = false
-      chatMessageInput.visibility = View.INVISIBLE
-      disabledChatNotice.visibility = View.VISIBLE
     } else {
       chatMessageSend.isEnabled = true
-      chatMessageInput.visibility = View.VISIBLE
-      disabledChatNotice.visibility = View.INVISIBLE
     }
     refreshMessagesStream()
     LocalBroadcastManager.getInstance(this).registerReceiver(receiver, IntentFilter(BROADCAST_INTENT))
@@ -220,10 +218,16 @@ class ChatView : RecyclerViewImplementer<ChatView.DisplayMessageStruct>() {
   }
 
   override fun onOptionsItemSelected(item: MenuItem): Boolean {
-    if (item.itemId == R.id.verify_contact_identity_key) {
-      startActivity(VerifyIdentity.createIntent(user, server, this))
-    } else {
-      return super.onOptionsItemSelected(item)
+    when (item.itemId) {
+      R.id.verify_contact_identity_key -> {
+        startActivity(VerifyIdentity.createIntent(user, server, this))
+      }
+      android.R.id.home -> {
+        onBackPressed()
+      }
+      else -> {
+        return super.onOptionsItemSelected(item)
+      }
     }
     return true
   }

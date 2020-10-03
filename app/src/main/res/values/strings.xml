@@ -76,6 +76,8 @@
     <string name="backup_restorer_failed_short_iv">"Restore failed due to short Initialization Vector."</string>
     <string name="backup_restorer_failed_bad_db_integrity">"Restore failed because the restored database is corrupt."</string>
     <string name="backup_restorer_failed_decryption_failed">"Restore failed because the backup file is corrupt or decryption key is wrong."</string>
+    <string name="admin_web_view_toolbar_title">"Admin interface"</string>
+    <string name="servers_list_users_count">"%1$d users"</string>
     <string-array name="countries_codes">
         <item>+965</item>
         <item>+966</item>
