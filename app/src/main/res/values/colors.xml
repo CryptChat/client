@@ -19,4 +19,7 @@
     <color name="brandTertiaryHigh">#6597F9</color>
     <color name="brandTertiaryMedium">#9FBEFB</color>
     <color name="brandTertiaryLow">#E2ECFE</color>
+
+    <color name="defaultAvatarBackgroundColor">#838383</color>
+    <color name="defaultAvatarForegroundColor">#AEAEAE</color>
 </resources>

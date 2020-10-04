@@ -13,11 +13,54 @@
         android:background="?attr/colorPrimary"
         android:minHeight="?attr/actionBarSize"
         android:theme="@style/AppTheme.ToolbarTheme"
+        app:contentInsetStartWithNavigation="0dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:titleTextColor="?attr/colorSecondary"
-        tools:title="User name" />
+        app:layout_constraintTop_toTopOf="parent">
+
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            tools:layout_editor_absoluteX="119dp"
+            tools:layout_editor_absoluteY="10dp">
+
+            <androidx.cardview.widget.CardView
+                android:id="@+id/avatarImageViewContainer"
+                android:layout_width="35dp"
+                android:layout_height="35dp"
+                android:layout_gravity="start"
+                app:cardBackgroundColor="@color/defaultAvatarBackgroundColor"
+                app:cardCornerRadius="50dp"
+                app:cardElevation="0dp"
+                tools:layout_editor_absoluteX="16dp"
+                tools:layout_editor_absoluteY="13dp">
+
+                <ImageView
+                    android:id="@+id/avatarImageView"
+                    android:layout_width="25.6dp"
+                    android:layout_height="25.6dp"
+                    android:layout_gravity="center"
+                    app:srcCompat="@drawable/default_avatar"
+                    tools:layout_editor_absoluteX="78dp" />
+            </androidx.cardview.widget.CardView>
+
+            <TextView
+                android:id="@+id/userNameTextView"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_centerVertical="true"
+                android:layout_marginStart="10dp"
+                android:layout_toRightOf="@id/avatarImageViewContainer"
+                android:textAppearance="@android:style/TextAppearance.Material.Widget.Toolbar.Title"
+                android:textColor="?attr/colorSecondary"
+                android:textSize="20dp"
+                tools:text="TextView" />
+        </RelativeLayout>
+
+
+    </androidx.appcompat.widget.Toolbar>
+
+
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/chatBody"

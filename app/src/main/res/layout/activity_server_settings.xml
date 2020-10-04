@@ -31,7 +31,8 @@
         app:cardElevation="0dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/toolbar">
+        app:cardBackgroundColor="@color/defaultAvatarBackgroundColor"
+        app:layout_constraintTop_toBottomOf="@+id/serverSettingsToolbar">
 
         <androidx.constraintlayout.widget.ConstraintLayout
             android:layout_width="match_parent"
@@ -39,10 +40,11 @@
 
             <ImageView
                 android:id="@+id/avatarHolder"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
+                android:layout_width="96dp"
+                android:layout_height="96dp"
                 android:contentDescription="@string/server_settings_profile_avatar"
                 android:scaleType="fitXY"
+                android:layout_gravity="center"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
@@ -59,23 +61,9 @@
                 android:padding="40dp"
                 android:visibility="gone"
                 app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintEnd_toEndOf="@+id/avatarHolder"
-                app:layout_constraintStart_toStartOf="@+id/avatarHolder"
-                app:layout_constraintTop_toTopOf="@+id/avatarHolder" />
-
-            <ImageView
-                android:id="@+id/uploadSuccessfulIcon"
-                android:layout_width="0dp"
-                android:layout_height="0dp"
-                android:background="#90000000"
-                android:padding="45dp"
-                android:tint="#FFFFFF"
-                android:visibility="gone"
-                app:layout_constraintBottom_toBottomOf="@+id/avatarHolder"
-                app:layout_constraintEnd_toEndOf="@+id/avatarHolder"
+                app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toTopOf="@+id/avatarHolder"
-                app:srcCompat="@drawable/ic_check_black_24dp" />
+                app:layout_constraintTop_toTopOf="parent" />
 
         </androidx.constraintlayout.widget.ConstraintLayout>
 
@@ -145,14 +133,16 @@
         app:srcCompat="@drawable/ic_check_black_24dp" />
 
     <androidx.appcompat.widget.Toolbar
-        android:id="@+id/toolbar"
+        android:id="@+id/serverSettingsToolbar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:background="?attr/colorPrimary"
         android:minHeight="?attr/actionBarSize"
-        android:theme="?attr/actionBarTheme"
+        android:theme="@style/AppTheme.ToolbarTheme"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toTopOf="parent"
+        app:titleTextColor="?attr/colorSecondary" />
 
     <TextView
         android:id="@+id/disabledSettingsNotice"

@@ -10,6 +10,7 @@ import android.view.MenuItem
 import android.view.View
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
+import androidx.constraintlayout.widget.ConstraintLayout
 import cc.osama.cryptchat.*
 import cc.osama.cryptchat.db.Server
 import kotlinx.android.synthetic.main.activity_server_settings.*
@@ -20,22 +21,21 @@ import java.io.ByteArrayOutputStream
 class ServerSettings : AppCompatActivity() {
   companion object {
     private const val PICK_IMAGE = 444
-    fun createIntent(serverId: Long, context: Context) : Intent {
+    fun createIntent(server: Server, context: Context) : Intent {
       return Intent(context, ServerSettings::class.java).also { intent ->
-        intent.putExtra("serverId", serverId)
+        intent.putExtra("server", server)
       }
     }
   }
 
   private val handler = Handler()
-  private var serverId: Long = -1
   private lateinit var server: Server
 
   override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
     super.onActivityResult(requestCode, resultCode, data)
     val uri = data?.data
     if (requestCode == PICK_IMAGE && uri != null) {
-      AsyncExec.run { asyncTask ->
+      AsyncExec.run(AsyncExec.Companion.Threads.Network) {
         contentResolver.openInputStream(uri)?.use { input ->
           val tempPath = "_AVATAR_PICK_${CryptchatUtils.secureRandomHex(16)}"
           try {
@@ -55,7 +55,7 @@ class ServerSettings : AppCompatActivity() {
               val stream = ByteArrayOutputStream()
               val successfulCompression = bigBitmap.compress(Bitmap.CompressFormat.JPEG, 90, stream)
               stream.close()
-              asyncTask.execMainThread {
+              AsyncExec.onUiThread {
                 if (successfulCompression) {
                   uploadAvatar(stream, smallBitmap)
                 } else {
@@ -67,7 +67,7 @@ class ServerSettings : AppCompatActivity() {
                 }
               }
             } else {
-              asyncTask.execMainThread {
+              AsyncExec.onUiThread {
                 AlertDialog.Builder(this).apply {
                   setNegativeButton(R.string.dialog_ok) { _, _ ->  }
                   setMessage("Weird condition occurred where bigBitmap or smallBitmap are null")
@@ -88,7 +88,6 @@ class ServerSettings : AppCompatActivity() {
     handler.removeCallbacksAndMessages(null)
     avatarUploadProgressBar.visibility = View.GONE
     changeAvatarButton.visibility = View.VISIBLE
-    uploadSuccessfulIcon.visibility = View.GONE
   }
 
   override fun onDestroy() {
@@ -98,9 +97,9 @@ class ServerSettings : AppCompatActivity() {
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
-    serverId = intent?.extras?.getLong("serverId") as Long
+    server = intent?.extras?.get("server") as Server
     setContentView(R.layout.activity_server_settings)
-    setSupportActionBar(toolbar)
+    setSupportActionBar(serverSettingsToolbar)
     supportActionBar?.setDisplayHomeAsUpEnabled(true)
 
     changeAvatarButton.setOnClickListener {
@@ -175,19 +174,17 @@ class ServerSettings : AppCompatActivity() {
         }
       }
     }
-    AsyncExec.run {
-      Cryptchat.db(applicationContext).also { db ->
-        server = db.servers().findById(serverId) as Server
-      }
+    AsyncExec.run(AsyncExec.Companion.Threads.Db) {
+      server.reload(applicationContext)
     }
   }
 
   override fun onStart() {
     super.onStart()
-    AsyncExec.run {
-      server = Cryptchat.db(applicationContext).servers().findById(serverId) as Server
+    AsyncExec.run(AsyncExec.Companion.Threads.Db) {
+      server.reload(applicationContext)
       val serverName = server.name
-      it.execMainThread {
+      AsyncExec.onUiThread {
         serverNameInput.setText(server.name ?: "")
         userNameInput.setText(server.userName ?: "")
         supportActionBar?.title = if (serverName != null) {
@@ -198,6 +195,10 @@ class ServerSettings : AppCompatActivity() {
         val bitmap = AvatarsStore(server.id, null, applicationContext).bitmap(AvatarsStore.Sizes.Small)
         if (bitmap != null) {
           avatarHolder.setImageBitmap(bitmap)
+          avatarHolder.layoutParams = ConstraintLayout.LayoutParams(
+            ConstraintLayout.LayoutParams.MATCH_PARENT,
+            ConstraintLayout.LayoutParams.MATCH_PARENT
+          )
         }
       }
     }
@@ -237,10 +238,10 @@ class ServerSettings : AppCompatActivity() {
       success = {
         onUiThread {
           avatarHolder.setImageBitmap(smallBitmap)
-          uploadSuccessfulIcon.visibility = View.VISIBLE
-          handler.postDelayed({
-            uploadSuccessfulIcon.visibility = View.GONE
-          }, 1500)
+          avatarHolder.layoutParams = ConstraintLayout.LayoutParams(
+            ConstraintLayout.LayoutParams.MATCH_PARENT,
+            ConstraintLayout.LayoutParams.MATCH_PARENT
+          )
         }
       },
       failure = {

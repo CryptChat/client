@@ -22,8 +22,7 @@
         <activity android:name=".ui.BackupsEntry" />
         <activity android:name=".ui.VerifyIdentity" />
         <activity
-            android:name=".ui.ServerSettings"
-            android:theme="@style/Theme.AppCompat.Light.NoActionBar" />
+            android:name=".ui.ServerSettings" />
         <activity android:name=".ui.ChatView" />
         <activity
             android:name=".ui.AppEntry"

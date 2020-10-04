@@ -1,12 +1,14 @@
 package cc.osama.cryptchat.ui
 
+import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
+import android.content.IntentFilter
 import android.os.Bundle
 import android.text.format.DateUtils
-import android.util.Log.d
 import android.view.*
 import androidx.appcompat.app.AppCompatActivity
+import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import cc.osama.cryptchat.AsyncExec
@@ -26,14 +28,28 @@ interface OnServerClick {
 
 class ServersList : AppCompatActivity(), OnServerClick {
   companion object {
+    private const val REFRESH_INTENT_ACTION = "CRYPTCHAT_REFRESH_SERVERS_LIST"
     fun createIntent(context: Context) : Intent {
       return Intent(context, ServersList::class.java)
+    }
+
+    fun refreshList(context: Context) {
+      LocalBroadcastManager.getInstance(context).also { broadcast ->
+        val intent = Intent(REFRESH_INTENT_ACTION)
+        broadcast.sendBroadcast(intent)
+      }
     }
   }
 
   private val servers = ArrayList<Server.ServerListItem>()
   private val viewAdapter = ServersAdapter(servers, this, this)
   private val viewManager = LinearLayoutManager(this)
+
+  private val receiver = object : BroadcastReceiver() {
+    override fun onReceive(context: Context?, intent: Intent?) {
+      refreshList()
+    }
+  }
 
   class ServersAdapter(
     private val dataset: ArrayList<Server.ServerListItem>,
@@ -102,14 +118,15 @@ class ServersList : AppCompatActivity(), OnServerClick {
 
   override fun onStart() {
     super.onStart()
-    val db = Cryptchat.db(applicationContext)
-    AsyncExec.run { runner ->
-      servers.clear()
-      servers.addAll(db.servers().serversList())
-      runner.execMainThread {
-        viewAdapter.notifyDataSetChanged()
-      }
-    }
+    LocalBroadcastManager
+      .getInstance(this)
+      .registerReceiver(receiver, IntentFilter(REFRESH_INTENT_ACTION))
+    refreshList()
+  }
+
+  override fun onStop() {
+    super.onStop()
+    LocalBroadcastManager.getInstance(this).unregisterReceiver(receiver)
   }
 
   override fun onCreateOptionsMenu(menu: Menu?): Boolean {
@@ -126,7 +143,7 @@ class ServersList : AppCompatActivity(), OnServerClick {
     if (restoreBackupItem != null) {
       AsyncExec.run {
         val serversCount = Cryptchat.db(applicationContext).servers().getAll().size
-        if (serversCount > 0 && false) {
+        if (serversCount > 0) {
           it.execMainThread {
             restoreBackupItem.isVisible = false
           }
@@ -152,5 +169,17 @@ class ServersList : AppCompatActivity(), OnServerClick {
       }
     }
     return true
+  }
+
+  private fun refreshList() {
+    AsyncExec.run(AsyncExec.Companion.Threads.Db) {
+      val db = Cryptchat.db(applicationContext)
+      val newList = db.servers().serversList()
+      AsyncExec.onUiThread {
+        servers.clear()
+        servers.addAll(newList)
+        viewAdapter.notifyDataSetChanged()
+      }
+    }
   }
 }

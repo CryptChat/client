@@ -13,6 +13,7 @@ import cc.osama.cryptchat.*
 import cc.osama.cryptchat.R
 import cc.osama.cryptchat.db.Message
 import cc.osama.cryptchat.ui.ServerUsersList
+import cc.osama.cryptchat.ui.ServersList
 import org.json.JSONArray
 import org.json.JSONObject
 import java.security.SecureRandom
@@ -53,8 +54,9 @@ class SyncMessagesWorker(context: Context, params: WorkerParameters) : Worker(co
             )
             val message = handler.process() ?: return@request
             val user = db.users().find(message.userId) ?: return@request
-            ServerUsersList.refreshUsersList(applicationContext)
             if (message.decrypted()) {
+              ServerUsersList.refreshUsersList(applicationContext)
+              ServersList.refreshList(applicationContext)
               NotificationCompat.Builder(applicationContext, Cryptchat.MESSAGES_CHANNEL_ID).also { builder ->
                 builder.setContentText(message.plaintext)
                 builder.setContentTitle(

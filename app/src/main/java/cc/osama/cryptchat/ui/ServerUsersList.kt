@@ -9,6 +9,7 @@ import android.text.format.DateUtils
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
+import android.widget.FrameLayout
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import androidx.recyclerview.widget.LinearLayoutManager
 import cc.osama.cryptchat.*
@@ -59,7 +60,6 @@ class ServerUsersList : RecyclerViewImplementer<User.Conversation>() {
       adapter = viewAdapter
     }
     setSupportActionBar(serverUsersListToolbar)
-    supportActionBar?.title = server.name ?: resources.getString(R.string.server)
     supportActionBar?.setDisplayHomeAsUpEnabled(true)
   }
 
@@ -68,10 +68,15 @@ class ServerUsersList : RecyclerViewImplementer<User.Conversation>() {
     return true
   }
 
+  override fun onPrepareOptionsMenu(menu: Menu?): Boolean {
+    menu?.findItem(R.id.go_to_admin_interface)?.isVisible = server.isAdmin
+    return super.onPrepareOptionsMenu(menu)
+  }
+
   override fun onOptionsItemSelected(item: MenuItem): Boolean {
     when (item.itemId) {
       R.id.go_to_server_settings -> {
-        startActivity(ServerSettings.createIntent(server.id, this))
+        startActivity(ServerSettings.createIntent(server, this))
       }
       R.id.go_to_admin_interface -> {
         startActivity(AdminWebView.createIntent(server, this))
@@ -88,20 +93,15 @@ class ServerUsersList : RecyclerViewImplementer<User.Conversation>() {
 
   override fun onStart() {
     super.onStart()
-    val callback = {
-      LocalBroadcastManager
-        .getInstance(this)
-        .registerReceiver(receiver, IntentFilter(REFRESH_INTENT_ACTION))
-      supportActionBar?.title = server.name ?: resources.getString(R.string.server)
-      refreshConversations()
-    }
-    if (server.shouldReload()) {
-      AsyncExec.run {
-        server.reload(applicationContext)
-        it.execMainThread(callback)
+    LocalBroadcastManager
+      .getInstance(this)
+      .registerReceiver(receiver, IntentFilter(REFRESH_INTENT_ACTION))
+    AsyncExec.run(AsyncExec.Companion.Threads.Db) {
+      server.reload(applicationContext)
+      AsyncExec.onUiThread {
+        supportActionBar?.title = server.name ?: resources.getString(R.string.server)
+        refreshConversations()
       }
-    } else {
-      callback()
     }
   }
 
@@ -115,7 +115,7 @@ class ServerUsersList : RecyclerViewImplementer<User.Conversation>() {
     AsyncExec.run {
       val newSet = db.users().findConversationsOnServer(serverId = server.id)
       it.execMainThread {
-        dataset.removeAll(dataset)
+        dataset.clear()
         dataset.addAll(newSet)
         viewAdapter.notifyDataSetChanged()
       }
@@ -137,6 +137,10 @@ class ServerUsersList : RecyclerViewImplementer<User.Conversation>() {
       val bitmap = AvatarsStore(server.id, user.id, applicationContext).bitmap(AvatarsStore.Sizes.Small)
       if (bitmap != null) {
         holder.view.avatarHolder.setImageBitmap(bitmap)
+        holder.view.avatarHolder.layoutParams = FrameLayout.LayoutParams(
+          FrameLayout.LayoutParams.MATCH_PARENT,
+          FrameLayout.LayoutParams.MATCH_PARENT
+        )
       }
     }
     if (conversation.lastMessageDate != null) {
