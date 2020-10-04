@@ -17,6 +17,7 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
         app:navigationIcon="@drawable/ic_close_black_24dp"
+        app:contentInsetStartWithNavigation="0dp"
         app:subtitleTextAppearance="@style/TextAppearance.AppCompat.Small"
         app:subtitleTextColor="?attr/colorSecondaryVariant"
         app:title="@string/admin_web_view_toolbar_title"
