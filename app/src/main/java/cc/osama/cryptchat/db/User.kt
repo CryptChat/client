@@ -24,7 +24,8 @@ data class User(
   data class Conversation(
     val lastMessage: String?,
     val lastMessageDate: Long?,
-    val unreadCount: Int,
+    val unreadCount: Int = 0,
+    val messageStatus: Int?,
     @Embedded val user: User
   )
 
@@ -76,7 +77,7 @@ data class User(
     @Query("SELECT * FROM users WHERE serverId = :serverId AND idOnServer = :idOnServer LIMIT 1")
     fun findUserByServerIdAndIdOnServer(serverId: Long, idOnServer: Long): User?
 
-    @Query("SELECT u.*, m.plaintext AS lastMessage, m.lastMessageDate AS lastMessageDate, COALESCE(c.unreadCount, 0) AS unreadCount FROM users u LEFT JOIN (SELECT MAX(createdAt) AS lastMessageDate, userId, plaintext FROM messages WHERE serverId = :serverId GROUP BY userId) m ON m.userId = u.id LEFT JOIN (SELECT COUNT(*) AS unreadCount, userId FROM messages WHERE serverId = :serverId AND read = 0 GROUP BY userId) c ON c.userId = u.id WHERE serverId = :serverId ORDER BY lastMessageDate DESC")
+    @Query("SELECT u.*, m.plaintext AS lastMessage, m.status AS messageStatus, m.lastMessageDate AS lastMessageDate, c.unreadCount AS unreadCount FROM users u LEFT JOIN (SELECT MAX(createdAt) AS lastMessageDate, userId, plaintext, status FROM messages WHERE serverId = :serverId AND (status < ${Message.UNDECRYPTED} OR status = ${Message.DECRYPTED}) GROUP BY userId) m ON m.userId = u.id LEFT JOIN (SELECT COUNT(*) AS unreadCount, userId FROM messages WHERE serverId = :serverId AND NOT read AND status = ${Message.DECRYPTED} GROUP BY userId) c ON c.userId = u.id WHERE serverId = :serverId ORDER BY lastMessageDate DESC")
     fun findConversationsOnServer(serverId: Long) : List<Conversation>
 
     @Query("SELECT MAX(lastUpdatedAt) FROM users WHERE serverId = :serverId")

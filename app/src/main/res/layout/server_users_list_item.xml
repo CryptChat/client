@@ -24,12 +24,13 @@
         android:id="@+id/lastMessageContainer"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_marginStart="4dp"
         android:layout_marginTop="5dp"
         android:ellipsize="end"
-        android:maxWidth="250dp"
+        android:maxWidth="230dp"
         android:singleLine="true"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintStart_toStartOf="@+id/displayName"
+        app:layout_constraintStart_toEndOf="@+id/messageStatusIconUsersList"
         app:layout_constraintTop_toBottomOf="@+id/displayName"
         app:layout_constraintVertical_chainStyle="packed"
         tools:text="TextView" />
@@ -89,12 +90,12 @@
         android:id="@+id/avatarHolderContainer"
         android:layout_width="55dp"
         android:layout_height="55dp"
-        android:layout_marginStart="15dp"
+        android:layout_marginStart="16dp"
+        app:cardBackgroundColor="@color/defaultAvatarBackgroundColor"
         app:cardCornerRadius="100dp"
         app:cardElevation="0dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:cardBackgroundColor="@color/defaultAvatarBackgroundColor"
         app:layout_constraintTop_toTopOf="parent">
 
         <ImageView
@@ -105,5 +106,15 @@
             android:scaleType="fitXY"
             app:srcCompat="@drawable/default_avatar" />
     </androidx.cardview.widget.CardView>
+
+    <ImageView
+        android:id="@+id/messageStatusIconUsersList"
+        android:layout_width="12dp"
+        android:layout_height="12dp"
+        app:layout_constraintBottom_toBottomOf="@+id/lastMessageContainer"
+        app:layout_constraintStart_toStartOf="@+id/displayName"
+        app:layout_constraintTop_toTopOf="@+id/lastMessageContainer"
+        app:srcCompat="@drawable/ic_check_black_24dp"
+        app:tint="@android:color/tab_indicator_text" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

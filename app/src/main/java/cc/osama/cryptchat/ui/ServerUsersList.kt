@@ -10,9 +10,11 @@ import android.view.Menu
 import android.view.MenuItem
 import android.view.View
 import android.widget.FrameLayout
+import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import androidx.recyclerview.widget.LinearLayoutManager
 import cc.osama.cryptchat.*
+import cc.osama.cryptchat.db.Message
 import cc.osama.cryptchat.db.Server
 import cc.osama.cryptchat.db.User
 import kotlinx.android.synthetic.main.activity_server_users_list.*
@@ -112,9 +114,9 @@ class ServerUsersList : RecyclerViewImplementer<User.Conversation>() {
 
   fun refreshConversations() {
     val db = Cryptchat.db(applicationContext)
-    AsyncExec.run {
+    AsyncExec.run(AsyncExec.Companion.Threads.Db) {
       val newSet = db.users().findConversationsOnServer(serverId = server.id)
-      it.execMainThread {
+      AsyncExec.onUiThread {
         dataset.clear()
         dataset.addAll(newSet)
         viewAdapter.notifyDataSetChanged()
@@ -153,6 +155,28 @@ class ServerUsersList : RecyclerViewImplementer<User.Conversation>() {
       holder.view.conversationDateHolder.text = formatter.format(Date(conversation.lastMessageDate))
     } else {
       holder.view.conversationDateHolder.visibility = View.INVISIBLE
+    }
+    if (conversation.messageStatus != null && conversation.messageStatus < Message.UNDECRYPTED) {
+      val icon = when(conversation.messageStatus) {
+        Message.INITIAL_STATE -> {
+          R.drawable.ic_hourglass_empty_black_24dp
+        }
+        Message.NEEDS_RETRY -> {
+          R.drawable.ic_hourglass_empty_black_24dp
+        }
+        Message.SENT -> {
+          R.drawable.ic_check_black_24dp
+        }
+        else -> {
+          R.drawable.ic_error_outline_black_24dp
+        }
+      }
+      holder.view.messageStatusIconUsersList.setImageResource(icon)
+    } else {
+      holder.view.messageStatusIconUsersList.visibility = View.GONE
+      val params = holder.view.lastMessageContainer.layoutParams as ConstraintLayout.LayoutParams
+      params.marginStart = 0
+      holder.view.lastMessageContainer.layoutParams = params
     }
     if (conversation.unreadCount > 0) {
       holder.view.conversationUnreadCountHolder.visibility = View.VISIBLE

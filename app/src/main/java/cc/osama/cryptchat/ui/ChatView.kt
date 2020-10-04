@@ -4,11 +4,9 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
-import android.graphics.drawable.BitmapDrawable
 import android.os.Bundle
 import android.view.Menu
 import android.view.MenuItem
-import android.view.View
 import android.widget.FrameLayout
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -18,7 +16,6 @@ import cc.osama.cryptchat.db.Server
 import cc.osama.cryptchat.db.User
 import kotlinx.android.synthetic.main.activity_chat_view.*
 import kotlinx.android.synthetic.main.sent_chat_message.view.*
-import kotlinx.android.synthetic.main.server_users_list_item.view.*
 import java.text.SimpleDateFormat
 import java.util.*
 import kotlin.collections.ArrayList
