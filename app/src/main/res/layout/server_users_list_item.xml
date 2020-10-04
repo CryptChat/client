@@ -25,11 +25,14 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="5dp"
-        tools:text="TextView"
+        android:ellipsize="end"
+        android:maxWidth="250dp"
+        android:singleLine="true"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="@+id/displayName"
         app:layout_constraintTop_toBottomOf="@+id/displayName"
-        app:layout_constraintVertical_chainStyle="packed" />
+        app:layout_constraintVertical_chainStyle="packed"
+        tools:text="TextView" />
 
     <TextView
         android:id="@+id/conversationDateHolder"
