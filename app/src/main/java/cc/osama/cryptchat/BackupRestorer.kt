@@ -6,6 +6,7 @@ import android.util.Log.d
 import android.util.Log.e
 import cc.osama.cryptchat.ui.RestoreBackup
 import cc.osama.cryptchat.worker.InstanceIdsManagerWorker
+import cc.osama.cryptchat.worker.SyncUsersWorker
 import java.io.FileOutputStream
 import java.io.InputStream
 import java.lang.Exception
@@ -30,7 +31,7 @@ class BackupRestorer(
   fun getProgress() = progress
 
   fun start(password: String) {
-    AsyncExec.run {
+    AsyncExec.run(AsyncExec.Companion.Threads.Network) {
       val file = applicationContext.getDatabasePath(Database.Name)
       var inputStream: InputStream? = null
       try {
@@ -96,7 +97,7 @@ class BackupRestorer(
             while (bytesRead != -1) {
               fileOutputStream.write(buffer, 0, bytesRead)
               progress = (totalBytesRead / fileSize.toDouble()) * 100
-              it.execMainThread {
+              AsyncExec.onUiThread {
                 activity?.notifyRestoreProgress(this)
               }
               bytesRead = cipherInputStream.read(buffer)
@@ -119,11 +120,33 @@ class BackupRestorer(
       } finally {
         inputStream?.close()
         Cryptchat.disableReadonly(applicationContext)
-        it.execMainThread {
+        AsyncExec.onUiThread {
           activity?.notifyRestoreComplete(this)
         }
       }
-      if (error != null) InstanceIdsManagerWorker.enqueue(applicationContext)
+      if (error == null) {
+        InstanceIdsManagerWorker.enqueue(applicationContext)
+        Cryptchat.db(applicationContext).servers().getAll().forEach {
+          SyncUsersWorker.enqueue(it.id, true, applicationContext)
+          CryptchatServer(applicationContext, it).request(
+            CryptchatRequest.Methods.GET,
+            "/my-avatar.json",
+            async = false,
+            success = { json ->
+              val url = CryptchatUtils.jsonOptString(json, "url")
+              if (url != null) {
+                AvatarsStore(it.id, null, applicationContext).download(
+                  it.urlForPath(url),
+                  applicationContext.resources
+                )
+              }
+            },
+            failure = { error ->
+              e("BackupRestorer", "Failed to download self avatar. serverId=${it.id}, error=$error")
+            }
+          )
+        }
+      }
     }
   }
 }

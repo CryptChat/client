@@ -86,7 +86,7 @@ class SyncUsersWorker(context: Context, params: WorkerParameters) : Worker(conte
                   serverId = server.id,
                   userId = id,
                   context = applicationContext
-                ).download(server.address + avatarUrl, applicationContext.resources)
+                ).download(server.urlForPath(avatarUrl), applicationContext.resources)
               }
             } else {
               var changed = false

@@ -4,8 +4,10 @@ import android.content.Context
 import android.content.res.Resources
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import android.util.Log.e
 import android.util.Log.w
 import java.io.File
+import java.lang.Exception
 import java.net.URL
 import java.util.*
 
@@ -39,6 +41,8 @@ class AvatarsStore(
         }
       }
       process(context.getFileStreamPath(tempPath), r)
+    } catch (ex: Exception) {
+      e("AvatarsStore", "avatar download failed", ex)
     } finally {
       val tempFile = context.getFileStreamPath(tempPath)
       if (tempFile.exists()) tempFile.delete()

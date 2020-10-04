@@ -23,7 +23,6 @@ data class Server (
   var userName: String?
 ) : Serializable {
   @Ignore val keyPair = ECKeyPair(publicKey = publicKey, privateKey = privateKey)
-  @Ignore private var lastReloadedAt = System.currentTimeMillis()
 
   constructor(
     id: Long = 0,
@@ -75,12 +74,7 @@ data class Server (
       instanceId = newCopy.instanceId
       userName = newCopy.userName
       isAdmin = newCopy.isAdmin
-      lastReloadedAt = System.currentTimeMillis()
     }
-  }
-
-  fun shouldReload() : Boolean {
-    return System.currentTimeMillis() - 1000 * 60 > lastReloadedAt
   }
 
   fun urlForPath(path: String) : String {
