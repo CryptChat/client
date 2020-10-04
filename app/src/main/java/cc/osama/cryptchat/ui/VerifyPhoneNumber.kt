@@ -75,8 +75,22 @@ class VerifyPhoneNumber : AppCompatActivity() {
         success = { json ->
           val userId = json.optLong("id", -1)
           val authToken = CryptchatUtils.jsonOptString(json, "auth_token")
+          val serverName = CryptchatUtils.jsonOptString(json, "server_name").let {
+            if (it != null && it.isNotEmpty()) it else "Cryptchat Server"
+          }
           if (userId != (-1).toLong() && authToken != null) {
-            val server = addServerToDatabase(address, userId, keyPair, senderId, authToken, instanceId)
+            val server = Cryptchat.db(applicationContext).servers().add(
+              Server(
+                address = address,
+                name = serverName,
+                userId = userId,
+                keyPair = keyPair,
+                senderId = senderId,
+                authToken = authToken,
+                instanceId = instanceId,
+                userName = null
+              )
+            )
             SupplyEphemeralKeysWorker.enqueue(serverId = server.id, batchSize = 500, context = applicationContext)
             SyncUsersWorker.enqueue(serverId = server.id, context = applicationContext)
             onUiThread {
@@ -94,18 +108,5 @@ class VerifyPhoneNumber : AppCompatActivity() {
         }
       )
     }
-  }
-
-  private fun addServerToDatabase(address: String, userId: Long, keyPair: ECKeyPair, senderId: String, authToken: String, instanceId: String?) : Server {
-    return Cryptchat.db(applicationContext).servers().add(Server(
-      address = address,
-      name = "SErVeR!&#_X", // TODO: FIX THIS!
-      userId = userId,
-      keyPair = keyPair,
-      senderId = senderId,
-      authToken = authToken,
-      instanceId = instanceId,
-      userName = null
-    ))
   }
 }
