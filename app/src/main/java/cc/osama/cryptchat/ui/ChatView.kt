@@ -145,8 +145,12 @@ class ChatView : RecyclerViewImplementer<ChatView.DisplayMessageStruct>() {
     super.onStart()
     if (Cryptchat.isReadonly(applicationContext)) {
       chatMessageSend.isEnabled = false
+      chatMessageInput.isEnabled = false
+      chatMessageInput.hint = resources.getText(R.string.chat_view_input_readonly_hint)
     } else {
       chatMessageSend.isEnabled = true
+      chatMessageInput.isEnabled = true
+      chatMessageInput.hint = resources.getText(R.string.chat_view_input_hint)
     }
     refreshMessagesStream()
     LocalBroadcastManager.getInstance(this).registerReceiver(receiver, IntentFilter(BROADCAST_INTENT))

@@ -54,7 +54,6 @@
     <string name="take_backup_view_backup_progress">"%1$.1f%% done…"</string>
     <string name="take_backup_view_backup_starting_backup_process">"Starting backup process…"</string>
     <string name="take_backup_view_backup_successful">"Backup has been created successfully!"</string>
-    <string name="chat_disabled_because_readonly">"Chat is disabled because the app is in read-only mode."</string>
     <string name="server_settings_disabled_because_readonly">"Server settings are currently disabled because the app is in read-only mode."</string>
     <string name="backup_process_confirmation_message">"The application will enter read-only mode which means many capabilities will be disabled such as sending and receiving messages. Continue?"</string>
     <string name="take_backup_view_toolbar_title">"Take new backup"</string>
@@ -78,6 +77,8 @@
     <string name="backup_restorer_failed_decryption_failed">"Restore failed because the backup file is corrupt or decryption key is wrong."</string>
     <string name="admin_web_view_toolbar_title">"Admin interface"</string>
     <string name="servers_list_users_count">"%1$d users"</string>
+    <string name="chat_view_input_hint">"Say something…"</string>
+    <string name="chat_view_input_readonly_hint">"<i>Chat is disabled because the app is in readonly mode</i>"</string>
     <string-array name="countries_codes">
         <item>+965</item>
         <item>+966</item>
