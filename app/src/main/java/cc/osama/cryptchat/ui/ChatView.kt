@@ -10,6 +10,8 @@ import android.view.MenuItem
 import android.widget.FrameLayout
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.LinearSmoothScroller
+import androidx.recyclerview.widget.RecyclerView
 import cc.osama.cryptchat.*
 import cc.osama.cryptchat.db.Message
 import cc.osama.cryptchat.db.Server
@@ -39,9 +41,14 @@ class ChatView : RecyclerViewImplementer<ChatView.DisplayMessageStruct>() {
   override val dataset = ArrayList<DisplayMessageStruct>()
   override val defaultLayout = R.layout.sent_chat_message
   override val viewAdapter = Adapter(dataset, defaultLayout, this)
-  override val viewManager = LinearLayoutManager(this)
+  override val viewManager = LinearLayoutManager(this).apply {
+    stackFromEnd = false
+  }
   private lateinit var server: Server
   private lateinit var user: User
+
+  private var lastVisibleItemPosition = -1
+  private var didInitialScroll = false
 
   private val receiver = object : BroadcastReceiver() {
     override fun onReceive(context: Context?, intent: Intent?) {
@@ -134,6 +141,23 @@ class ChatView : RecyclerViewImplementer<ChatView.DisplayMessageStruct>() {
         chatMessageInput.text.clear()
       }
     }
+    lastVisibleItemPosition = viewManager.findLastVisibleItemPosition()
+    chatBody.addOnScrollListener(object : RecyclerView.OnScrollListener() {
+      override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
+        super.onScrolled(recyclerView, dx, dy)
+        if (dy != 0) {
+          lastVisibleItemPosition = viewManager.findLastVisibleItemPosition()
+        }
+      }
+    })
+    chatBody.addOnLayoutChangeListener { v, left, top, right, bottom, oldLeft, oldTop, oldRight, oldBottom ->
+      if (shouldScrollToBottom() && bottom < oldBottom) {
+        LinearSmoothScroller(this).also {
+          it.targetPosition = dataset.size - 1
+          viewManager.startSmoothScroll(it)
+        }
+      }
+    }
   }
 
   override fun onStop() {
@@ -173,7 +197,10 @@ class ChatView : RecyclerViewImplementer<ChatView.DisplayMessageStruct>() {
       }
       AsyncExec.onUiThread {
         viewAdapter.notifyDataSetChanged()
-        chatBody.scrollToPosition(dataset.size - 1)
+        if (shouldScrollToBottom() || !didInitialScroll) {
+          chatBody.scrollToPosition(dataset.size - 1)
+          didInitialScroll = true
+        }
       }
     }
   }
@@ -247,4 +274,8 @@ class ChatView : RecyclerViewImplementer<ChatView.DisplayMessageStruct>() {
   }
 
   private fun db() = Cryptchat.db(applicationContext)
+
+  private fun shouldScrollToBottom() : Boolean {
+    return (lastVisibleItemPosition + 1 == dataset.size) || lastVisibleItemPosition == -1
+  }
 }
