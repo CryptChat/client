@@ -16,7 +16,7 @@ class Cryptchat : Application() {
   companion object {
     const val MESSAGES_CHANNEL_ID = "CRYPTCHAT_MESSAGES_CHANNEL"
     private var DB_INSTANCE: Database? = null
-    private lateinit var sharedPrefs: SharedPreferences
+    private var sharedPrefs: SharedPreferences? = null
     fun db(context: Context): Database {
       return DB_INSTANCE ?: synchronized(this) {
         DB_INSTANCE ?: Room.databaseBuilder(
@@ -47,13 +47,11 @@ class Cryptchat : Application() {
     }
 
     fun sharedPreferences(context: Context) : SharedPreferences {
-      return if (this::sharedPrefs.isInitialized) {
-        sharedPrefs
-      } else {
-        val name = context.packageName + "-shared-preferences"
-        val pref = context.getSharedPreferences(name, Context.MODE_PRIVATE)
-        sharedPrefs = pref
-        sharedPrefs
+      return sharedPrefs ?: synchronized(this) {
+        sharedPrefs ?: context.getSharedPreferences(
+          context.packageName + "-shared-preferences",
+          Context.MODE_PRIVATE
+        ).also { sharedPrefs = it }
       }
     }
 
