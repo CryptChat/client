@@ -150,8 +150,9 @@ class ChatView : RecyclerViewImplementer<ChatView.DisplayMessageStruct>() {
         }
       }
     })
-    chatBody.addOnLayoutChangeListener { v, left, top, right, bottom, oldLeft, oldTop, oldRight, oldBottom ->
-      if (shouldScrollToBottom() && bottom < oldBottom) {
+    chatBody.addOnLayoutChangeListener { _, _, _, _, bottom, _, _, _, oldBottom ->
+      if ((lastVisibleItemPosition + 1 == dataset.size || lastVisibleItemPosition == -1)
+        && bottom < oldBottom) {
         LinearSmoothScroller(this).also {
           it.targetPosition = dataset.size - 1
           viewManager.startSmoothScroll(it)
@@ -182,6 +183,7 @@ class ChatView : RecyclerViewImplementer<ChatView.DisplayMessageStruct>() {
 
   private fun refreshMessagesStream() {
     AsyncExec.run(AsyncExec.Companion.Threads.Db) {
+      val scrollToBottom = viewManager.findLastVisibleItemPosition() + 1 == dataset.size
       synchronized(dataset) {
         val lastId = dataset.maxBy { m -> m.id }?.id ?: 0
         val messages = db().messages().findConversationMessages(
@@ -197,7 +199,7 @@ class ChatView : RecyclerViewImplementer<ChatView.DisplayMessageStruct>() {
       }
       AsyncExec.onUiThread {
         viewAdapter.notifyDataSetChanged()
-        if (shouldScrollToBottom() || !didInitialScroll) {
+        if (scrollToBottom || !didInitialScroll) {
           chatBody.scrollToPosition(dataset.size - 1)
           didInitialScroll = true
         }
@@ -274,8 +276,4 @@ class ChatView : RecyclerViewImplementer<ChatView.DisplayMessageStruct>() {
   }
 
   private fun db() = Cryptchat.db(applicationContext)
-
-  private fun shouldScrollToBottom() : Boolean {
-    return (lastVisibleItemPosition + 1 == dataset.size) || lastVisibleItemPosition == -1
-  }
 }
