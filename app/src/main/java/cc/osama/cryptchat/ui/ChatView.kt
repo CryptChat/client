@@ -8,6 +8,7 @@ import android.os.Bundle
 import android.view.Menu
 import android.view.MenuItem
 import android.widget.FrameLayout
+import androidx.appcompat.app.AlertDialog
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.LinearSmoothScroller
@@ -135,6 +136,22 @@ class ChatView : RecyclerViewImplementer<ChatView.DisplayMessageStruct>() {
           handler.saveToDb {
             AsyncExec.run(AsyncExec.Companion.Threads.Network) {
               handler.process()
+              val error = handler.getError()
+              if (error != null && error.isClientError) {
+                AsyncExec.onUiThread {
+                  val message = if (error.serverMessages.isNotEmpty()) {
+                    error.serverMessages.joinToString("\n")
+                  } else {
+                    resources.getString(R.string.chat_view_server_rejected_message_no_reason)
+                  }
+                  AlertDialog.Builder(this).apply {
+                    setNegativeButton(R.string.dialog_ok) { _, _ ->  }
+                    setTitle(R.string.chat_view_server_rejected_message_title)
+                    setMessage(message)
+                    create().show()
+                  }
+                }
+              }
             }
           }
         }

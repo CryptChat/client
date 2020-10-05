@@ -79,6 +79,8 @@
     <string name="servers_list_users_count">"%1$d users"</string>
     <string name="chat_view_input_hint">"Say something…"</string>
     <string name="chat_view_input_readonly_hint">"<i>Chat is disabled because the app is in readonly mode</i>"</string>
+    <string name="chat_view_server_rejected_message_title">"Message rejected"</string>
+    <string name="chat_view_server_rejected_message_no_reason">"The server rejected your message and did not provide a reason."</string>
     <string-array name="countries_codes">
         <item>+965</item>
         <item>+966</item>

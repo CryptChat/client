@@ -37,6 +37,10 @@ class OutboundMessageHandler(
     user = user
   )
 
+  private var errorObject: CryptchatRequest.ErrorMetadata? = null
+
+  fun getError() = errorObject
+
   fun process() {
     val stringKey = message.receiverEphemeralPublicKey
     val idOnReceiverDevice = message.receiverEphemeralKeyPairId
@@ -47,15 +51,15 @@ class OutboundMessageHandler(
       )
       encryptAndSend(ephPubKey)
     } else {
-      fetchReceiverEphemeralPublicKey { ephPubKey, serverError ->
-        if (serverError == null) {
+      fetchReceiverEphemeralPublicKey { ephPubKey, error ->
+        if (error == null) {
           message.receiverEphemeralKeyPairId = ephPubKey?.idOnUserDevice
           message.receiverEphemeralPublicKey = ephPubKey?.key?.toString()
           encryptAndSend(ephPubKey)
-        } else if (serverError.isServerError ||
-          serverError.isNoConnectionError ||
-          serverError.isTimeoutError ||
-          serverError.isUnknownHostError
+        } else if (error.isServerError ||
+          error.isNoConnectionError ||
+          error.isTimeoutError ||
+          error.isUnknownHostError
         ) {
           message.status = Message.NEEDS_RETRY
           updateMessageInDb()
@@ -122,6 +126,7 @@ class OutboundMessageHandler(
         message.idOnServer = idOnServer
         updateMessageInDb()
       }, failure = {
+        errorObject = it
         if (it.isUnknownHostError ||
           it.isTimeoutError ||
           it.isNoConnectionError ||
@@ -163,6 +168,7 @@ class OutboundMessageHandler(
         callback(ephemeralPublicKey, null)
       },
       failure = {
+        errorObject = it
         if (it.statusCode == 404) {
           message.status = Message.RECEIVER_DELETED
           updateMessageInDb()
