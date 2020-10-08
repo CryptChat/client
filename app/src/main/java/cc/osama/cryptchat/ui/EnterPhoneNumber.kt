@@ -2,7 +2,9 @@ package cc.osama.cryptchat.ui
 
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.telephony.PhoneNumberFormattingTextWatcher
 import android.util.Log.*
+import android.view.MenuItem
 import android.view.View
 import android.widget.ArrayAdapter
 import cc.osama.cryptchat.R
@@ -17,6 +19,8 @@ class EnterPhoneNumber : AppCompatActivity() {
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
     setContentView(R.layout.activity_enter_phone_number)
+    setSupportActionBar(enterPhoneNumberToolbar)
+    supportActionBar?.setDisplayHomeAsUpEnabled(true)
     val countryCodes = ArrayList<String>()
     countryCodes.addAll(resources.getStringArray(R.array.countries_codes))
     ArrayAdapter(this, android.R.layout.simple_spinner_dropdown_item, countryCodes).also { adapter ->
@@ -67,6 +71,15 @@ class EnterPhoneNumber : AppCompatActivity() {
         }
       )
     }
+  }
+
+  override fun onOptionsItemSelected(item: MenuItem): Boolean {
+    if (item.itemId == android.R.id.home) {
+      onBackPressed()
+    } else {
+      return super.onOptionsItemSelected(item)
+    }
+    return true
   }
 
   private fun toggleErrorMessage(message: String? = null) {
