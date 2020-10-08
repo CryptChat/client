@@ -120,19 +120,9 @@ class ChatView : RecyclerViewImplementer<ChatView.DisplayMessageStruct>() {
       )
     }
     chatMessageSend.isEnabled = chatMessageInput.text.toString().trim().isNotEmpty()
-    if (chatMessageSend.isEnabled) {
-      sendButtonContainer.alpha = 1.0F
-    } else {
-      sendButtonContainer.alpha = .7F
-    }
     chatMessageInput.addTextChangedListener(CryptchatTextWatcher(
       on = { s, _, _, _ ->
         chatMessageSend.isEnabled = s != null && s.trim().isNotEmpty()
-        if (chatMessageSend.isEnabled) {
-          sendButtonContainer.alpha = 1.0F
-        } else {
-          sendButtonContainer.alpha = .7F
-        }
       }
     ))
     chatMessageSend.setOnClickListener {
@@ -198,11 +188,11 @@ class ChatView : RecyclerViewImplementer<ChatView.DisplayMessageStruct>() {
   override fun onStart() {
     super.onStart()
     if (Cryptchat.isReadonly(applicationContext)) {
-      sendButtonContainer.visibility = View.GONE
+      chatMessageSend.visibility = View.GONE
       chatMessageInput.isEnabled = false
       chatMessageInput.hint = resources.getText(R.string.chat_view_input_readonly_hint)
     } else {
-      sendButtonContainer.visibility = View.VISIBLE
+      chatMessageSend.visibility = View.VISIBLE
       chatMessageInput.isEnabled = true
       chatMessageInput.hint = resources.getText(R.string.chat_view_input_hint)
     }

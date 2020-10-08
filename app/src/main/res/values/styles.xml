@@ -1,15 +1,23 @@
 <resources>
-    <style name="AppTheme" parent="Theme.AppCompat.Light.NoActionBar">
+    <style name="AppTheme" parent="Theme.MaterialComponents.DayNight.NoActionBar">
         <item name="colorPrimary">@color/brandPrimary</item>
         <item name="colorPrimaryDark">@color/brandPrimary</item>
         <item name="colorAccent">@color/brandTertiary</item>
         <item name="colorSecondary">@color/brandSecondary</item>
         <item name="colorSecondaryVariant">@color/brandSecondaryHigh</item>
         <item name="colorPrimaryLow">@color/brandPrimaryLow</item>
+        <item name="materialButtonStyle">@style/AppTheme.Button</item>
     </style>
     
     <style name="AppTheme.ToolbarTheme" parent="ThemeOverlay.AppCompat.ActionBar">
         <item name="colorControlNormal">?attr/colorSecondary</item>
     </style>
 
+    <style name="AppTheme.Button" parent="Widget.MaterialComponents.Button">
+        <item name="materialThemeOverlay">@style/AppTheme.Button.ThemeOverlay</item>
+    </style>
+
+    <style name="AppTheme.Button.ThemeOverlay">
+        <item name="colorPrimary">@color/brandTertiary</item>
+    </style>
 </resources>

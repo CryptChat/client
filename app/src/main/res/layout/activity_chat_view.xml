@@ -88,29 +88,23 @@
         android:inputType="textMultiLine"
         android:minHeight="40dp"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toStartOf="@id/sendButtonContainer"
+        app:layout_constraintEnd_toStartOf="@id/chatMessageSend"
         app:layout_constraintStart_toStartOf="parent" />
 
-    <androidx.cardview.widget.CardView
-        android:id="@+id/sendButtonContainer"
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/chatMessageSend"
         android:layout_width="40dp"
         android:layout_height="40dp"
+        android:layout_gravity="center"
         android:layout_marginEnd="8dp"
-        android:background="?attr/colorSecondary"
-        android:elevation="2dp"
-        app:cardCornerRadius="50dp"
+        android:insetLeft="0dp"
+        android:insetTop="0dp"
+        android:insetRight="0dp"
+        android:insetBottom="0dp"
+        app:icon="@drawable/ic_arrow_forward_black_24dp"
+        app:iconGravity="textStart"
+        app:iconPadding="0dp"
         app:layout_constraintBottom_toBottomOf="@+id/chatMessageInput"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="@+id/chatMessageInput">
-
-        <ImageButton
-            android:id="@+id/chatMessageSend"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:layout_gravity="center"
-            android:background="?attr/colorAccent"
-            android:tint="?attr/colorSecondary"
-            app:srcCompat="@drawable/ic_arrow_forward_black_24dp" />
-    </androidx.cardview.widget.CardView>
-
+        app:layout_constraintTop_toTopOf="@+id/chatMessageInput" />
 </androidx.constraintlayout.widget.ConstraintLayout>
