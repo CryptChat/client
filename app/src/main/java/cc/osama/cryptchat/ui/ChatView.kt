@@ -7,6 +7,7 @@ import android.content.IntentFilter
 import android.os.Bundle
 import android.view.Menu
 import android.view.MenuItem
+import android.view.View
 import android.widget.FrameLayout
 import androidx.appcompat.app.AlertDialog
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
@@ -118,9 +119,20 @@ class ChatView : RecyclerViewImplementer<ChatView.DisplayMessageStruct>() {
         FrameLayout.LayoutParams.MATCH_PARENT
       )
     }
+    chatMessageSend.isEnabled = chatMessageInput.text.toString().trim().isNotEmpty()
+    if (chatMessageSend.isEnabled) {
+      sendButtonContainer.alpha = 1.0F
+    } else {
+      sendButtonContainer.alpha = .7F
+    }
     chatMessageInput.addTextChangedListener(CryptchatTextWatcher(
       on = { s, _, _, _ ->
         chatMessageSend.isEnabled = s != null && s.trim().isNotEmpty()
+        if (chatMessageSend.isEnabled) {
+          sendButtonContainer.alpha = 1.0F
+        } else {
+          sendButtonContainer.alpha = .7F
+        }
       }
     ))
     chatMessageSend.setOnClickListener {
@@ -186,11 +198,11 @@ class ChatView : RecyclerViewImplementer<ChatView.DisplayMessageStruct>() {
   override fun onStart() {
     super.onStart()
     if (Cryptchat.isReadonly(applicationContext)) {
-      chatMessageSend.isEnabled = false
+      sendButtonContainer.visibility = View.GONE
       chatMessageInput.isEnabled = false
       chatMessageInput.hint = resources.getText(R.string.chat_view_input_readonly_hint)
     } else {
-      chatMessageSend.isEnabled = true
+      sendButtonContainer.visibility = View.VISIBLE
       chatMessageInput.isEnabled = true
       chatMessageInput.hint = resources.getText(R.string.chat_view_input_hint)
     }

@@ -37,6 +37,8 @@
         android:layout_height="wrap_content"
         android:layout_marginBottom="16dp"
         android:text="@string/restore_backup_start_button"
+        android:backgroundTint="?attr/colorAccent"
+        android:textColor="?attr/colorSecondary"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent" />
@@ -49,7 +51,8 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/restoreBackupToolbar"
-        android:alpha="0.75"
+        android:alpha="0.85"
+        android:tint="?attr/colorPrimary"
         app:srcCompat="@drawable/ic_restore_black_24dp" />
 
     <TextView
@@ -70,14 +73,14 @@
         android:id="@+id/backupRestoreStatus"
         android:layout_width="375dp"
         android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
+        android:layout_marginTop="16dp"
         android:alpha="0.75"
-        android:textSize="14sp"
+        android:gravity="center"
+        android:textSize="18sp"
         android:visibility="invisible"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/textView5"
-        android:gravity="center"
         tools:text="TextView"
         tools:visibility="visible" />
 
@@ -86,6 +89,7 @@
         style="@style/Widget.AppCompat.ProgressBar.Horizontal"
         android:layout_width="250dp"
         android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
         android:visibility="invisible"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
