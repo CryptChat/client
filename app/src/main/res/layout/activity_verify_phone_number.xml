@@ -6,6 +6,19 @@
     android:layout_height="match_parent"
     tools:context=".ui.VerifyPhoneNumber">
 
+    <androidx.appcompat.widget.Toolbar
+        android:id="@+id/verifyPhoneNumberToolbar"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:background="?attr/colorPrimary"
+        android:minHeight="?attr/actionBarSize"
+        android:theme="@style/AppTheme.ToolbarTheme"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:title="@string/verify_phone_number_view_title"
+        app:titleTextColor="?attr/colorSecondary" />
+
     <EditText
         android:id="@+id/verificationCodeField"
         android:layout_width="wrap_content"
@@ -19,13 +32,20 @@
         app:layout_constraintHorizontal_bias="0.5"
         app:layout_constraintHorizontal_chainStyle="packed"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toBottomOf="@+id/verifyPhoneNumberToolbar" />
 
-    <Button
+    <com.google.android.material.button.MaterialButton
         android:id="@+id/verificationCodeSubmit"
-        android:layout_width="50dp"
-        android:layout_height="50dp"
-        android:drawableStart="@drawable/ic_arrow_forward_black_24dp"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:layout_marginStart="8dp"
+        android:insetLeft="0dp"
+        android:insetTop="0dp"
+        android:insetRight="0dp"
+        android:insetBottom="0dp"
+        app:icon="@drawable/ic_arrow_forward_black_24dp"
+        app:iconGravity="textStart"
+        app:iconPadding="0dp"
         app:layout_constraintBottom_toBottomOf="@+id/verificationCodeField"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.5"
@@ -42,4 +62,5 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/verificationCodeField" />
+
 </androidx.constraintlayout.widget.ConstraintLayout>

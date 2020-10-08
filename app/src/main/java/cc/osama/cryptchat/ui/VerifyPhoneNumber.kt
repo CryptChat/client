@@ -7,6 +7,7 @@ import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
 import android.util.Log.*
+import android.view.MenuItem
 import cc.osama.cryptchat.*
 import cc.osama.cryptchat.db.EphemeralKey
 import cc.osama.cryptchat.db.Server
@@ -33,16 +34,23 @@ class VerifyPhoneNumber : AppCompatActivity() {
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
     setContentView(R.layout.activity_verify_phone_number)
-    verificationCodeField.addTextChangedListener(object : TextWatcher {
-      override fun afterTextChanged(s: Editable?) {}
-      override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
-      override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
-        verificationCodeSubmit.isEnabled = s != null && s.length == 8
-      }
-    })
+    setSupportActionBar(verifyPhoneNumberToolbar)
+    supportActionBar?.setDisplayHomeAsUpEnabled(true)
+    verificationCodeField.addTextChangedListener(CryptchatTextWatcher(on = { s, _, _, _ ->
+      verificationCodeSubmit.isEnabled = s != null && s.length == 8
+    }))
     verificationCodeSubmit.setOnClickListener {
       submitButtonHandler()
     }
+  }
+
+  override fun onOptionsItemSelected(item: MenuItem): Boolean {
+    if (item.itemId == android.R.id.home) {
+      onBackPressed()
+    } else {
+      return super.onOptionsItemSelected(item)
+    }
+    return true
   }
 
   private fun submitButtonHandler() {

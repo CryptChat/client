@@ -8,6 +8,7 @@
     <string name="registration_id_missing">"Expected to receive a registration id, but received \"%1$s\""</string>
     <string name="country_code">"Country code"</string>
     <string name="verification_code">"Verification code"</string>
+    <string name="verify_phone_number_view_title">"Verify your phone number"</string>
     <string name="add_server_button">Go</string>
     <string name="go_phone_number">Go</string>
     <string name="server_already_added">"Server already added"</string>
