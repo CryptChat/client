@@ -8,7 +8,7 @@
         <item name="colorPrimaryLow">@color/brandPrimaryLow</item>
         <item name="materialButtonStyle">@style/AppTheme.Button</item>
     </style>
-    
+
     <style name="AppTheme.ToolbarTheme" parent="ThemeOverlay.AppCompat.ActionBar">
         <item name="colorControlNormal">?attr/colorSecondary</item>
     </style>
