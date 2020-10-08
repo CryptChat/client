@@ -5,6 +5,7 @@
         <item name="colorAccent">@color/brandTertiary</item>
         <item name="colorSecondary">@color/brandSecondary</item>
         <item name="colorSecondaryVariant">@color/brandSecondaryHigh</item>
+        <item name="colorPrimaryLow">@color/brandPrimaryLow</item>
     </style>
     
     <style name="AppTheme.ToolbarTheme" parent="ThemeOverlay.AppCompat.ActionBar">
