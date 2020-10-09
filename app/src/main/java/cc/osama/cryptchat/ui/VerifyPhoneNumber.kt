@@ -4,44 +4,87 @@ import android.content.Context
 import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import android.text.Editable
-import android.text.TextWatcher
 import android.util.Log.*
+import android.view.KeyEvent
 import android.view.MenuItem
+import android.widget.EditText
 import cc.osama.cryptchat.*
-import cc.osama.cryptchat.db.EphemeralKey
 import cc.osama.cryptchat.db.Server
-import cc.osama.cryptchat.db.User
 import cc.osama.cryptchat.worker.SupplyEphemeralKeysWorker
 import cc.osama.cryptchat.worker.SyncUsersWorker
 import com.google.firebase.iid.FirebaseInstanceId
 import kotlinx.android.synthetic.main.activity_verify_phone_number.*
-import org.json.JSONArray
 import org.json.JSONObject
 import java.io.IOException
+import java.lang.StringBuilder
+import kotlin.properties.Delegates
 
 class VerifyPhoneNumber : AppCompatActivity() {
   companion object {
-    fun createIntent(id: Long, address: String, senderId: String, context: Context) : Intent {
+    private const val TOKEN_SIZE = 8
+
+    fun createIntent(id: Long, address: String, senderId: String, phoneNumber: String, context: Context) : Intent {
       return Intent(context, VerifyPhoneNumber::class.java).also {
         it.putExtra("id", id)
         it.putExtra("address", address)
         it.putExtra("senderId", senderId)
+        it.putExtra("phoneNumber", phoneNumber)
       }
     }
   }
 
+  private lateinit var address: String
+  private lateinit var senderId: String
+  private lateinit var phoneNumber: String
+  private lateinit var fields: Array<EditText>
+  private var id by Delegates.notNull<Long>()
+
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
+
+    id = intent.extras?.getLong("id") as Long
+    address = intent.extras?.getString("address") as String
+    senderId = intent.extras?.getString("senderId") as String
+    phoneNumber = intent.extras?.getString("phoneNumber") as String
+
     setContentView(R.layout.activity_verify_phone_number)
     setSupportActionBar(verifyPhoneNumberToolbar)
     supportActionBar?.setDisplayHomeAsUpEnabled(true)
-    verificationCodeField.addTextChangedListener(CryptchatTextWatcher(on = { s, _, _, _ ->
-      verificationCodeSubmit.isEnabled = s != null && s.length == 8
-    }))
     verificationCodeSubmit.setOnClickListener {
       submitButtonHandler()
     }
+    fields = arrayOf(
+      verificationDigit1,
+      verificationDigit2,
+      verificationDigit3,
+      verificationDigit4,
+      verificationDigit5,
+      verificationDigit6,
+      verificationDigit7,
+      verificationDigit8
+    )
+    verificationCodeSubmit.isEnabled = getVerificationToken().length == TOKEN_SIZE
+    fields.forEachIndexed { index, editText ->
+      editText.addTextChangedListener(CryptchatTextWatcher(
+        before = { _, _, _, after ->
+          if (after == 1 && index + 1 < fields.size) {
+            fields[index + 1].requestFocus()
+          }
+        },
+        after = {
+          verificationCodeSubmit.isEnabled = getVerificationToken().length == TOKEN_SIZE
+        }
+      ))
+      editText.setOnKeyListener { _, keyCode, _ ->
+        if (keyCode == KeyEvent.KEYCODE_DEL && index > 0 && editText.length() == 0) {
+          fields[index - 1].requestFocus()
+          return@setOnKeyListener true
+        }
+        return@setOnKeyListener false
+      }
+    }
+    verifyPhoneNumberTipHolder.text = resources.getString(R.string.verify_phone_number_view_tip, phoneNumber)
+    fields[0].requestFocus()
   }
 
   override fun onOptionsItemSelected(item: MenuItem): Boolean {
@@ -53,16 +96,17 @@ class VerifyPhoneNumber : AppCompatActivity() {
     return true
   }
 
-  private fun submitButtonHandler() {
-    val id = intent.extras?.getLong("id")
-    val address = intent.extras?.getString("address")
-    val senderId = intent.extras?.getString("senderId")
-    val token = verificationCodeField.text.toString()
-    if (id == null || address == null || senderId == null) {
-      d("VerifyPhoneNumber", "weird condition. id=$id, address=$address, senderId=$senderId.")
-      return
+  private fun getVerificationToken() : String {
+    val builder = StringBuilder()
+    fields.forEach {
+      builder.append(it.text.toString())
     }
-    AsyncExec.run {
+    return builder.toString()
+  }
+
+  private fun submitButtonHandler() {
+    val token = getVerificationToken()
+    AsyncExec.run(AsyncExec.Companion.Threads.Network) {
       val instanceId: String? = try {
         FirebaseInstanceId.getInstance().getToken(senderId, "FCM")
       } catch (ex: IOException) {

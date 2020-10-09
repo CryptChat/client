@@ -55,6 +55,7 @@ class EnterPhoneNumber : AppCompatActivity() {
                   id = id,
                   address = address,
                   senderId = senderId,
+                  phoneNumber = number,
                   context = this@EnterPhoneNumber
                 )
               )
