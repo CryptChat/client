@@ -21,8 +21,8 @@
 
     <Spinner
         android:id="@+id/countryCodeField"
-        android:layout_width="100dp"
-        android:layout_height="50dp"
+        android:layout_width="wrap_content"
+        android:layout_height="40dp"
         android:layout_marginStart="16dp"
         android:dropDownWidth="120dp"
         app:layout_constraintBottom_toBottomOf="@+id/phoneNumberField"
@@ -30,46 +30,70 @@
         app:layout_constraintTop_toTopOf="@+id/phoneNumberField" />
 
     <com.google.android.material.button.MaterialButton
-        android:id="@+id/goPhoneNumber"
-        android:layout_width="40dp"
+        android:id="@+id/enterPhoneNumberSubmitButton"
+        android:layout_width="wrap_content"
         android:layout_height="40dp"
-        android:layout_marginEnd="16dp"
+        android:layout_marginTop="24dp"
         android:autofillHints="phone"
         android:enabled="false"
-        android:insetLeft="0dp"
         android:insetTop="0dp"
-        android:insetRight="0dp"
         android:insetBottom="0dp"
+        android:text="@string/sumbit_button"
         app:icon="@drawable/ic_arrow_forward_black_24dp"
-        app:iconGravity="textStart"
-        app:iconPadding="0dp"
-        app:layout_constraintBottom_toBottomOf="@+id/phoneNumberField"
+        app:iconGravity="textEnd"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="@+id/phoneNumberField" />
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/phoneNumberField" />
 
     <EditText
         android:id="@+id/phoneNumberField"
         android:layout_width="0dp"
-        android:layout_height="50dp"
+        android:layout_height="40dp"
         android:layout_marginStart="8dp"
-        android:layout_marginEnd="8dp"
+        android:layout_marginTop="24dp"
+        android:layout_marginEnd="16dp"
         android:autofillHints=""
         android:ems="10"
         android:hint="@string/enter_phone_number"
         android:inputType="phone"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toStartOf="@+id/goPhoneNumber"
+        app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toEndOf="@+id/countryCodeField"
-        app:layout_constraintTop_toBottomOf="@+id/enterPhoneNumberToolbar" />
+        app:layout_constraintTop_toBottomOf="@+id/enterPhoneNumberExplanation" />
 
     <TextView
         android:id="@+id/errorPlaceholder"
-        android:layout_width="0dp"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="15dp"
-        android:visibility="invisible"
+        android:layout_marginTop="16dp"
+        android:gravity="center"
+        android:textColor="?attr/colorError"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/phoneNumberField" />
+        app:layout_constraintTop_toBottomOf="@+id/enterPhoneNumberSubmitButton"
+        tools:text="This is a placeholder for errors." />
+
+    <ImageView
+        android:id="@+id/imageView4"
+        android:layout_width="100dp"
+        android:layout_height="100dp"
+        android:layout_marginTop="128dp"
+        android:tint="?attr/colorPrimary"
+        android:alpha="0.65"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/enterPhoneNumberToolbar"
+        app:srcCompat="@drawable/ic_phone_android_black_24dp" />
+
+    <TextView
+        android:id="@+id/enterPhoneNumberExplanation"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="24dp"
+        android:maxWidth="350dp"
+        android:text="@string/enter_phone_number_view_explanation"
+        android:gravity="center"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/imageView4" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

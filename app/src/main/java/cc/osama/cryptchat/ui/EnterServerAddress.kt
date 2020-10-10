@@ -56,9 +56,7 @@ class EnterServerAddress : AppCompatActivity() {
             val serverDao = db.servers()
             val server = serverDao.findByAddress(address)
             if (server == null) {
-              val intent = Intent(this, EnterPhoneNumber::class.java)
-              intent.putExtra("address", address)
-              startActivity(intent)
+              startActivity(EnterPhoneNumber.createIntent(address, this))
             } else {
               errorMessage = resources.getString(R.string.server_already_added)
             }

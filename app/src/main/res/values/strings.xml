@@ -1,15 +1,17 @@
 <resources>
     <string name="app_name">"Cryptchat"</string>
     <string name="send_button">"Send"</string>
+    <string name="sumbit_button">"Submit"</string>
     <string name="enter_server_address">"https://example.com"</string>
     <string name="enter_server_address_toolbar_title">"Add new server"</string>
     <string name="enter_phone_number">"Phone number"</string>
     <string name="enter_phone_number_view_title">"Enter phone number"</string>
+    <string name="enter_phone_number_view_explanation">"Enter a phone number to use in this server. The phone number you use will be visible to all users in the server."</string>
     <string name="registration_id_missing">"Expected to receive a registration id, but received \"%1$s\""</string>
     <string name="country_code">"Country code"</string>
     <string name="verification_code">"Verification code"</string>
     <string name="verify_phone_number_view_title">"Verify your phone number"</string>
-    <string name="verify_phone_number_view_tip"><![CDATA[We\'ve sent an SMS to <b>%1$s</b> containing an 8-digits token.\nPlease enter the token below to continue:]]></string>
+    <string name="verify_phone_number_view_tip"><![CDATA[The server has sent an SMS to <b>%1$s</b> containing an 8-digits token.\nPlease enter the token below to continue:]]></string>
     <string name="verify_phone_number_verification_request_failed">"Verification request has failed without a reason. Status code: %1$d"</string>
     <string name="add_server_button">Go</string>
     <string name="go_phone_number">Go</string>
