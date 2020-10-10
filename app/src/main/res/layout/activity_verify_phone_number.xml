@@ -35,14 +35,16 @@
         app:layout_constraintTop_toBottomOf="@+id/linearLayout" />
 
     <TextView
-        android:id="@+id/errorPlaceholder"
-        android:layout_width="0dp"
+        android:id="@+id/verifyPhoneNumberErrorPlaceholder"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="16dp"
-        android:visibility="invisible"
+        android:maxWidth="350dp"
+        android:textColor="?attr/colorError"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/verificationCodeSubmit" />
+        app:layout_constraintTop_toBottomOf="@+id/verificationCodeSubmit"
+        tools:text="Hello this is a test can you tell me if this looks ok? more stuff in here to see how it looks when error is too long" />
 
     <LinearLayout
         android:id="@+id/linearLayout"

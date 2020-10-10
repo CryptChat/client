@@ -8,6 +8,7 @@ import android.util.Log.*
 import android.view.KeyEvent
 import android.view.MenuItem
 import android.widget.EditText
+import androidx.core.text.HtmlCompat
 import cc.osama.cryptchat.*
 import cc.osama.cryptchat.db.Server
 import cc.osama.cryptchat.worker.SupplyEphemeralKeysWorker
@@ -83,8 +84,13 @@ class VerifyPhoneNumber : AppCompatActivity() {
         return@setOnKeyListener false
       }
     }
-    verifyPhoneNumberTipHolder.text = resources.getString(R.string.verify_phone_number_view_tip, phoneNumber)
-    fields[0].requestFocus()
+    verifyPhoneNumberTipHolder.text = HtmlCompat.fromHtml(
+      getString(
+        R.string.verify_phone_number_view_tip,
+        phoneNumber
+      ),
+      HtmlCompat.FROM_HTML_MODE_COMPACT
+    )
   }
 
   override fun onOptionsItemSelected(item: MenuItem): Boolean {
@@ -106,6 +112,7 @@ class VerifyPhoneNumber : AppCompatActivity() {
 
   private fun submitButtonHandler() {
     val token = getVerificationToken()
+    verificationCodeSubmit.isEnabled = false
     AsyncExec.run(AsyncExec.Companion.Threads.Network) {
       val instanceId: String? = try {
         FirebaseInstanceId.getInstance().getToken(senderId, "FCM")
@@ -145,7 +152,7 @@ class VerifyPhoneNumber : AppCompatActivity() {
             )
             SupplyEphemeralKeysWorker.enqueue(serverId = server.id, batchSize = 500, context = applicationContext)
             SyncUsersWorker.enqueue(serverId = server.id, context = applicationContext)
-            onUiThread {
+            AsyncExec.onUiThread {
               startActivity(ServerUsersList.createIntent(server, this@VerifyPhoneNumber))
             }
           } else {
@@ -154,9 +161,23 @@ class VerifyPhoneNumber : AppCompatActivity() {
               "verification success callback weird condition. userId=$userId, authToken=$authToken, json=$json."
             )
           }
+          AsyncExec.onUiThread {
+            verificationCodeSubmit.isEnabled = true
+          }
         },
         failure = { error ->
-          e("VerifyPhoneNumber", "verification requests failed. $error", error.originalError)
+          AsyncExec.onUiThread {
+            if (error.serverMessages.isNotEmpty()) {
+              verifyPhoneNumberErrorPlaceholder.text = error.serverMessages.joinToString("\n")
+            } else {
+              verifyPhoneNumberErrorPlaceholder.text = resources.getString(
+                R.string.verify_phone_number_verification_request_failed,
+                error.statusCode
+              )
+            }
+            e("VerifyPhoneNumber", "verification requests failed. $error", error.originalError)
+            verificationCodeSubmit.isEnabled = true
+          }
         }
       )
     }

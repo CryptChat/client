@@ -9,7 +9,8 @@
     <string name="country_code">"Country code"</string>
     <string name="verification_code">"Verification code"</string>
     <string name="verify_phone_number_view_title">"Verify your phone number"</string>
-    <string name="verify_phone_number_view_tip">"We've sent an SMS to <b>%1$s</b> containing an 8-digits token.\nPlease enter the token below to continue:"</string>
+    <string name="verify_phone_number_view_tip"><![CDATA[We\'ve sent an SMS to <b>%1$s</b> containing an 8-digits token.\nPlease enter the token below to continue:]]></string>
+    <string name="verify_phone_number_verification_request_failed">"Verification request has failed without a reason. Status code: %1$d"</string>
     <string name="add_server_button">Go</string>
     <string name="go_phone_number">Go</string>
     <string name="server_already_added">"Server already added"</string>
