@@ -8,39 +8,46 @@
 
     <EditText
         android:id="@+id/serverAddressInput"
-        android:layout_width="0dp"
-        android:layout_height="50dp"
-        android:layout_marginStart="10dp"
-        android:layout_marginEnd="10dp"
+        android:layout_width="360dp"
+        android:layout_height="45dp"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="24dp"
+        android:layout_marginEnd="16dp"
         android:ems="10"
         android:hint="@string/enter_server_address"
         android:inputType="textPersonName"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toStartOf="@+id/addServerButton"
+        android:maxWidth="350dp"
+        app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/enterServerAddressToolbar" />
+        app:layout_constraintTop_toBottomOf="@+id/textView6" />
 
     <com.google.android.material.button.MaterialButton
         android:id="@+id/addServerButton"
-        android:layout_width="88dp"
+        android:layout_width="wrap_content"
         android:layout_height="40dp"
-        android:layout_marginEnd="10dp"
+        android:layout_marginTop="24dp"
         android:enabled="false"
-        android:text="@string/add_server_button"
-        android:insetLeft="0dp"
         android:insetTop="0dp"
-        android:insetRight="0dp"
         android:insetBottom="0dp"
-        app:layout_constraintBottom_toBottomOf="@+id/serverAddressInput"
+        android:text="@string/add_server_button"
+        app:icon="@drawable/ic_arrow_forward_black_24dp"
+        app:iconGravity="textEnd"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="@+id/serverAddressInput" />
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/serverAddressInput" />
 
     <TextView
         android:id="@+id/errorMessagePlaceholder"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:gravity="center"
+        android:maxWidth="360dp"
+        android:textColor="?attr/colorError"
+        app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/serverAddressInput" />
+        app:layout_constraintTop_toBottomOf="@+id/addServerButton"
+        tools:text="This is an error placeholder" />
 
     <androidx.appcompat.widget.Toolbar
         android:id="@+id/enterServerAddressToolbar"
@@ -54,5 +61,28 @@
         app:titleTextColor="?attr/colorSecondary"
         android:background="?attr/colorPrimary"
         app:title="@string/enter_server_address_toolbar_title" />
+
+    <ImageView
+        android:id="@+id/imageView5"
+        android:layout_width="100dp"
+        android:layout_height="100dp"
+        android:layout_marginTop="128dp"
+        android:tint="?attr/colorPrimary"
+        android:alpha="0.65"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/enterServerAddressToolbar"
+        app:srcCompat="@drawable/ic_group_add_black_24dp" />
+
+    <TextView
+        android:id="@+id/textView6"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:maxWidth="360dp"
+        android:text="@string/enter_server_address_explanation"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/imageView5" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

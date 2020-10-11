@@ -4,18 +4,12 @@ import android.content.Context
 import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import android.text.Editable
-import android.text.TextWatcher
-import android.view.Menu
+import android.util.Log.d
 import android.view.MenuItem
 import cc.osama.cryptchat.*
-import com.android.volley.ClientError
-import com.android.volley.NoConnectionError
-import com.android.volley.ServerError
 import kotlinx.android.synthetic.main.activity_enter_server_address.*
 import java.net.MalformedURLException
 import java.net.URL
-import java.net.UnknownHostException
 
 class EnterServerAddress : AppCompatActivity() {
   companion object {
@@ -29,48 +23,18 @@ class EnterServerAddress : AppCompatActivity() {
     setContentView(R.layout.activity_enter_server_address)
     setSupportActionBar(enterServerAddressToolbar)
     supportActionBar?.setDisplayHomeAsUpEnabled(true)
-    serverAddressInput.addTextChangedListener(object : TextWatcher {
-      override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
-      override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
-        addServerButton.isEnabled = s != null && s.isNotEmpty()
-      }
-      override fun afterTextChanged(s: Editable?) {}
-    })
+    serverAddressInput.addTextChangedListener(CryptchatTextWatcher(after = { s ->
+      addServerButton.isEnabled = s != null && s.isNotBlank()
+    }))
     addServerButton.setOnClickListener {
       errorMessagePlaceholder.text = null
       changeElementsEnabledStatus(false)
-      var address = serverAddressInput.text.toString().trim()
-      var errorMessage: String?
-      errorMessage = validateAddress(address)
-      if (errorMessage != null && errorMessage.isNotEmpty()) {
-        errorMessagePlaceholder.text = errorMessage
+      val address = canonicalAddress(serverAddressInput.text.toString().trim())
+      if (address == null) {
         changeElementsEnabledStatus(true)
         return@setOnClickListener
       }
-
-      address = getCanonicalAddress(address)
-      validateServer(address,
-        onValid = {
-          val db = Cryptchat.db(applicationContext)
-          AsyncExec.run {
-            val serverDao = db.servers()
-            val server = serverDao.findByAddress(address)
-            if (server == null) {
-              startActivity(EnterPhoneNumber.createIntent(address, this))
-            } else {
-              errorMessage = resources.getString(R.string.server_already_added)
-            }
-            it.execMainThread {
-              errorMessagePlaceholder.text = errorMessage
-              changeElementsEnabledStatus(true)
-            }
-          }
-        },
-        onInvalid = {
-          errorMessagePlaceholder.text = it
-          changeElementsEnabledStatus(true)
-        }
-      )
+      validateServer(address)
     }
   }
 
@@ -91,82 +55,71 @@ class EnterServerAddress : AppCompatActivity() {
     serverAddressInput.isEnabled = status
   }
 
-  private fun validateServer(address: String, onValid: () -> Unit, onInvalid: (message: String) -> Unit) {
-    return onValid()
+  private fun validateServer(address: String) {
     CryptchatServer.checkAddress(
       address = address,
-      success = {
-        val isCryptchat = it.optBoolean("is_cryptchat", false)
-        onUiThread {
-          if (isCryptchat) {
-            onValid()
+      success = { json ->
+        val isCryptchatServer = json.optBoolean("is_cryptchat", false)
+        if (!isCryptchatServer) {
+          AsyncExec.onUiThread {
+            errorMessagePlaceholder.text = resources.getString(R.string.not_a_cryptchat_server)
+            changeElementsEnabledStatus(true)
+          }
+          return@checkAddress
+        }
+        val db = Cryptchat.db(applicationContext)
+        val server = db.servers().findByAddress(address)
+        AsyncExec.onUiThread {
+          if (server == null) { // valid server
+            startActivity(EnterPhoneNumber.createIntent(address, this@EnterServerAddress))
           } else {
-            onInvalid(resources.getString(R.string.not_a_cryptchat_server))
+            errorMessagePlaceholder.text = resources.getString(R.string.server_already_added)
+            changeElementsEnabledStatus(true)
           }
         }
       },
       failure = {
-        val errorMessage = if (it.isUnknownHostError) {
-          resources.getString(R.string.unknown_host)
-        } else if (it.isClientError) {
-          val responseCode = it.statusCode
-          if (responseCode == 404) {
-            resources.getString((R.string.not_a_cryptchat_server))
-          } else {
-            resources.getString(R.string.client_error_occurred, responseCode)
-          }
-        } else if (it.isNoConnectionError) {
-          resources.getString(R.string.not_pointing_to_server)
-        } else if (it.isServerError) {
-          val responseCode = it.statusCode
-          if (responseCode >= 500) {
-            resources.getString(R.string.server_down)
-          } else {
-            resources.getString(R.string.server_error_occurred, responseCode)
-          }
+        d("TESTTTTT", it.toString())
+        val errorId = if (it.statusCode in 300..499) {
+          R.string.not_a_cryptchat_server
         } else {
-          resources.getString(R.string.unknown_error_occurred, "${it.javaClass}")
+          it.genericErrorId
         }
-        onUiThread {
-          onInvalid(errorMessage)
+        AsyncExec.onUiThread {
+          errorMessagePlaceholder.text = resources.getString(errorId)
+          changeElementsEnabledStatus(true)
         }
       }
     )
   }
 
-  private fun getCanonicalAddress(address: String): String {
-    var adrs = address
-    if (!adrs.matches(Regex("^https?://.+", setOf(RegexOption.IGNORE_CASE)))) {
-      adrs = "https://$adrs"
-    }
-    val url = URL(adrs)
-    /*************** UNCOMMENT THIS LINE **************/
-    // return "https://${url.host}"
-    return "http://${url.authority}"
-  }
-
-  private fun validateAddress(address: String): String? {
-    if (address.isEmpty()) {
-      return resources.getString(R.string.empty_address)
-    }
-    return try {
+  private fun canonicalAddress(address: String?) : String? {
+    try {
       val url = URL(address)
-      if (listOf("https", "http").indexOf(url.protocol) == -1) {
-        return resources.getString(R.string.unsupported_protocol, url.protocol ?: "<unknown>")
+      if (url.protocol != "https") {
+        errorMessagePlaceholder.text = resources.getString(R.string.disallowed_protocol, url.protocol ?: "<unknown>")
+        return null
       }
-      if (url.host == null || url.host.isEmpty()) {
-        return resources.getString(R.string.invalid_address, address)
+      if (url.host == null || url.host.isBlank()) {
+        errorMessagePlaceholder.text = resources.getString(R.string.invalid_address, address)
+        return null
       }
-      null
+      // TODO(Uncomment this line)
+      // return "https://${url.host}"
+      return "http://${url.authority}"
     } catch (err: MalformedURLException) {
-      var errorMessage = err.message
+      val errorMessage = err.message
       if (errorMessage == null || errorMessage.isEmpty()) {
-        errorMessage = resources.getString(R.string.invalid_address, address)
+        errorMessagePlaceholder.text = resources.getString(R.string.invalid_address, address)
+        return null
       }
-      if (errorMessage.contains("no protocol", ignoreCase = true)) {
-        validateAddress("https://$address")
+      return if (errorMessage.contains("no protocol", ignoreCase = true) ||
+        errorMessage.contains("unknown protocol", ignoreCase = true)) {
+        canonicalAddress("https://$address")
       } else {
-        errorMessage
+        d("TESTTTTT", errorMessage)
+        errorMessagePlaceholder.text = errorMessage
+        null
       }
     }
   }

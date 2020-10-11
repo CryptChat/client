@@ -3,7 +3,6 @@ package cc.osama.cryptchat
 import android.os.Handler
 import android.os.Looper
 import android.util.Log.w
-import cc.osama.cryptchat.db.Server
 import org.json.JSONException
 import org.json.JSONObject
 import java.io.*
@@ -13,7 +12,6 @@ import java.net.HttpURLConnection
 import java.net.SocketTimeoutException
 import java.net.URL
 import java.net.UnknownHostException
-import java.util.*
 import java.util.concurrent.Executors
 import kotlin.collections.ArrayList
 import kotlin.collections.HashMap
@@ -61,6 +59,34 @@ class CryptchatRequest(
     val serverMessages: Array<String> = emptyArray(),
     val originalError: Throwable? = null
   ) {
+    val genericErrorId = let {
+      when {
+        isUnknownHostError -> {
+          R.string.unknown_host_error
+        }
+        isNoConnectionError -> {
+          R.string.no_connection_error
+        }
+        isTimeoutError -> {
+          R.string.timeout_error
+        }
+        hadEncodingError -> {
+          R.string.encoding_error
+        }
+        hadMalformedJson -> {
+          R.string.malformed_json_error
+        }
+        isClientError -> {
+          R.string.client_error
+        }
+        isServerError -> {
+          R.string.server_error
+        }
+        else -> {
+          R.string.generic_error
+        }
+      }
+    }
     override fun toString() : String {
       val fullError = if (originalError != null) {
         arrayOf(
@@ -167,7 +193,7 @@ class CryptchatRequest(
   }
 
   private fun execute() {
-    var isEncodingError = false
+    var isEncodingError: Boolean
     var isMalformedJsonError = false
     try {
       val response = connect()
@@ -196,7 +222,7 @@ class CryptchatRequest(
         -1 -> {
           // I doubt this case is needed, but let's add just to
           // be on the safe side
-          w("CRYPTCHAT HTTP ERROR", "WEIRD CONDITION OCCURRED!")
+          w("CryptchatRequest", "WEIRD CONDITION OCCURRED!")
           failure(ErrorMetadata(
             statusCode = statusCode,
             hadMalformedJson = isMalformedJsonError,
@@ -236,13 +262,6 @@ class CryptchatRequest(
         isNoConnectionError = true,
         originalError = ex
       ))
-    // } catch (ex: Throwable) {
-    //   failure(ErrorMetadata(
-    //     statusCode = statusCode,
-    //     hadMalformedJson = isMalformedJsonError,
-    //     hadEncodingError = isEncodingError,
-    //     originalError = ex
-    //   ))
     } finally {
       headers()
     }
@@ -276,27 +295,28 @@ class CryptchatRequest(
         it[i.key] = i.value?.joinToString(", ") ?: ""
       }
     }
-    var stream: InputStream? = null
     try {
-      stream = try {
+      val responseBuilder = StringBuilder()
+      try {
         connection.inputStream
       } catch (ex: IOException) {
         connection.errorStream
-      }
-      // BufferedReader and InputStreamReader speed things up
-      // according to the documentation
-      val input = BufferedReader(InputStreamReader(stream, Charsets.UTF_8))
-      val responseBuilder = StringBuilder()
-      var line = input.readLine()
-      while (line != null) {
-        responseBuilder.append(line)
-        line = input.readLine()
+      }.use { stream ->
+        // BufferedReader and InputStreamReader speed things up
+        // according to the documentation
+        InputStreamReader(stream, Charsets.UTF_8).use { inputStreamReader ->
+          BufferedReader(inputStreamReader).use { bufferedReader ->
+            var line = bufferedReader.readLine()
+            while (line != null) {
+              responseBuilder.append(line)
+              line = bufferedReader.readLine()
+            }
+          }
+        }
       }
       return responseBuilder.toString()
     } catch (ex: UnsupportedEncodingException) {
       return null
-    } finally {
-      stream?.close()
     }
   }
 

@@ -4,6 +4,8 @@
     <string name="sumbit_button">"Submit"</string>
     <string name="enter_server_address">"https://example.com"</string>
     <string name="enter_server_address_toolbar_title">"Add new server"</string>
+    <string name="enter_server_address_explanation">"Enter the address of the Cryptchat server you want to add to continue. The server must be secured with <b>HTTPS</b>."</string>
+    <string name="enter_server_address_canonical_address">"Canonical: %1$s"</string>
     <string name="enter_phone_number">"Phone number"</string>
     <string name="enter_phone_number_view_title">"Enter phone number"</string>
     <string name="enter_phone_number_view_explanation">"Enter a phone number to use in this server. The phone number you use will be visible to all users in the server."</string>
@@ -13,19 +15,12 @@
     <string name="verify_phone_number_view_title">"Verify your phone number"</string>
     <string name="verify_phone_number_view_tip"><![CDATA[The server has sent an SMS to <b>%1$s</b> containing an 8-digits token.\nPlease enter the token below to continue:]]></string>
     <string name="verify_phone_number_verification_request_failed">"Verification request has failed without a reason. Status code: %1$d"</string>
-    <string name="add_server_button">Go</string>
+    <string name="add_server_button">Next</string>
     <string name="go_phone_number">Go</string>
-    <string name="server_already_added">"Server already added"</string>
+    <string name="server_already_added">"You are already registered in this server!"</string>
     <string name="not_a_cryptchat_server">"This address doesn't appear to be pointing to a Cryptchat server."</string>
-    <string name="not_pointing_to_server">"This address doesn't appear to be pointing to a server."</string>
-    <string name="server_down">"The server appears to be down at the moment. Please try again later or contact the site administrator."</string>
-    <string name="unknown_host">"Unknown host"</string>
-    <string name="server_error_occurred">"Server error occurred: \"%1$d\""</string>
-    <string name="client_error_occurred">"Client error occurred: \"%1$d\""</string>
-    <string name="unknown_error_occurred">"Unknown error occurred: \"%1$s\""</string>
-    <string name="invalid_address">"Invalid address: \"%1$s\""</string>
-    <string name="empty_address">"Empty address"</string>
-    <string name="unsupported_protocol">"Unsupported protocol: \"%1$s\""</string>
+    <string name="invalid_address">"Invalid address: %1$s"</string>
+    <string name="disallowed_protocol">"Disallowed protocol: %1$s"</string>
     <string name="enter_your_name_alert_dialog">"Enter your name"</string>
     <string name="dialog_save">"Save"</string>
     <string name="dialog_cancel">"Cancel"</string>
@@ -87,6 +82,14 @@
     <string name="chat_view_input_readonly_hint">"<i>Chat is disabled because the app is in readonly mode</i>"</string>
     <string name="chat_view_server_rejected_message_title">"Message rejected"</string>
     <string name="chat_view_server_rejected_message_no_reason">"The server rejected your message and did not provide a reason."</string>
+    <string name="client_error">"The server denied the request due to a client error."</string>
+    <string name="server_error">"The server had a problem while processing the request."</string>
+    <string name="unknown_host_error">"No such host exists. Are you connected to the Internet?"</string>
+    <string name="no_connection_error">"Your device appears to be offline at the moment. Please try again when your device is connected to the Internet."</string>
+    <string name="timeout_error">"Request to the server timed out."</string>
+    <string name="encoding_error">"An encoding error occurred while processing the server response."</string>
+    <string name="malformed_json_error">"The server unexpectedly responded with a non-JSON response or malformed JSON."</string>
+    <string name="generic_error">"Unknown network error occurred."</string>
     <string-array name="countries_codes">
         <item>+965</item>
         <item>+966</item>
