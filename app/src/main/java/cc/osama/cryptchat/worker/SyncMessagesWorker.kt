@@ -88,6 +88,10 @@ class SyncMessagesWorker(context: Context, params: WorkerParameters) : Worker(co
                 }
               }
             }
+            val hasMore = it.optBoolean("has_more", false)
+            if (hasMore) {
+              enqueue(server.id, 1, applicationContext)
+            }
           } catch (ex: InboundMessageHandler.UserNotFound) {
             if (!Cryptchat.isReadonly(applicationContext)) {
               SyncUsersWorker.enqueue(
@@ -99,7 +103,7 @@ class SyncMessagesWorker(context: Context, params: WorkerParameters) : Worker(co
           }
         },
         failure = {
-          e("SyncMessagesWorker", "MESSAGES SYNC API POINT FAILURE ${it}")
+          e("SyncMessagesWorker", "MESSAGES SYNC API POINT FAILURE $it")
         }
       )
     } finally {
