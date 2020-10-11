@@ -4,7 +4,6 @@ import android.content.Context
 import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import android.util.Log.d
 import android.view.MenuItem
 import cc.osama.cryptchat.*
 import kotlinx.android.synthetic.main.activity_enter_server_address.*
@@ -79,7 +78,6 @@ class EnterServerAddress : AppCompatActivity() {
         }
       },
       failure = {
-        d("TESTTTTT", it.toString())
         val errorId = if (it.statusCode in 300..499) {
           R.string.not_a_cryptchat_server
         } else {
@@ -117,7 +115,6 @@ class EnterServerAddress : AppCompatActivity() {
         errorMessage.contains("unknown protocol", ignoreCase = true)) {
         canonicalAddress("https://$address")
       } else {
-        d("TESTTTTT", errorMessage)
         errorMessagePlaceholder.text = errorMessage
         null
       }
