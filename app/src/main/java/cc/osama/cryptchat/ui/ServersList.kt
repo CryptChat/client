@@ -92,9 +92,11 @@ class ServersList : AppCompatActivity(), OnServerClick {
       } else {
         holder.view.unreadMessagesCountTextView.visibility = View.INVISIBLE
       }
-      holder.view.usersCountTextView.text = context.resources.getString(
-        R.string.servers_list_users_count,
-        serverItem.usersCount + 1 // add 1 to account for current user
+      val count = serverItem.usersCount
+      holder.view.usersCountTextView.text = context.resources.getQuantityString(
+        R.plurals.servers_list_users_count,
+        count,
+        count
       )
     }
   }

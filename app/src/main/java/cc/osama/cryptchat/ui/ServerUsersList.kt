@@ -120,6 +120,13 @@ class ServerUsersList : RecyclerViewImplementer<User.Conversation>() {
         dataset.clear()
         dataset.addAll(newSet)
         viewAdapter.notifyDataSetChanged()
+        if (dataset.isEmpty()) {
+          usersList.visibility = View.GONE
+          serverUsersListNoUsersMessage.visibility = View.VISIBLE
+        } else {
+          usersList.visibility = View.VISIBLE
+          serverUsersListNoUsersMessage.visibility = View.GONE
+        }
       }
     }
   }

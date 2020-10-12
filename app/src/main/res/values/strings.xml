@@ -36,6 +36,7 @@
     <string name="server_settings_info_updated_successfully">"Your settings have been saved successfully!"</string>
     <string name="server_users_list_menu_go_to_server_settings">"Settings"</string>
     <string name="server_users_list_menu_go_to_admin_interface">"Admin interface"</string>
+    <string name="server_users_list_no_other_users">"There are no other users besides you on this server"</string>
     <string name="notification_channel_messages">"Messages"</string>
     <string name="notification_channel_messages_desc">"Notifications for received messages."</string>
     <string name="message_notification_title">"%1$s@%2$s"</string>
@@ -77,7 +78,10 @@
     <string name="backup_restorer_failed_bad_db_integrity">"Restore failed because the restored database is corrupt."</string>
     <string name="backup_restorer_failed_decryption_failed">"Restore failed because the backup file is corrupt or decryption key is wrong."</string>
     <string name="admin_web_view_toolbar_title">"Admin interface"</string>
-    <string name="servers_list_users_count">"%1$d users"</string>
+    <plurals name="servers_list_users_count">
+        <item quantity="one">"%1$d user"</item>
+        <item quantity="other">"%1$d users"</item>
+    </plurals>
     <string name="chat_view_input_hint">"Say something…"</string>
     <string name="chat_view_input_readonly_hint">"<i>Chat is disabled because the app is in readonly mode</i>"</string>
     <string name="chat_view_server_rejected_message_title">"Message rejected"</string>

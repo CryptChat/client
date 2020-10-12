@@ -28,4 +28,18 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
         app:titleTextColor="?attr/colorSecondary" />
+
+    <TextView
+        android:id="@+id/serverUsersListNoUsersMessage"
+        android:layout_width="300dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="32dp"
+        android:gravity="center"
+        android:text="@string/server_users_list_no_other_users"
+        android:visibility="gone"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/serverUsersListToolbar"
+        app:textAllCaps="false"
+        tools:visibility="visible" />
 </androidx.constraintlayout.widget.ConstraintLayout>

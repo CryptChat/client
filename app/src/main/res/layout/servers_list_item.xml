@@ -63,11 +63,12 @@
         android:id="@+id/usersCountTextView"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        tools:text="3 users"
+        android:layout_marginTop="4dp"
         android:textAppearance="@style/TextAppearance.MaterialComponents.Caption"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="@+id/serverName"
-        app:layout_constraintTop_toBottomOf="@+id/serverName" />
+        app:layout_constraintTop_toBottomOf="@+id/serverName"
+        tools:text="3 users" />
 
     <TextView
         android:id="@+id/dotSeparatorView"
