@@ -27,4 +27,18 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
         app:titleTextColor="?attr/colorSecondary" />
+
+    <TextView
+        android:id="@+id/serversListNoServers"
+        android:layout_width="300dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="32dp"
+        android:gravity="center"
+        android:text="@string/servers_list_no_servers"
+        android:visibility="gone"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/serversListToolbar"
+        app:textAllCaps="false"
+        tools:visibility="visible" />
 </androidx.constraintlayout.widget.ConstraintLayout>

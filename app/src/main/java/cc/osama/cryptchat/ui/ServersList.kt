@@ -5,7 +5,11 @@ import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.os.Bundle
+import android.text.SpannableStringBuilder
 import android.text.format.DateUtils
+import android.text.method.LinkMovementMethod
+import android.text.style.ClickableSpan
+import android.text.style.URLSpan
 import android.view.*
 import androidx.appcompat.app.AppCompatActivity
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
@@ -181,6 +185,30 @@ class ServersList : AppCompatActivity(), OnServerClick {
         servers.clear()
         servers.addAll(newList)
         viewAdapter.notifyDataSetChanged()
+        if (servers.isEmpty()) {
+          serversList.visibility = View.GONE
+          serversListNoServers.visibility = View.VISIBLE
+          val sequence = SpannableStringBuilder(resources.getText(R.string.servers_list_no_servers))
+          val underlines = sequence.getSpans(0, sequence.length, URLSpan::class.java)
+          for (span in underlines) {
+            val start = sequence.getSpanStart(span)
+            val end = sequence.getSpanEnd(span)
+            val flags = sequence.getSpanFlags(span)
+            val clickableSpan = object : ClickableSpan() {
+              override fun onClick(widget: View) {
+                startActivity(EnterServerAddress.createIntent(this@ServersList))
+              }
+            }
+            sequence.setSpan(clickableSpan, start, end, flags)
+            sequence.removeSpan(span)
+          }
+          serversListNoServers.text = sequence
+          serversListNoServers.linksClickable = true
+          serversListNoServers.movementMethod = LinkMovementMethod.getInstance()
+        } else {
+          serversList.visibility = View.VISIBLE
+          serversListNoServers.visibility = View.GONE
+        }
       }
     }
   }
