@@ -80,8 +80,7 @@ class SyncMessagesWorker(context: Context, params: WorkerParameters) : Worker(co
                     )
                   )
                   builder.priority = NotificationCompat.PRIORITY_DEFAULT
-                  // TODO: Replace this with a proper icon
-                  builder.setSmallIcon(R.drawable.ic_check_black_24dp)
+                  builder.setSmallIcon(R.drawable.ic_stat_cryptchat_logo)
                   with(NotificationManagerCompat.from(applicationContext)) {
                     notify(SecureRandom().nextInt(), builder.build())
                   }
