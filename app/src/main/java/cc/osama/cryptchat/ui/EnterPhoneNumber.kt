@@ -120,7 +120,7 @@ class EnterPhoneNumber : AppCompatActivity() {
                   id = id,
                   address = address,
                   senderId = senderId,
-                  phoneNumber = number,
+                  phoneNumber = code + number,
                   context = this@EnterPhoneNumber
                 )
               )
