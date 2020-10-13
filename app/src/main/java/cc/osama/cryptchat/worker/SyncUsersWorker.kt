@@ -1,15 +1,12 @@
 package cc.osama.cryptchat.worker
 
 import android.content.Context
-import android.content.Intent
-import androidx.localbroadcastmanager.content.LocalBroadcastManager
+import androidx.core.content.edit
 import androidx.work.*
 import cc.osama.cryptchat.*
 import cc.osama.cryptchat.db.User
 import cc.osama.cryptchat.ui.ServerUsersList
-import org.json.JSONArray
 import org.json.JSONObject
-import java.lang.Exception
 import java.lang.IllegalArgumentException
 
 class SyncUsersWorker(context: Context, params: WorkerParameters) : Worker(context, params) {
@@ -23,6 +20,19 @@ class SyncUsersWorker(context: Context, params: WorkerParameters) : Worker(conte
         .setInputData(workerArgs)
         .build()
       WorkManager.getInstance(context).enqueue(syncMessagesRequest)
+    }
+
+    fun lastRunTime(context: Context, serverId: Long) : Long {
+      val key = "sync_users_last_ran_server:${serverId}"
+      return Cryptchat.sharedPreferences(context).getLong(key, -1)
+    }
+
+    private fun updateLastRan(context: Context, serverId: Long) {
+      val key = "sync_users_last_ran_server:${serverId}"
+      Cryptchat.sharedPreferences(context).edit {
+        putLong(key, System.currentTimeMillis())
+        commit()
+      }
     }
   }
 
@@ -125,6 +135,7 @@ class SyncUsersWorker(context: Context, params: WorkerParameters) : Worker(conte
             }
           }
         }
+        updateLastRan(applicationContext, server.id)
         ServerUsersList.refreshUsersList(applicationContext)
         if (scheduleMessagesSync) {
           SyncMessagesWorker.enqueue(

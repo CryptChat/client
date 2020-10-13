@@ -1,14 +1,13 @@
 package cc.osama.cryptchat
 
 import android.content.Context
-import android.content.Intent
 import android.util.Log.d
-import androidx.localbroadcastmanager.content.LocalBroadcastManager
+import androidx.core.content.edit
 import cc.osama.cryptchat.db.EphemeralKey
 import cc.osama.cryptchat.db.Message
 import cc.osama.cryptchat.db.Server
 import cc.osama.cryptchat.ui.ChatView
-import cc.osama.cryptchat.ui.ServerUsersList
+import cc.osama.cryptchat.worker.SyncUsersWorker
 import org.json.JSONObject
 import java.lang.Exception
 import java.lang.IllegalArgumentException
@@ -44,8 +43,25 @@ class InboundMessageHandler(
     val receiverEphKeyPairId = data.optLong("ephemeral_key_id_on_user_device", -1).let {
       if (it != (-1).toLong()) it else null
     }
-    val senderUser = db.users().findUserByServerIdAndIdOnServer(serverId = server.id, idOnServer = senderIdOnServer)
-      ?: throw UserNotFound() // TODO: add safety guards to ensure we remember not found IDs and not fail for them again
+    val senderUser = db.users().findUserByServerIdAndIdOnServer(
+      serverId = server.id,
+      idOnServer = senderIdOnServer
+    )
+    if (senderUser == null) {
+      val key = "not_found_user_with_id:${senderIdOnServer}_on_server:${server.id}"
+      val pref = Cryptchat.sharedPreferences(context)
+      val lastFailedAt = pref.getLong(key, -1)
+      val lastServerSync = SyncUsersWorker.lastRunTime(context, server.id)
+      if (lastServerSync > lastFailedAt && lastFailedAt != (-1).toLong()) {
+        return null
+      } else {
+        pref.edit {
+          putLong(key, System.currentTimeMillis())
+          commit()
+        }
+        throw UserNotFound()
+      }
+    }
 
     var status = Message.DECRYPTED
     var plaintext = ""
