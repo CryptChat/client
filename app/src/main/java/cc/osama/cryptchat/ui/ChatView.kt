@@ -173,7 +173,7 @@ class ChatView : RecyclerViewImplementer<ChatView.DisplayMessageStruct>() {
       if ((lastVisibleItemPosition + 1 == dataset.size || lastVisibleItemPosition == -1)
         && bottom < oldBottom) {
         LinearSmoothScroller(this).also {
-          it.targetPosition = dataset.size - 1
+          it.targetPosition = (dataset.size - 1).coerceAtLeast(0)
           viewManager.startSmoothScroll(it)
         }
       }

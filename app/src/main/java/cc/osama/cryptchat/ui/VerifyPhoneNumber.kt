@@ -153,7 +153,10 @@ class VerifyPhoneNumber : AppCompatActivity() {
             SupplyEphemeralKeysWorker.enqueue(serverId = server.id, batchSize = 500, context = applicationContext)
             SyncUsersWorker.enqueue(serverId = server.id, context = applicationContext)
             AsyncExec.onUiThread {
-              startActivity(ServerUsersList.createIntent(server, this@VerifyPhoneNumber))
+              ServerUsersList.createIntent(server, this@VerifyPhoneNumber).also { intent ->
+                intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                startActivity(intent)
+              }
             }
           } else {
             e(

@@ -37,7 +37,7 @@ class InboundMessageHandler(
     val senderIdOnServer = data.optLong("sender_user_id", -1)
     val createdAt = data.optLong("created_at", -1)
     if (createdAt == (-1).toLong() || senderIdOnServer == (-1).toLong()) {
-      d("InboundMessageHandler", "returned cuz createdAt or senderIdOnServer is -1. data=$data")
+      d("InboundMessageHandler", "returned cuz createdAt or senderIdOnServer is -1. createdAt=$createdAt, senderIdOnServer=$senderIdOnServer. data=$data")
       return null
     }
     val senderEphPubKeyString = CryptchatUtils.jsonOptString(data,"sender_ephemeral_public_key")

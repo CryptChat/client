@@ -84,7 +84,12 @@ class ServerUsersList : RecyclerViewImplementer<User.Conversation>() {
         startActivity(AdminWebView.createIntent(server, this))
       }
       android.R.id.home -> {
-        onBackPressed()
+        if (isTaskRoot) {
+          startActivity(ServersList.createIntent(applicationContext))
+          finish()
+        } else {
+          onBackPressed()
+        }
       }
       else -> {
         return super.onOptionsItemSelected(item)
