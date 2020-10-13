@@ -145,7 +145,7 @@ class ServerUsersList : RecyclerViewImplementer<User.Conversation>() {
   override fun onBindViewHolder(holder: Adapter.ListItemHolder, position: Int) {
     val conversation = dataset[position]
     val user = conversation.user
-    holder.view.displayName.text = user.name ?: user.countryCode + user.phoneNumber
+    holder.view.displayName.text = user.displayName()
     holder.view.lastMessageContainer.text = conversation.lastMessage ?: ""
     if (user.avatarUrl != null) {
       val bitmap = AvatarsStore(server.id, user.id, applicationContext).bitmap(AvatarsStore.Sizes.Small)

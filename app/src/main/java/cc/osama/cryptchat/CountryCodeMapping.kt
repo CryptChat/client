@@ -1,6 +1,7 @@
 package cc.osama.cryptchat
 
 import java.lang.Exception
+import java.lang.StringBuilder
 
 object CountryCodeMapping {
   const val SPACE = ' '
@@ -21,5 +22,28 @@ object CountryCodeMapping {
   fun formatFor(country: String) : String {
     val value = map[country] ?: throw NoSuchCountryException()
     return value.split('|')[1]
+  }
+
+  fun formatNumber(code: String, number: String) : String {
+    val format = map.values.toTypedArray().find {
+      it.split("|")[0] == code.replace("+", "")
+    }?.split("|")?.get(1) ?: return code + number
+    if (format.replace(SPACE.toString(), "").length != number.length) {
+      return code + number
+    } else {
+      val builder = StringBuilder()
+      builder.append(code)
+      builder.append(SPACE)
+      var formatIndex = 0
+      number.forEach { c ->
+        if (format[formatIndex] == SPACE) {
+          builder.append(SPACE)
+          formatIndex++
+        }
+        builder.append(c)
+        formatIndex++
+      }
+      return builder.toString()
+    }
   }
 }

@@ -120,7 +120,7 @@ class EnterPhoneNumber : AppCompatActivity() {
                   id = id,
                   address = address,
                   senderId = senderId,
-                  phoneNumber = code + number,
+                  phoneNumber = CountryCodeMapping.formatNumber(code, number),
                   context = this@EnterPhoneNumber
                 )
               )
