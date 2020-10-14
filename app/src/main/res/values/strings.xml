@@ -87,6 +87,9 @@
     <string name="chat_view_input_readonly_hint">"<i>Chat is disabled because the app is in readonly mode</i>"</string>
     <string name="chat_view_server_rejected_message_title">"Message rejected"</string>
     <string name="chat_view_server_rejected_message_no_reason">"The server rejected your message and did not provide a reason."</string>
+    <string name="chat_view_chat_beginning">"Chat beginning"</string>
+    <string name="chat_view_today">"Today"</string>
+    <string name="chat_view_yesterday">"Yesterday"</string>
     <string name="client_error">"The server denied the request due to a client error."</string>
     <string name="server_error">"The server had a problem while processing the request."</string>
     <string name="unknown_host_error">"No such host exists. Are you connected to the Internet?"</string>
