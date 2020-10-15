@@ -7,6 +7,7 @@ import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
 import android.util.Log.d
+import android.util.TypedValue
 import android.view.MenuItem
 import android.view.View
 import android.widget.EditText
@@ -14,6 +15,7 @@ import cc.osama.cryptchat.*
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import kotlinx.android.synthetic.main.activity_restore_backup.*
 import kotlin.math.roundToInt
+
 
 class RestoreBackup: CryptchatBaseAppCompatActivity() {
   companion object {
@@ -107,6 +109,9 @@ class RestoreBackup: CryptchatBaseAppCompatActivity() {
       backupRestoreStatus.setText(R.string.restore_backup_restore_succeeded)
     } else {
       backupRestoreStatus.text = error
+      obtainStyledAttributes(TypedValue().data, intArrayOf(R.attr.colorError)).also { ta ->
+        backupRestoreStatus.setTextColor(ta.getColor(0, 0))
+      }.recycle()
     }
     startBackupRestoreButton.isEnabled = true
     runningBackupRestore = null
@@ -128,6 +133,9 @@ class RestoreBackup: CryptchatBaseAppCompatActivity() {
     backupRestoreStatus.visibility = View.VISIBLE
     backupRestoreProgressbar.visibility = View.VISIBLE
     startBackupRestoreButton.isEnabled = false
+    obtainStyledAttributes(TypedValue().data, intArrayOf(android.R.attr.textColorTertiary)).also { ta ->
+      backupRestoreStatus.setTextColor(ta.getColor(0, 0))
+    }.recycle()
     if (br.getError() != null || br.getProgress() == 100.0) {
       notifyRestoreComplete(br)
     } else {
