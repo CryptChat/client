@@ -6,19 +6,11 @@ import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
 import android.util.Log.d
-import android.util.Log.e
 import android.view.MenuItem
-import androidx.appcompat.app.AppCompatActivity
 import androidx.preference.*
 import cc.osama.cryptchat.*
 import cc.osama.cryptchat.R
 import kotlinx.android.synthetic.main.activity_backups_entry.*
-import java.io.FileOutputStream
-import java.security.SecureRandom
-import javax.crypto.Cipher
-import javax.crypto.CipherInputStream
-import javax.crypto.spec.IvParameterSpec
-import javax.crypto.spec.SecretKeySpec
 
 class BackupsEntry: CryptchatBaseAppCompatActivity() {
   companion object {

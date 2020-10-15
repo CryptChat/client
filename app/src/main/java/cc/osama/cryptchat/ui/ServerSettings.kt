@@ -8,10 +8,10 @@ import android.os.Handler
 import android.provider.MediaStore
 import android.view.MenuItem
 import android.view.View
-import androidx.appcompat.app.AlertDialog
 import androidx.constraintlayout.widget.ConstraintLayout
 import cc.osama.cryptchat.*
 import cc.osama.cryptchat.db.Server
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import kotlinx.android.synthetic.main.activity_server_settings.*
 import org.json.JSONObject
 import java.io.ByteArrayOutputStream
@@ -58,7 +58,7 @@ class ServerSettings : CryptchatBaseAppCompatActivity() {
                 if (successfulCompression) {
                   uploadAvatar(stream, smallBitmap)
                 } else {
-                  AlertDialog.Builder(this).apply {
+                  MaterialAlertDialogBuilder(this).apply {
                     setNegativeButton(R.string.dialog_ok) { _, _ ->  }
                     setMessage(R.string.somehow_failed_to_compress_avatar)
                     create().show()
@@ -67,7 +67,7 @@ class ServerSettings : CryptchatBaseAppCompatActivity() {
               }
             } else {
               AsyncExec.onUiThread {
-                AlertDialog.Builder(this).apply {
+                MaterialAlertDialogBuilder(this).apply {
                   setNegativeButton(R.string.dialog_ok) { _, _ ->  }
                   setMessage("Weird condition occurred where bigBitmap or smallBitmap are null")
                   create().show()
@@ -129,7 +129,7 @@ class ServerSettings : CryptchatBaseAppCompatActivity() {
           },
           success = {
             onUiThread {
-              AlertDialog.Builder(this@ServerSettings).apply {
+              MaterialAlertDialogBuilder(this@ServerSettings).apply {
                 setMessage(resources.getString(R.string.server_settings_info_updated_successfully))
                 setNegativeButton(R.string.dialog_ok) { _, _ ->  }
                 create().show()
@@ -143,7 +143,7 @@ class ServerSettings : CryptchatBaseAppCompatActivity() {
               } else {
                 it.toString()
               }
-              AlertDialog.Builder(this@ServerSettings).apply {
+              MaterialAlertDialogBuilder(this@ServerSettings).apply {
                 setMessage(message)
                 setNegativeButton(R.string.dialog_ok) { _, _ ->  }
                 create().show()
@@ -159,7 +159,7 @@ class ServerSettings : CryptchatBaseAppCompatActivity() {
           }
         )
       } else if (somethingChanged) {
-        AlertDialog.Builder(this).apply {
+        MaterialAlertDialogBuilder(this).apply {
           setMessage(resources.getString(R.string.server_settings_info_updated_successfully))
           setNegativeButton(R.string.dialog_ok) { _, _ ->  }
           create().show()
@@ -245,7 +245,7 @@ class ServerSettings : CryptchatBaseAppCompatActivity() {
       },
       failure = {
         onUiThread {
-          AlertDialog.Builder(this@ServerSettings).also { builder ->
+          MaterialAlertDialogBuilder(this@ServerSettings).also { builder ->
             builder.setNegativeButton(R.string.dialog_ok) { _, _ ->  }
             if (it.serverMessages.isNotEmpty()) {
               builder.setMessage(it.serverMessages.joinToString("\n"))

@@ -9,7 +9,6 @@ import android.view.Menu
 import android.view.MenuItem
 import android.view.View
 import android.widget.FrameLayout
-import androidx.appcompat.app.AlertDialog
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.LinearSmoothScroller
@@ -18,6 +17,7 @@ import cc.osama.cryptchat.*
 import cc.osama.cryptchat.db.Message
 import cc.osama.cryptchat.db.Server
 import cc.osama.cryptchat.db.User
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import kotlinx.android.synthetic.main.activity_chat_view.*
 import kotlinx.android.synthetic.main.chat_system_message.view.*
 import kotlinx.android.synthetic.main.sent_chat_message.view.*
@@ -150,7 +150,7 @@ class ChatView : RecyclerViewImplementer<ChatView.ChatRowItem>() {
                   } else {
                     resources.getString(R.string.chat_view_server_rejected_message_no_reason)
                   }
-                  AlertDialog.Builder(this).apply {
+                  MaterialAlertDialogBuilder(this).apply {
                     setNegativeButton(R.string.dialog_ok) { _, _ ->  }
                     setTitle(R.string.chat_view_server_rejected_message_title)
                     setMessage(message)

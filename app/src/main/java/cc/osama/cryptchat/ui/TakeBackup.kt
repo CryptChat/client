@@ -12,6 +12,7 @@ import android.view.MenuItem
 import android.view.View
 import android.widget.EditText
 import cc.osama.cryptchat.*
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import kotlinx.android.synthetic.main.activity_take_backup.*
 import kotlin.math.roundToInt
 
@@ -31,7 +32,7 @@ class TakeBackup : CryptchatBaseAppCompatActivity() {
     supportActionBar?.setDisplayHomeAsUpEnabled(true)
     supportActionBar?.title = resources.getString(R.string.take_backup_view_toolbar_title)
     backupStartButton.setOnClickListener {
-      AlertDialog.Builder(this).apply {
+      MaterialAlertDialogBuilder(this).apply {
         val view = layoutInflater.inflate(R.layout.backup_password_dialog, null)
         val input = view.findViewById<EditText>(R.id.backups_dialog_password)
         setView(view)
