@@ -17,8 +17,7 @@
             android:id="@+id/imageView7"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:alpha="0.3"
-            android:background="?attr/colorSecondary" />
+            android:background="?attr/colorSecondaryVariant" />
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -39,7 +38,7 @@
                     android:layout_marginTop="8dp"
                     android:layout_marginEnd="8dp"
                     android:maxWidth="320dp"
-                    android:textColor="?attr/colorOnSecondary"
+                    android:textColor="?attr/colorOnSecondaryVariant"
                     android:textSize="16sp"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintHorizontal_bias="0.0"
@@ -54,7 +53,7 @@
                     android:layout_marginEnd="8dp"
                     android:layout_marginBottom="4dp"
                     android:alpha="0.8"
-                    android:textColor="?attr/colorOnSecondary"
+                    android:textColor="?attr/colorOnSecondaryVariant"
                     android:textSize="12sp"
                     app:layout_constraintBottom_toBottomOf="parent"
                     app:layout_constraintEnd_toEndOf="parent"
@@ -68,7 +67,7 @@
                     android:layout_marginStart="8dp"
                     android:layout_marginEnd="4dp"
                     android:alpha="0.8"
-                    android:tint="?attr/colorOnSecondary"
+                    android:tint="?attr/colorOnSecondaryVariant"
                     app:layout_constraintBottom_toBottomOf="@+id/messageDateHolder"
                     app:layout_constraintEnd_toStartOf="@+id/messageDateHolder"
                     app:layout_constraintHorizontal_bias="1.0"

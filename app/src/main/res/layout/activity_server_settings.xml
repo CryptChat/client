@@ -12,6 +12,7 @@
         android:layout_height="40dp"
         android:clickable="true"
         android:focusable="true"
+        app:tint="?attr/colorOnSecondary"
         app:fabCustomSize="40dp"
         app:layout_constraintBottom_toBottomOf="@+id/avatarCardView"
         app:layout_constraintEnd_toEndOf="@+id/avatarCardView"

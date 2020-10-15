@@ -44,6 +44,7 @@
     <color name="app_blue_700">#3c7beb</color>
     <color name="app_blue_800">#3a69d8</color>
     <color name="app_blue_900">#3649b8</color>
+    <color name="app_blue_1000">#273f61</color>
 
     <color name="app_white_50">#ffffff</color>
     <color name="app_white_100">#fafafa</color>
