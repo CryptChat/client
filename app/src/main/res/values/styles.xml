@@ -29,6 +29,7 @@
         <item name="colorOnPrimary">@color/app_white_50</item>
         <item name="colorSurface">@color/app_white_900</item>
         <item name="colorOnSurface">@color/app_white_400</item>
+        <item name="colorControlHighlight">@color/app_white_800</item>
         <item name="android:windowBackground">@color/app_white_1000</item>
         <item name="android:textColorPrimary">@color/app_white_200</item>
         <item name="android:textColorSecondary">@color/app_white_200</item>
