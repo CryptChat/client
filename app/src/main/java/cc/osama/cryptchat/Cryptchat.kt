@@ -86,42 +86,36 @@ class Cryptchat : Application() {
         Intent.FLAG_GRANT_WRITE_URI_PERMISSION
       )
     }
+
+    fun defaultTheme(context: Context) : Int {
+      val key = "dark_theme_default_theme"
+      return if (sharedPreferences(context).getBoolean(key, false)) {
+        R.style.AppTheme_Dark
+      } else {
+        R.style.AppTheme_Light
+      }
+    }
+
+    fun setDarkThemeDefault(context: Context) {
+      val key = "dark_theme_default_theme"
+      sharedPreferences(context).edit {
+        putBoolean(key, true)
+        commit()
+      }
+    }
+
+    fun resetDefaultTheme(context: Context) {
+      val key = "dark_theme_default_theme"
+      sharedPreferences(context).edit {
+        remove(key)
+        commit()
+      }
+    }
   }
 
   override fun onCreate() {
     super.onCreate()
     createNotificationChannels()
-    // SyncMessagesWorker.enqueue(1, applicationContext)
-
-    // registerActivityLifecycleCallbacks(object : ActivityLifecycleCallbacks {
-    //   override fun onActivityPaused(activity: Activity) {
-    //     Log.w("SSSSSSSSSSSSSSS", activity.javaClass.name + " Paused!")
-    //   }
-
-    //   override fun onActivityStarted(activity: Activity) {
-    //     Log.w("SSSSSSSSSSSSSSS", activity.javaClass.name + " Started!")
-    //   }
-
-    //   override fun onActivityDestroyed(activity: Activity) {
-    //     Log.w("SSSSSSSSSSSSSSS", activity.javaClass.name + " Destroyed!")
-    //   }
-
-    //   override fun onActivitySaveInstanceState(activity: Activity, outState: Bundle) {
-    //     Log.w("SSSSSSSSSSSSSSS", activity.javaClass.name + " blah!")
-    //   }
-
-    //   override fun onActivityStopped(activity: Activity) {
-    //     Log.w("SSSSSSSSSSSSSSS", activity.javaClass.name + " Stopped!")
-    //   }
-
-    //   override fun onActivityCreated(activity: Activity, savedInstanceState: Bundle?) {
-    //     Log.w("SSSSSSSSSSSSSSS", activity.javaClass.name + " Created!")
-    //   }
-
-    //   override fun onActivityResumed(activity: Activity) {
-    //     Log.w("SSSSSSSSSSSSSSS", activity.javaClass.name + " Resumed!")
-    //   }
-    // })
   }
 
   private fun createNotificationChannels() {

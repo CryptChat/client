@@ -223,7 +223,7 @@ class ChatView : RecyclerViewImplementer<ChatView.ChatRowItem>() {
           today.time = Date(System.currentTimeMillis())
           val yesterday = Calendar.getInstance()
           yesterday.time = Date(System.currentTimeMillis() - (3600 * 24 * 1000))
-          val formatter = SimpleDateFormat("yyyy/MM/dd", Locale.getDefault())
+          val formatter = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
           var prevMsgDate: Calendar?
           prevMsgDate = Calendar.getInstance()
           if (index > 0) {

@@ -2,7 +2,6 @@ package cc.osama.cryptchat.ui
 
 import android.content.Context
 import android.content.Intent
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.view.MenuItem
 import cc.osama.cryptchat.*
@@ -10,7 +9,7 @@ import kotlinx.android.synthetic.main.activity_enter_server_address.*
 import java.net.MalformedURLException
 import java.net.URL
 
-class EnterServerAddress : AppCompatActivity() {
+class EnterServerAddress : CryptchatBaseAppCompatActivity() {
   companion object {
     fun createIntent(context: Context) : Intent {
       return Intent(context, EnterServerAddress::class.java)

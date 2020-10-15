@@ -6,23 +6,20 @@
     android:layout_height="match_parent"
     tools:context=".ui.AdminWebView">
 
-    <androidx.appcompat.widget.Toolbar
+    <com.google.android.material.appbar.MaterialToolbar
         android:id="@+id/adminWebViewToolbar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="?attr/colorPrimary"
         android:minHeight="?attr/actionBarSize"
-        android:theme="@style/AppTheme.ToolbarTheme"
+        style="@style/Widget.MaterialComponents.Toolbar.Primary"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
         app:navigationIcon="@drawable/ic_close_black_24dp"
         app:contentInsetStartWithNavigation="0dp"
         app:subtitleTextAppearance="@style/TextAppearance.AppCompat.Small"
-        app:subtitleTextColor="?attr/colorSecondaryVariant"
         app:title="@string/admin_web_view_toolbar_title"
         app:titleTextAppearance="@style/TextAppearance.MaterialComponents.Subtitle1"
-        app:titleTextColor="?attr/colorSecondary"
         tools:subtitle="https://example.com" />
 
     <WebView

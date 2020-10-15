@@ -49,7 +49,7 @@
         app:layout_constraintTop_toBottomOf="@+id/addServerButton"
         tools:text="This is an error placeholder" />
 
-    <androidx.appcompat.widget.Toolbar
+    <com.google.android.material.appbar.MaterialToolbar
         android:id="@+id/enterServerAddressToolbar"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
@@ -57,9 +57,7 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        android:theme="@style/AppTheme.ToolbarTheme"
-        app:titleTextColor="?attr/colorSecondary"
-        android:background="?attr/colorPrimary"
+        style="@style/Widget.MaterialComponents.Toolbar.Primary"
         app:title="@string/enter_server_address_toolbar_title" />
 
     <ImageView
@@ -67,8 +65,8 @@
         android:layout_width="100dp"
         android:layout_height="100dp"
         android:layout_marginTop="128dp"
-        android:tint="?attr/colorPrimary"
         android:alpha="0.65"
+        android:tint="?attr/colorSecondary"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/enterServerAddressToolbar"

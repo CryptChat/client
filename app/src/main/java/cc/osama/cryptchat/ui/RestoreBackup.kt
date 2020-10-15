@@ -5,7 +5,6 @@ import android.app.AlertDialog
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log.d
 import android.view.MenuItem
@@ -15,7 +14,7 @@ import cc.osama.cryptchat.*
 import kotlinx.android.synthetic.main.activity_restore_backup.*
 import kotlin.math.roundToInt
 
-class RestoreBackup: AppCompatActivity() {
+class RestoreBackup: CryptchatBaseAppCompatActivity() {
   companion object {
     private const val BACKUPS_RESTORE_REQUEST_CODE = 943
     private var runningBackupRestore: BackupRestorer? = null

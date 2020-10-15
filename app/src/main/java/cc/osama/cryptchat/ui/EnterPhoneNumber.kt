@@ -2,7 +2,6 @@ package cc.osama.cryptchat.ui
 
 import android.content.Context
 import android.content.Intent
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log.*
 import android.view.MenuItem
@@ -15,7 +14,7 @@ import org.json.JSONObject
 import java.lang.StringBuilder
 import kotlin.collections.ArrayList
 
-class EnterPhoneNumber : AppCompatActivity() {
+class EnterPhoneNumber : CryptchatBaseAppCompatActivity() {
   companion object {
     fun createIntent(address: String, context: Context) : Intent {
       return Intent(context, EnterPhoneNumber::class.java).apply {

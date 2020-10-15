@@ -1,16 +1,43 @@
 <resources>
-    <style name="AppTheme" parent="Theme.MaterialComponents.DayNight.NoActionBar">
-        <item name="colorPrimary">@color/brandPrimary</item>
-        <item name="colorPrimaryDark">@color/brandPrimary</item>
-        <item name="colorAccent">@color/brandTertiary</item>
-        <item name="colorSecondary">@color/brandSecondary</item>
-        <item name="colorSecondaryVariant">@color/brandSecondaryHigh</item>
-        <item name="colorPrimaryLow">@color/brandPrimaryLow</item>
+    <style name="AppTheme.Light" parent="Theme.MaterialComponents.Light.NoActionBar">
+        <item name="colorPrimary">@color/app_dark_blue_800</item>
+        <item name="colorPrimaryDark">@color/app_dark_blue_900</item>
+        <item name="colorAccent">@color/app_blue_600</item>
+        <item name="colorSecondary">@color/app_blue_600</item>
+        <item name="colorSecondaryVariant">@color/app_blue_200</item>
+        <item name="colorOnPrimary">@color/app_white_50</item>
+        <item name="colorSurface">@color/app_white_300</item>
+        <item name="colorOnSurface">@color/app_white_900</item>
+        <item name="android:windowBackground">@color/app_white_50</item>
         <item name="materialButtonStyle">@style/AppTheme.Button</item>
+        <item name="toolbarNavigationButtonStyle">@style/TintedNavigation</item>
+        <item name="android:textColorPrimary">@color/app_white_900</item>
+        <item name="android:textColorSecondary">@color/app_white_800</item>
+        <item name="android:textColorTertiary">@color/app_white_700</item>
+        <item name="android:textColorHint">@color/app_white_600</item>
+        <item name="android:textColorLink">@color/app_blue_600</item>
     </style>
 
-    <style name="AppTheme.ToolbarTheme" parent="ThemeOverlay.AppCompat.ActionBar">
+    <style name="AppTheme.Dark" parent="AppTheme.Light">
+        <item name="colorAccent">@color/app_blue_600</item>
+        <item name="colorSecondary">@color/app_blue_600</item>
+        <item name="colorSecondaryVariant">@color/app_blue_900</item>
+        <item name="colorOnSecondary">@color/app_white_400</item>
+        <item name="colorOnPrimary">@color/app_white_50</item>
+        <item name="colorSurface">@color/app_white_900</item>
+        <item name="colorOnSurface">@color/app_white_400</item>
+        <item name="android:windowBackground">@color/app_white_1000</item>
+        <item name="android:textColorPrimary">@color/app_white_200</item>
+        <item name="android:textColorSecondary">@color/app_white_200</item>
+        <item name="android:textColorTertiary">@color/app_white_300</item>
+        <item name="android:textColorHint">@color/app_white_600</item>
+        <item name="android:textColorLink">@color/app_blue_600</item>
+    </style>
+
+    <style name="AppTheme.ToolbarTheme" parent="ThemeOverlay.MaterialComponents.Toolbar.Primary">
         <item name="colorControlNormal">?attr/colorSecondary</item>
+        <item name="colorSecondary">?attr/colorOnPrimary</item>
+        <item name="android:textColorPrimary">?attr/colorOnPrimary</item>
     </style>
 
     <style name="AppTheme.Button" parent="Widget.MaterialComponents.Button">
@@ -18,6 +45,14 @@
     </style>
 
     <style name="AppTheme.Button.ThemeOverlay">
-        <item name="colorPrimary">@color/brandTertiary</item>
+        <item name="colorPrimary">?attr/colorSecondary</item>
+    </style>
+
+    <style name="TintedNavigation" parent="Widget.AppCompat.Toolbar.Button.Navigation">
+        <item name="tint">?attr/colorOnPrimary</item>
+    </style>
+
+    <style name="AppTheme.LaunchScreen" parent="AppTheme.Light">
+        <item name="android:windowBackground">@drawable/app_start_screen</item>
     </style>
 </resources>

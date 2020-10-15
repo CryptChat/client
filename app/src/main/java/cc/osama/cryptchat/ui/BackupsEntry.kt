@@ -20,7 +20,7 @@ import javax.crypto.CipherInputStream
 import javax.crypto.spec.IvParameterSpec
 import javax.crypto.spec.SecretKeySpec
 
-class BackupsEntry: AppCompatActivity() {
+class BackupsEntry: CryptchatBaseAppCompatActivity() {
   companion object {
     private const val BACKUPS_TREE_REQUEST_CODE = 382
     fun createIntent(context: Context) = Intent(context, BackupsEntry::class.java)

@@ -9,4 +9,10 @@
     <item
         android:id="@+id/go_to_restore_backup"
         android:title="@string/servers_list_menu_go_to_restore_backup" />
+    <item
+        android:id="@+id/switch_to_light_theme"
+        android:title="@string/servers_list_menu_switch_to_light_theme" />
+    <item
+        android:id="@+id/switch_to_dark_theme"
+        android:title="@string/servers_list_menu_switch_to_dark_theme" />
 </menu>

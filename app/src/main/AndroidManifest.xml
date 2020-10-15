@@ -14,7 +14,7 @@
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
-        android:theme="@style/AppTheme"
+        android:theme="@style/AppTheme.Light"
         android:usesCleartextTraffic="${usesCleartextTraffic}">
         <activity android:name=".ui.AdminWebView"></activity>
         <activity android:name=".ui.RestoreBackup" />
@@ -25,7 +25,7 @@
             android:name=".ui.ServerSettings" />
         <activity android:name=".ui.ChatView" />
         <activity android:name=".ui.ServerUsersList" />
-        <activity android:name=".ui.ServersList">
+        <activity android:name=".ui.ServersList" android:theme="@style/AppTheme.LaunchScreen">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 

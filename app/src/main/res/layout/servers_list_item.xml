@@ -49,13 +49,13 @@
             android:id="@+id/unreadMessagesCountTextView"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:background="?attr/colorAccent"
             android:paddingStart="5dp"
             android:paddingTop="1dp"
             android:paddingEnd="5dp"
             android:paddingBottom="1dp"
             android:textAppearance="@style/TextAppearance.MaterialComponents.Subtitle2"
-            android:textColor="?attr/colorSecondary"
+            android:background="?attr/colorSecondary"
+            android:textColor="?attr/colorOnPrimary"
             tools:text="10" />
     </androidx.cardview.widget.CardView>
 

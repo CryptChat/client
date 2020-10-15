@@ -6,18 +6,16 @@
     android:layout_height="match_parent"
     tools:context=".ui.VerifyPhoneNumber">
 
-    <androidx.appcompat.widget.Toolbar
+    <com.google.android.material.appbar.MaterialToolbar
         android:id="@+id/verifyPhoneNumberToolbar"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:background="?attr/colorPrimary"
         android:minHeight="?attr/actionBarSize"
-        android:theme="@style/AppTheme.ToolbarTheme"
+        style="@style/Widget.MaterialComponents.Toolbar.Primary"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:title="@string/verify_phone_number_view_title"
-        app:titleTextColor="?attr/colorSecondary" />
+        app:title="@string/verify_phone_number_view_title"/>
 
     <com.google.android.material.button.MaterialButton
         android:id="@+id/verificationCodeSubmit"
@@ -40,8 +38,8 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="16dp"
         android:maxWidth="350dp"
-        android:textColor="?attr/colorError"
         android:gravity="center"
+        android:textColor="?attr/colorError"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/verificationCodeSubmit"
@@ -135,7 +133,7 @@
         android:layout_height="100dp"
         android:layout_marginTop="128dp"
         android:alpha="0.65"
-        android:tint="?attr/colorPrimary"
+        android:tint="?attr/colorSecondary"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/verifyPhoneNumberToolbar"

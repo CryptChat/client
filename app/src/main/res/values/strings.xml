@@ -46,6 +46,8 @@
     <string name="servers_list_menu_backups">"Data backup"</string>
     <string name="servers_list_menu_add_server">"Add server"</string>
     <string name="servers_list_menu_go_to_restore_backup">"Restore backup"</string>
+    <string name="servers_list_menu_switch_to_light_theme">"Switch to light theme"</string>
+    <string name="servers_list_menu_switch_to_dark_theme">"Switch to dark theme"</string>
     <string name="servers_list_no_servers">"You have not registered in any servers yet. Register in your first server <a href='#'>here</a>."</string>
     <string name="take_backup_button">"Take Backup"</string>
     <string name="backup_creator_failed_unexpected_condition">"Backup failed due to an unexpected condition."</string>

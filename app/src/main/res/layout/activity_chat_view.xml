@@ -6,13 +6,12 @@
     android:layout_height="match_parent"
     tools:context=".ui.ChatView">
 
-    <androidx.appcompat.widget.Toolbar
+    <com.google.android.material.appbar.MaterialToolbar
         android:id="@+id/chatViewToolbar"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:background="?attr/colorPrimary"
         android:minHeight="?attr/actionBarSize"
-        android:theme="@style/AppTheme.ToolbarTheme"
+        style="@style/Widget.MaterialComponents.Toolbar.Primary"
         app:contentInsetStartWithNavigation="0dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
@@ -52,13 +51,11 @@
                 android:layout_marginStart="10dp"
                 android:layout_toRightOf="@id/avatarImageViewContainer"
                 android:textAppearance="@android:style/TextAppearance.Material.Widget.Toolbar.Title"
-                android:textColor="?attr/colorSecondary"
                 android:textSize="20dp"
+                android:textColor="?attr/colorOnPrimary"
                 tools:text="TextView" />
         </RelativeLayout>
-
-
-    </androidx.appcompat.widget.Toolbar>
+    </com.google.android.material.appbar.MaterialToolbar>
 
 
     <androidx.recyclerview.widget.RecyclerView

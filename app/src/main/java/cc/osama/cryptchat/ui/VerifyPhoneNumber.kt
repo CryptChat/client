@@ -2,7 +2,6 @@ package cc.osama.cryptchat.ui
 
 import android.content.Context
 import android.content.Intent
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log.*
 import android.view.KeyEvent
@@ -20,7 +19,7 @@ import java.io.IOException
 import java.lang.StringBuilder
 import kotlin.properties.Delegates
 
-class VerifyPhoneNumber : AppCompatActivity() {
+class VerifyPhoneNumber : CryptchatBaseAppCompatActivity() {
   companion object {
     private const val TOKEN_SIZE = 8
 

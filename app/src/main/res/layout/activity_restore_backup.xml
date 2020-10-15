@@ -18,7 +18,7 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/textView2" />
 
-    <androidx.appcompat.widget.Toolbar
+    <com.google.android.material.appbar.MaterialToolbar
         android:id="@+id/restoreBackupToolbar"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
@@ -26,9 +26,7 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        android:theme="@style/AppTheme.ToolbarTheme"
-        app:titleTextColor="?attr/colorSecondary"
-        android:background="?attr/colorPrimary"
+        style="@style/Widget.MaterialComponents.Toolbar.Primary"
         app:title="@string/servers_list_menu_go_to_restore_backup" />
 
     <Button
@@ -49,8 +47,8 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/restoreBackupToolbar"
-        android:alpha="0.85"
-        android:tint="?attr/colorPrimary"
+        android:alpha="0.65"
+        android:tint="?attr/colorSecondary"
         app:srcCompat="@drawable/ic_restore_black_24dp" />
 
     <TextView

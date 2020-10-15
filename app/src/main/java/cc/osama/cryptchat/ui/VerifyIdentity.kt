@@ -4,15 +4,14 @@ import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import android.view.MenuItem
-import androidx.appcompat.app.AppCompatActivity
+import cc.osama.cryptchat.CryptchatBaseAppCompatActivity
 import cc.osama.cryptchat.CryptchatSecurity
 import cc.osama.cryptchat.R
 import cc.osama.cryptchat.db.Server
 import cc.osama.cryptchat.db.User
 import kotlinx.android.synthetic.main.activity_verify_identity.*
-import java.lang.StringBuilder
 
-class VerifyIdentity: AppCompatActivity() {
+class VerifyIdentity: CryptchatBaseAppCompatActivity() {
   private lateinit var user: User
   private lateinit var server: Server
 

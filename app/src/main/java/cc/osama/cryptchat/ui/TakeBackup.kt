@@ -5,21 +5,17 @@ import android.app.AlertDialog
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log.d
 import android.util.Log.e
 import android.view.MenuItem
 import android.view.View
 import android.widget.EditText
-import cc.osama.cryptchat.BackupCreator
-import cc.osama.cryptchat.Cryptchat
-import cc.osama.cryptchat.CryptchatTextWatcher
-import cc.osama.cryptchat.R
+import cc.osama.cryptchat.*
 import kotlinx.android.synthetic.main.activity_take_backup.*
 import kotlin.math.roundToInt
 
-class TakeBackup : AppCompatActivity() {
+class TakeBackup : CryptchatBaseAppCompatActivity() {
   companion object {
     private const val BACKUP_TREE_REQUEST_CODE = 395
     private var runningBackupCreator: BackupCreator? = null

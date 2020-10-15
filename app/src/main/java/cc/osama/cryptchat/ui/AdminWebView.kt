@@ -5,7 +5,6 @@ import android.content.Intent
 import android.graphics.Bitmap
 import android.os.Bundle
 import android.util.Log.d
-import android.util.TypedValue
 import android.view.MenuItem
 import android.view.View
 import android.webkit.WebChromeClient
@@ -17,7 +16,7 @@ import cc.osama.cryptchat.*
 import cc.osama.cryptchat.db.Server
 import kotlinx.android.synthetic.main.activity_admin_web_view.*
 
-class AdminWebView: AppCompatActivity() {
+class AdminWebView: CryptchatBaseAppCompatActivity() {
   companion object {
     private const val ADMIN_TOKEN_HEADER = "Cryptchat-Admin-Token"
     private const val ADMIN_ID_HEADER = "Cryptchat-Admin-Id"
@@ -34,10 +33,6 @@ class AdminWebView: AppCompatActivity() {
     super.onCreate(savedInstanceState)
     setContentView(R.layout.activity_admin_web_view)
     server = intent.extras?.get("server") as Server
-    TypedValue().also {
-      theme.resolveAttribute(R.attr.colorSecondary, it, true)
-      adminWebViewToolbar.navigationIcon?.setTint(it.data)
-    }
     setSupportActionBar(adminWebViewToolbar)
     supportActionBar?.setDisplayHomeAsUpEnabled(true)
     adminWebview.webChromeClient = object : WebChromeClient() {

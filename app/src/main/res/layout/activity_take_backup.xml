@@ -6,16 +6,14 @@
     android:layout_height="match_parent"
     tools:context=".ui.TakeBackup">
 
-    <androidx.appcompat.widget.Toolbar
+    <com.google.android.material.appbar.MaterialToolbar
         android:id="@+id/takeBackupToolbar"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:minHeight="?attr/actionBarSize"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        android:theme="@style/AppTheme.ToolbarTheme"
-        app:titleTextColor="?attr/colorSecondary"
-        android:background="?attr/colorPrimary"
+        style="@style/Widget.MaterialComponents.Toolbar.Primary"
         app:layout_constraintTop_toTopOf="parent" />
 
     <Button
@@ -57,8 +55,8 @@
         android:layout_width="116dp"
         android:layout_height="116dp"
         android:layout_marginTop="16dp"
-        android:alpha="0.85"
-        android:tint="?attr/colorPrimary"
+        android:alpha="0.65"
+        android:tint="?attr/colorSecondary"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/takeBackupToolbar"

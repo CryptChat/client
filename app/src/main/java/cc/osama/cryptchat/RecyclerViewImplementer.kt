@@ -1,10 +1,8 @@
 package cc.osama.cryptchat
 
-import android.util.Log.w
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 
@@ -14,7 +12,7 @@ interface OnClick {
   fun getItemViewType(position: Int) : Int
 }
 
-abstract class RecyclerViewImplementer<T> : AppCompatActivity(), OnClick {
+abstract class RecyclerViewImplementer<T> : CryptchatBaseAppCompatActivity(), OnClick {
   abstract val dataset: ArrayList<T>
   abstract val defaultLayout: Int
   abstract val viewAdapter: Adapter<T>

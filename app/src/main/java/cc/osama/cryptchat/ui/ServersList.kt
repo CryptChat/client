@@ -11,12 +11,12 @@ import android.text.method.LinkMovementMethod
 import android.text.style.ClickableSpan
 import android.text.style.URLSpan
 import android.view.*
-import androidx.appcompat.app.AppCompatActivity
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import cc.osama.cryptchat.AsyncExec
 import cc.osama.cryptchat.Cryptchat
+import cc.osama.cryptchat.CryptchatBaseAppCompatActivity
 import cc.osama.cryptchat.R
 import cc.osama.cryptchat.db.Server
 import kotlinx.android.synthetic.main.activity_servers_list.*
@@ -30,7 +30,7 @@ interface OnServerClick {
   fun onServerClick(position: Int)
 }
 
-class ServersList : AppCompatActivity(), OnServerClick {
+class ServersList : CryptchatBaseAppCompatActivity(), OnServerClick {
   companion object {
     private const val REFRESH_INTENT_ACTION = "CRYPTCHAT_REFRESH_SERVERS_LIST"
     fun createIntent(context: Context) : Intent {
@@ -111,6 +111,7 @@ class ServersList : AppCompatActivity(), OnServerClick {
   }
 
   override fun onCreate(savedInstanceState: Bundle?) {
+    setTheme(Cryptchat.defaultTheme(applicationContext))
     super.onCreate(savedInstanceState)
     setContentView(R.layout.activity_servers_list)
 
@@ -145,6 +146,10 @@ class ServersList : AppCompatActivity(), OnServerClick {
     if (addServerItem != null) {
       addServerItem.isVisible = !Cryptchat.isReadonly(applicationContext)
     }
+    val darkThemeSwitch = menu?.findItem(R.id.switch_to_dark_theme)
+    val lightThemeSwitch = menu?.findItem(R.id.switch_to_light_theme)
+    darkThemeSwitch?.isVisible = Cryptchat.defaultTheme(applicationContext) == R.style.AppTheme_Light
+    lightThemeSwitch?.isVisible = Cryptchat.defaultTheme(applicationContext) == R.style.AppTheme_Dark
     val restoreBackupItem = menu?.findItem(R.id.go_to_restore_backup)
     if (restoreBackupItem != null) {
       AsyncExec.run {
@@ -169,6 +174,16 @@ class ServersList : AppCompatActivity(), OnServerClick {
       }
       R.id.go_to_restore_backup -> {
         startActivity(RestoreBackup.createIntent(this))
+      }
+      R.id.switch_to_dark_theme -> {
+        Cryptchat.setDarkThemeDefault(applicationContext)
+        setTheme(R.style.AppTheme_Dark)
+        recreate()
+      }
+      R.id.switch_to_light_theme -> {
+        Cryptchat.resetDefaultTheme(applicationContext)
+        setTheme(R.style.AppTheme_Light)
+        recreate()
       }
       else -> {
         return super.onOptionsItemSelected(item)

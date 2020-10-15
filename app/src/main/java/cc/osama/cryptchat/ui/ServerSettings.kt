@@ -9,7 +9,6 @@ import android.provider.MediaStore
 import android.view.MenuItem
 import android.view.View
 import androidx.appcompat.app.AlertDialog
-import androidx.appcompat.app.AppCompatActivity
 import androidx.constraintlayout.widget.ConstraintLayout
 import cc.osama.cryptchat.*
 import cc.osama.cryptchat.db.Server
@@ -18,7 +17,7 @@ import org.json.JSONObject
 import java.io.ByteArrayOutputStream
 
 
-class ServerSettings : AppCompatActivity() {
+class ServerSettings : CryptchatBaseAppCompatActivity() {
   companion object {
     private const val PICK_IMAGE = 444
     fun createIntent(server: Server, context: Context) : Intent {

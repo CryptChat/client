@@ -22,4 +22,38 @@
 
     <color name="defaultAvatarBackgroundColor">#838383</color>
     <color name="defaultAvatarForegroundColor">#AEAEAE</color>
+
+    <color name="app_dark_blue_50">#e6eefa</color>
+    <color name="app_dark_blue_100">#c6d5e3</color>
+    <color name="app_dark_blue_200">#a7b8ca</color>
+    <color name="app_dark_blue_300">#879bb2</color>
+    <color name="app_dark_blue_400">#6f869f</color>
+    <color name="app_dark_blue_500">#57728d</color>
+    <color name="app_dark_blue_600">#4a647c</color>
+    <color name="app_dark_blue_700">#3a5066</color>
+    <color name="app_dark_blue_800">#2c3e50</color>
+    <color name="app_dark_blue_900">#1a2a39</color>
+
+    <color name="app_blue_50">#e4f3ff</color>
+    <color name="app_blue_100">#bfe1ff</color>
+    <color name="app_blue_200">#96cfff</color>
+    <color name="app_blue_300">#6dbbff</color>
+    <color name="app_blue_400">#50acff</color>
+    <color name="app_blue_500">#3d9dff</color>
+    <color name="app_blue_600">#3d8eff</color>
+    <color name="app_blue_700">#3c7beb</color>
+    <color name="app_blue_800">#3a69d8</color>
+    <color name="app_blue_900">#3649b8</color>
+
+    <color name="app_white_50">#ffffff</color>
+    <color name="app_white_100">#fafafa</color>
+    <color name="app_white_200">#f5f5f5</color>
+    <color name="app_white_300">#f0f0f0</color>
+    <color name="app_white_400">#dedede</color>
+    <color name="app_white_500">#c2c2c2</color>
+    <color name="app_white_600">#979797</color>
+    <color name="app_white_700">#818181</color>
+    <color name="app_white_800">#606060</color>
+    <color name="app_white_900">#3c3c3c</color>
+    <color name="app_white_1000">#1E1E1E</color>
 </resources>
