@@ -86,10 +86,7 @@ class CryptchatSecurity {
       senderEphKeyPair = null
     }
     val master = stream.toByteArray()
-    val salt = ByteArray(32)
-    val info = "Cryptchat".toByteArray()
-    val prk = extract(salt, master)
-    val derived = expand(prk, info, 64)
+    val derived = hashMasterKey(master)
 
     val cipherKeyBytes = derived.copyOfRange(0, 32)
     val ivBytes = ByteArray(16)
@@ -124,10 +121,7 @@ class CryptchatSecurity {
       stream.write(ss2)
     }
     val master = stream.toByteArray()
-    val salt = ByteArray(32)
-    val info = "Cryptchat".toByteArray()
-    val prk = extract(salt, master)
-    val derived = expand(prk, info, 64)
+    val derived = hashMasterKey(master)
 
     val macKeyBytes = derived.copyOfRange(32, 64)
     val cipherBytes = decode(input.ciphertext)
@@ -205,34 +199,7 @@ class CryptchatSecurity {
     return cipher.doFinal(ciphertextBytes)
   }
 
-  private fun extract(salt: ByteArray, input: ByteArray): ByteArray {
-    val mac = Mac.getInstance("HmacSHA256")
-    mac.init(SecretKeySpec(salt, "HmacSHA256"))
-    return mac.doFinal(input)
-  }
-
-  private fun expand(prk: ByteArray, info: ByteArray?, size: Int): ByteArray {
-    val iterations =
-      ceil(size.toDouble() / 32.0).toInt()
-    var mixin: ByteArray? = ByteArray(0)
-    val results = ByteArrayOutputStream()
-    var remainingBytes: Int = size
-
-    for (i in 1 until iterations + 1) {
-      val mac = Mac.getInstance("HmacSHA256")
-      mac.init(SecretKeySpec(prk, "HmacSHA256"))
-      mac.update(mixin)
-      if (info != null) {
-        mac.update(info)
-      }
-      mac.update(i.toByte())
-      val stepResult = mac.doFinal()
-      val stepSize = remainingBytes.coerceAtMost(stepResult.size)
-      results.write(stepResult, 0, stepSize)
-      mixin = stepResult
-      remainingBytes -= stepSize
-    }
-
-    return results.toByteArray()
+  private fun hashMasterKey(key: ByteArray) : ByteArray {
+    return MessageDigest.getInstance("SHA-512").digest(key)
   }
 }
