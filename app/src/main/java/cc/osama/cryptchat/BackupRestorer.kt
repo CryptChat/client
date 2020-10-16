@@ -11,9 +11,10 @@ import java.io.FileOutputStream
 import java.io.InputStream
 import java.lang.Exception
 import java.security.MessageDigest
+import javax.crypto.AEADBadTagException
 import javax.crypto.Cipher
 import javax.crypto.CipherInputStream
-import javax.crypto.spec.IvParameterSpec
+import javax.crypto.spec.GCMParameterSpec
 import javax.crypto.spec.SecretKeySpec
 
 class BackupRestorer(
@@ -22,7 +23,7 @@ class BackupRestorer(
   var activity: RestoreBackup? = null
 ) {
   companion object {
-    private class BadDecryptException() : Exception()
+    private class NotSQLiteBackup() : Exception()
   }
   private var progress: Double = 0.0
   private var error: String? = null
@@ -44,7 +45,6 @@ class BackupRestorer(
           }
         }
         file.delete()
-        val cipher = Cipher.getInstance("AES/CBC/PKCS5Padding")
         var key = password.toByteArray(Charsets.UTF_8)
         val sha = MessageDigest.getInstance("SHA-256")
         repeat(100_000) {
@@ -56,11 +56,18 @@ class BackupRestorer(
           error = applicationContext.resources.getString(R.string.backup_restorer_failed_unexpected_condition)
           return@run
         }
-        val ivBytes = ByteArray(BackupCreator.IV_SIZE)
-        val readIvBytes = inputStream.read(ivBytes, 0, ivBytes.size)
+        val iv = ByteArray(BackupCreator.IV_SIZE)
+        val readIvBytes = inputStream.read(iv, 0, iv.size)
         if (readIvBytes != BackupCreator.IV_SIZE) {
           e("BackupRestorer", "expected to read ${BackupCreator.IV_SIZE} iv bytes, instead got $readIvBytes bytes.")
-          error = applicationContext.resources.getString(R.string.backup_restorer_failed_short_iv)
+          error = applicationContext.resources.getString(R.string.backup_restorer_failed_bad_db)
+          return@run
+        }
+        val aad = ByteArray(BackupCreator.AAD_SIZE)
+        val readAadBytes = inputStream.read(aad, 0, aad.size)
+        if (readAadBytes != BackupCreator.AAD_SIZE) {
+          e("BackupRestorer", "expected to read ${BackupCreator.AAD_SIZE} AAD bytes, instead got $readAadBytes bytes.")
+          error = applicationContext.resources.getString(R.string.backup_restorer_failed_bad_db)
           return@run
         }
         var fileSize: Long = 0
@@ -79,19 +86,22 @@ class BackupRestorer(
           return@run
         }
         inputStream.skip(BackupCreator.IV_SIZE.toLong())
+        inputStream.skip(BackupCreator.AAD_SIZE.toLong())
 
+        val cipher = Cipher.getInstance("AES/GCM/NoPadding")
         cipher.init(
           Cipher.DECRYPT_MODE,
           SecretKeySpec(key, "AES"),
-          IvParameterSpec(ivBytes)
+          GCMParameterSpec(BackupCreator.TAG_SIZE * 8, iv)
         )
+        cipher.updateAAD(aad)
         CipherInputStream(inputStream, cipher).use { cipherInputStream ->
           FileOutputStream(file).use { fileOutputStream ->
             val buffer = ByteArray(16384)
             var bytesRead = cipherInputStream.read(buffer)
             val sqliteDbHeader = String(buffer.copyOfRange(0, 16), Charsets.UTF_8)
             if (sqliteDbHeader != "SQLite format 3\u0000") {
-              throw BadDecryptException()
+              throw NotSQLiteBackup()
             }
             var totalBytesRead = bytesRead.toLong()
             while (bytesRead != -1) {
@@ -110,13 +120,17 @@ class BackupRestorer(
           e("BackupsView", "DATABASE INTEGRITY CHECK FAILED")
           error = applicationContext.resources.getString(R.string.backup_restorer_failed_bad_db_integrity)
         }
-      } catch (ex: BadDecryptException) {
+      } catch (ex: NotSQLiteBackup) {
         if (file != null && file.exists()) file.delete()
-        error = applicationContext.resources.getString(R.string.backup_restorer_failed_decryption_failed)
+        error = applicationContext.resources.getString(R.string.backup_restorer_failed_bad_db)
       } catch (ex: Exception) {
+        error = if (ex.cause is AEADBadTagException) {
+          applicationContext.resources.getString(R.string.backup_restorer_failed_bad_tag)
+        } else {
+          e("BackupRestorer", "EXCEPTION OCCURRED", ex)
+          applicationContext.resources.getString(R.string.restore_backup_restore_failed, ex.toString())
+        }
         if (file != null && file.exists()) file.delete()
-        e("BackupRestorer", "EXCEPTION OCCURRED", ex)
-        error = applicationContext.resources.getString(R.string.restore_backup_restore_failed, ex.toString())
       } finally {
         inputStream?.close()
         Cryptchat.disableReadonly(applicationContext)

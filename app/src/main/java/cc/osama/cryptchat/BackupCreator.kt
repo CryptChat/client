@@ -6,13 +6,11 @@ import android.util.Log.d
 import android.util.Log.e
 import androidx.documentfile.provider.DocumentFile
 import cc.osama.cryptchat.ui.TakeBackup
-import java.io.FileInputStream
-import java.io.OutputStream
+import java.io.*
 import java.security.MessageDigest
 import java.security.SecureRandom
 import javax.crypto.Cipher
 import javax.crypto.CipherOutputStream
-import javax.crypto.spec.IvParameterSpec
 import javax.crypto.spec.SecretKeySpec
 
 class BackupCreator(
@@ -21,7 +19,9 @@ class BackupCreator(
   var activity: TakeBackup? = null
 ) {
   companion object {
-    const val IV_SIZE = 16
+    const val IV_SIZE = 12
+    const val AAD_SIZE = 16
+    const val TAG_SIZE = 16
     const val MIME_TYPE = "application/octet-stream"
   }
 
@@ -88,25 +88,21 @@ class BackupCreator(
     password: String,
     callback: (Long, Long) -> Unit
   ) {
-    val cipher = Cipher.getInstance("AES/CBC/PKCS5Padding")
     val sha = MessageDigest.getInstance("SHA-256")
     var key = password.toByteArray(Charsets.UTF_8)
     repeat(100_000) {
       key = sha.digest(key)
     }
-    val ivBytes = ByteArray(IV_SIZE).also {
-      SecureRandom().nextBytes(it)
-    }
-    val iv = IvParameterSpec(ivBytes)
-    cipher.init(
-      Cipher.ENCRYPT_MODE,
-      SecretKeySpec(key, "AES"),
-      iv
-    )
+    val cipher = Cipher.getInstance("AES/GCM/NoPadding")
+    cipher.init(Cipher.ENCRYPT_MODE, SecretKeySpec(key, "AES"))
+    val iv = cipher.iv.copyOf()
+    val aad = SecureRandom().generateSeed(AAD_SIZE)
+    cipher.updateAAD(aad)
     Cryptchat.db(applicationContext).checkpoint()
     val dbFile = applicationContext.getDatabasePath(Database.Name)
     val size = dbFile.length()
-    outputStream.write(ivBytes, 0, ivBytes.size)
+    outputStream.write(iv, 0, iv.size)
+    outputStream.write(aad, 0, aad.size)
     FileInputStream(dbFile).use { inputStream ->
       CipherOutputStream(outputStream, cipher).use { cipherOutputStream ->
         val buffer = ByteArray(16384)
