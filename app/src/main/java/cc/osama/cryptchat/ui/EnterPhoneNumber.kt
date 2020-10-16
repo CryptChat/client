@@ -119,7 +119,8 @@ class EnterPhoneNumber : CryptchatBaseAppCompatActivity() {
                   id = id,
                   address = address,
                   senderId = senderId,
-                  phoneNumber = CountryCodeMapping.formatNumber(code, number),
+                  countryCode = code,
+                  phoneNumber = number,
                   context = this@EnterPhoneNumber
                 )
               )

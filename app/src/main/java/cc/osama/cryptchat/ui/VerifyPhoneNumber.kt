@@ -23,11 +23,19 @@ class VerifyPhoneNumber : CryptchatBaseAppCompatActivity() {
   companion object {
     private const val TOKEN_SIZE = 8
 
-    fun createIntent(id: Long, address: String, senderId: String, phoneNumber: String, context: Context) : Intent {
+    fun createIntent(
+      id: Long,
+      address: String,
+      senderId: String,
+      countryCode: String,
+      phoneNumber: String,
+      context: Context
+    ) : Intent {
       return Intent(context, VerifyPhoneNumber::class.java).also {
         it.putExtra("id", id)
         it.putExtra("address", address)
         it.putExtra("senderId", senderId)
+        it.putExtra("countryCode", countryCode)
         it.putExtra("phoneNumber", phoneNumber)
       }
     }
@@ -35,6 +43,7 @@ class VerifyPhoneNumber : CryptchatBaseAppCompatActivity() {
 
   private lateinit var address: String
   private lateinit var senderId: String
+  private lateinit var countryCode: String
   private lateinit var phoneNumber: String
   private lateinit var fields: Array<EditText>
   private var id by Delegates.notNull<Long>()
@@ -45,6 +54,7 @@ class VerifyPhoneNumber : CryptchatBaseAppCompatActivity() {
     id = intent.extras?.getLong("id") as Long
     address = intent.extras?.getString("address") as String
     senderId = intent.extras?.getString("senderId") as String
+    countryCode = intent.extras?.getString("countryCode") as String
     phoneNumber = intent.extras?.getString("phoneNumber") as String
 
     setContentView(R.layout.activity_verify_phone_number)
@@ -86,7 +96,7 @@ class VerifyPhoneNumber : CryptchatBaseAppCompatActivity() {
     verifyPhoneNumberTipHolder.text = HtmlCompat.fromHtml(
       getString(
         R.string.verify_phone_number_view_tip,
-        phoneNumber
+        CountryCodeMapping.formatNumber(countryCode, phoneNumber)
       ),
       HtmlCompat.FROM_HTML_MODE_COMPACT
     )
@@ -125,6 +135,8 @@ class VerifyPhoneNumber : CryptchatBaseAppCompatActivity() {
         put("instance_id", instanceId)
         put("identity_key", keyPair.publicKey.toString())
         put("verification_token", token)
+        put("country_code", countryCode)
+        put("phone_number", phoneNumber)
       }
       CryptchatServer.registerAtServer(
         async = false,
