@@ -41,6 +41,7 @@ class AdminWebView: CryptchatBaseAppCompatActivity() {
         webViewProgressBar.progress = newProgress
       }
     }
+    webViewProgressBar.z = 100.0F
     adminWebview.webViewClient = object : WebViewClient() {
       override fun shouldOverrideUrlLoading(view: WebView?, request: WebResourceRequest?): Boolean {
         val url = request?.url?.toString()
@@ -58,7 +59,11 @@ class AdminWebView: CryptchatBaseAppCompatActivity() {
       override fun onPageFinished(view: WebView?, url: String?) {
         super.onPageFinished(view, url)
         webViewProgressBar.visibility = View.GONE
+        adminWebViewSwipeRefreshLayout.isRefreshing = false
       }
+    }
+    adminWebViewSwipeRefreshLayout.setOnRefreshListener {
+      adminWebview.reload()
     }
     AsyncExec.run(AsyncExec.Companion.Threads.Network) {
       server.reload(applicationContext)
