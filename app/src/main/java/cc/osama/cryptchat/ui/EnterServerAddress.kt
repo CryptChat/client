@@ -101,9 +101,7 @@ class EnterServerAddress : CryptchatBaseAppCompatActivity() {
         errorMessagePlaceholder.text = resources.getString(R.string.invalid_address, address)
         return null
       }
-      // TODO(Uncomment this line)
-      // return "https://${url.host}"
-      return "http://${url.authority}"
+      return "https://${url.host}"
     } catch (err: MalformedURLException) {
       val errorMessage = err.message
       if (errorMessage == null || errorMessage.isEmpty()) {

@@ -138,7 +138,7 @@ class EnterPhoneNumber : CryptchatBaseAppCompatActivity() {
             if (error.serverMessages.isNotEmpty()) {
               toggleErrorMessage(error.serverMessages.joinToString("\n"))
             } else {
-              // TODO(Generic error)
+              toggleErrorMessage(resources.getString(error.genericErrorId))
             }
           }
         }
