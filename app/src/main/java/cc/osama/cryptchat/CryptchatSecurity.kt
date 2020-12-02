@@ -46,12 +46,12 @@ class CryptchatSecurity {
       val sha = MessageDigest.getInstance("SHA-256")
 
       val entropy = sha.digest(firstParty + secondParty).copyOfRange(0, 16)
-      val entropyBits = CryptchatUtils.bytesToBits(entropy)
+      val entropyBits = CryptchatUtils.bytesToBits(entropy) // 128 bits
 
       val hash = sha.digest(entropy)
       val hashBits = CryptchatUtils.bytesToBits(hash)
 
-      val extraChecksumBitsLength = entropyBits.size / 32
+      val extraChecksumBitsLength = entropyBits.size / 32 // 4 bits
       val allBits = BooleanArray(entropyBits.size + extraChecksumBitsLength)
       System.arraycopy(entropyBits, 0, allBits, 0, entropyBits.size)
       System.arraycopy(hashBits, 0, allBits, entropyBits.size, extraChecksumBitsLength)

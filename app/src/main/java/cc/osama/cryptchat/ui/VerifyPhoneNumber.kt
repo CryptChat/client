@@ -129,6 +129,7 @@ class VerifyPhoneNumber : CryptchatBaseAppCompatActivity() {
         d("VerifyPhoneNumber", "FirebaseInstanceId exception", ex)
         null
       }
+      // generate the long-term identity key pair of the user
       val keyPair = CryptchatSecurity.genKeyPair()
       val params = JSONObject().apply {
         put("id", id)
@@ -161,7 +162,9 @@ class VerifyPhoneNumber : CryptchatBaseAppCompatActivity() {
                 userName = null
               )
             )
+            // create a batch of ephemeral keys and send them to the server
             SupplyEphemeralKeysWorker.enqueue(serverId = server.id, batchSize = 500, context = applicationContext)
+            // fetch existing users data from the server
             SyncUsersWorker.enqueue(serverId = server.id, context = applicationContext)
             AsyncExec.onUiThread {
               ServerUsersList.createIntent(server, this@VerifyPhoneNumber).also { intent ->

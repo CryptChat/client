@@ -94,7 +94,8 @@ class EnterServerAddress : CryptchatBaseAppCompatActivity() {
     try {
       val url = URL(address)
       if (url.protocol != "https") {
-        errorMessagePlaceholder.text = resources.getString(R.string.disallowed_protocol, url.protocol ?: "<unknown>")
+        errorMessagePlaceholder.text =
+          resources.getString(R.string.disallowed_protocol, url.protocol ?: "<unknown>")
         return null
       }
       if (url.host == null || url.host.isBlank()) {
