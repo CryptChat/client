@@ -11,6 +11,8 @@ import android.os.Build
 import androidx.core.content.edit
 import androidx.documentfile.provider.DocumentFile
 import androidx.room.Room
+import cc.osama.cryptchat.worker.SyncMessagesWorker
+import cc.osama.cryptchat.worker.SyncUsersWorker
 
 class Cryptchat : Application() {
   companion object {
@@ -115,6 +117,12 @@ class Cryptchat : Application() {
 
   override fun onCreate() {
     super.onCreate()
+    AsyncExec.run(AsyncExec.Companion.Threads.Db) {
+      db(applicationContext).servers().getAll().forEach { server ->
+        SyncMessagesWorker.enqueue(serverId = server.id, context = applicationContext)
+        SyncUsersWorker.enqueue(serverId = server.id, context = applicationContext)
+      }
+    }
     createNotificationChannels()
   }
 
