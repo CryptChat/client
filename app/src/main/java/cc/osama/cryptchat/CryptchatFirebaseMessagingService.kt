@@ -17,17 +17,21 @@ class CryptchatFirebaseMessagingService : FirebaseMessagingService() {
     d("FirebaseMessagingSrv", "received firebase message. data=${message.data}")
     val command = message.data["command"] ?: return
     val from = message.from ?: return
-    val server = Cryptchat.db(applicationContext).servers().findBySenderId(from) ?: return
-    if (command == "sync_messages") {
-      SyncMessagesWorker.enqueue(
-        serverId = server.id,
-        context = applicationContext
-      )
-    } else if (command == "sync_users") {
-      SyncUsersWorker.enqueue(
-        serverId = server.id,
-        context = applicationContext
-      )
+    val servers = Cryptchat.db(applicationContext).servers().findBySenderId(from)
+    d("FirebaseMessageSrv", "Syncing for ${servers.size} servers.")
+    servers.forEach { server ->
+      d("FirebaseMessageSrv", "$command for ${server.id}, ${server.name}")
+      if (command == "sync_messages") {
+        SyncMessagesWorker.enqueue(
+          serverId = server.id,
+          context = applicationContext
+        )
+      } else if (command == "sync_users") {
+        SyncUsersWorker.enqueue(
+          serverId = server.id,
+          context = applicationContext
+        )
+      }
     }
   }
 
